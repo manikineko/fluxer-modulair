@@ -1,0 +1,22 @@
+{
+  "id": "slash-commands",
+  "name": "Slash Commands",
+  "version": "1.0.0",
+  "description": "Adds Discord-style slash commands for quick actions",
+  "author": "manikineko.nl",
+  "license": "MIT",
+  "main": "index.ts",
+  "target": "both",
+  "permissions": {
+    "api": {
+      "internal": true,
+      "external": true
+    }
+  },
+  "hooks": {
+    "onLoad": "onLoad",
+    "onEnable": "onEnable",
+    "onDisable": "onDisable",
+    "onRequest": "onRequest"
+  }
+}

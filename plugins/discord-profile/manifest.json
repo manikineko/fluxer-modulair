@@ -1,0 +1,20 @@
+{
+  "id": "discord-profile",
+  "name": "Discord Profile Customization",
+  "version": "1.0.0",
+  "description": "Adds Discord-style profile customization including banners, avatars, and bio",
+  "author": "manikineko.nl",
+  "license": "MIT",
+  "main": "index.ts",
+  "target": "both",
+  "permissions": {
+    "api": {
+      "internal": true
+    }
+  },
+  "hooks": {
+    "onLoad": "onLoad",
+    "onEnable": "onEnable",
+    "onDisable": "onDisable"
+  }
+}

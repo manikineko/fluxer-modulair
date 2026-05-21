@@ -1,0 +1,24 @@
+{
+  "id": "example-channel-type",
+  "name": "Example Channel Type",
+  "version": "1.0.0",
+  "description": "Example plugin demonstrating how to create a custom channel type",
+  "author": "Fluxer Contributors",
+  "license": "MIT",
+  "main": "index.ts",
+  "target": "client",
+  "permissions": {},
+  "hooks": {
+    "onLoad": "onLoad",
+    "onEnable": "onEnable",
+    "onDisable": "onDisable"
+  },
+  "channelTypes": [
+    {
+      "id": "GUILD_TASK",
+      "name": "Task",
+      "description": "Task channel for organizing and tracking work items",
+      "icon": "check-circle"
+    }
+  ]
+}

@@ -25,6 +25,7 @@
 		"@fluxer/logger": "workspace:*",
 		"@fluxer/media_proxy": "workspace:*",
 		"@fluxer/nats": "workspace:*",
+		"@fluxer/plugin": "workspace:*",
 		"@fluxer/s3": "workspace:*",
 		"@fluxer/sentry": "workspace:*",
 		"hono": "catalog:",

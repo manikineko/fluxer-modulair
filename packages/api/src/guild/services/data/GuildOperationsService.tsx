@@ -334,6 +334,7 @@ export class GuildOperationsService {
 						permission_overwrites: null,
 						nicks: null,
 						soft_deleted: false,
+						e2ee_enabled: false,
 						indexed_at: null,
 						version: 1,
 					}),

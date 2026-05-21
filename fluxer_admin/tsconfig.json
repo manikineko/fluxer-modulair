@@ -3,6 +3,8 @@
 	"compilerOptions": {
 		"paths": {
 			"@app/*": ["./src/*"],
+			"@fluxer/plugin": ["./../packages/plugin/src"],
+			"@fluxer/plugin/*": ["./../packages/plugin/src/*"],
 			"@fluxer/*": ["./../packages/*", "./../packages/*/src/index.tsx"]
 		}
 	},

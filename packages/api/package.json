@@ -33,6 +33,7 @@
 		"@fluxer/logger": "workspace:*",
 		"@fluxer/meilisearch_search": "workspace:*",
 		"@fluxer/nats": "workspace:*",
+		"@fluxer/plugin": "workspace:*",
 		"@fluxer/media_proxy": "workspace:*",
 		"@fluxer/media_proxy_utils": "workspace:*",
 		"@fluxer/mime_utils": "workspace:*",
@@ -47,6 +48,7 @@
 		"@fluxer/worker": "workspace:*",
 		"@opentelemetry/api": "catalog:",
 		"@simplewebauthn/server": "catalog:",
+		"adm-zip": "^0.5.10",
 		"archiver": "catalog:",
 		"argon2": "catalog:",
 		"bowser": "catalog:",
@@ -76,6 +78,7 @@
 		"zod": "catalog:"
 	},
 	"devDependencies": {
+		"@types/adm-zip": "^0.5.5",
 		"@types/archiver": "catalog:",
 		"@types/lodash": "catalog:",
 		"@types/luxon": "catalog:",

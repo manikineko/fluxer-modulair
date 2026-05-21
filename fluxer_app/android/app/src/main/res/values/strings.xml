@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Fluxer</string>
+    <string name="title_activity_main">Fluxer</string>
+    <string name="package_name">com.fluxer.mobile</string>
+    <string name="custom_url_scheme">com.fluxer.mobile</string>
+</resources>

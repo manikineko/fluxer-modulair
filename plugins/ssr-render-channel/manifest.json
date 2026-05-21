@@ -1,0 +1,24 @@
+{
+  "id": "ssr-render-channel",
+  "name": "SSR Render Channel",
+  "version": "1.0.0",
+  "description": "Server-side rendered content channel type",
+  "author": "Fluxer Contributors",
+  "license": "MIT",
+  "main": "index.ts",
+  "target": "client",
+  "permissions": {},
+  "hooks": {
+    "onLoad": "onLoad",
+    "onEnable": "onEnable",
+    "onDisable": "onDisable"
+  },
+  "channelTypes": [
+    {
+      "id": "SSR_RENDER",
+      "name": "SSR Render",
+      "description": "Server-side rendered content channel",
+      "icon": "code"
+    }
+  ]
+}

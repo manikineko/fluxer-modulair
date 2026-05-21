@@ -20,6 +20,7 @@
 		},
 		"admin": {
 			"secret_key_base": "test-admin-secret-key-base-minimum-32-chars",
+			"oauth_client_id": "1234567890123456789",
 			"oauth_client_secret": "test-oauth-client-secret"
 		},
 		"gateway": {

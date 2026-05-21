@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluxer-config
+  namespace: fluxer
+data:
+  config.json: |
+    {
+      "server": {
+        "host": "0.0.0.0",
+        "port": 8080
+      },
+      "database": {
+        "backend": "sqlite",
+        "sqlite_path": "/usr/src/app/data/db/fluxer.db"
+      },
+      "storage": {
+        "root": "/usr/src/app/data/storage"
+      },
+      "search": {
+        "backend": "sqlite"
+      }
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluxer-plugins
+  namespace: fluxer
+data:
+  plugins.json: |
+    {
+      "enabled": [
+        "example-plugin",
+        "atproto-pds",
+        "discord-decos",
+        "bluesky"
+      ]
+    }

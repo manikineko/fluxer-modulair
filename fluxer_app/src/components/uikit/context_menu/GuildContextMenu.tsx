@@ -21,6 +21,8 @@ import {DataMenuRenderer} from '@app/components/uikit/context_menu/DataMenuRende
 import {useGuildMenuData} from '@app/components/uikit/context_menu/items/GuildMenuData';
 import {MuteCommunityMenuItem} from '@app/components/uikit/context_menu/items/GuildMenuItems';
 import {MenuGroup} from '@app/components/uikit/context_menu/MenuGroup';
+import {MenuItem} from '@app/components/uikit/context_menu/MenuItem';
+import {usePluginUIComponents} from '@app/hooks/usePluginUIComponents';
 import type {GuildRecord} from '@app/records/GuildRecord';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -34,6 +36,7 @@ interface GuildContextMenuProps {
 
 export const GuildContextMenu: React.FC<GuildContextMenuProps> = observer(({guild, onClose}) => {
 	const {t} = useLingui();
+	const {components: pluginComponents} = usePluginUIComponents('guild_menu');
 
 	const {groups} = useGuildMenuData(guild, {onClose});
 
@@ -42,6 +45,16 @@ export const GuildContextMenu: React.FC<GuildContextMenuProps> = observer(({guil
 	return (
 		<>
 			<DataMenuRenderer groups={groups} excludeLabels={excludeLabels} />
+
+			{pluginComponents.length > 0 && (
+				<MenuGroup>
+					{pluginComponents.map((component) => (
+						<MenuItem key={component.id} onClick={() => {}}>
+							{component.name}
+						</MenuItem>
+					))}
+				</MenuGroup>
+			)}
 
 			<MenuGroup>
 				<MuteCommunityMenuItem guild={guild} onClose={onClose} />

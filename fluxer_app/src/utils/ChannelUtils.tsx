@@ -28,12 +28,16 @@ import {FLUXERBOT_ID} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
 import {
+	BirdIcon,
+	BroadcastIcon,
+	ChatsCircleIcon,
 	CaretDownIcon,
 	HashIcon,
 	type IconProps,
 	LinkIcon,
 	NotePencilIcon,
 	SpeakerHighIcon,
+	SparkleIcon,
 } from '@phosphor-icons/react';
 
 export function compareChannels(a: ChannelRecord, b: ChannelRecord): number {
@@ -54,6 +58,16 @@ export function getIcon(channel: {type: number; nsfw?: boolean}, props: IconProp
 			return <LinkIcon weight="bold" {...props} />;
 		case ChannelTypes.DM_PERSONAL_NOTES:
 			return <NotePencilIcon weight="bold" {...props} />;
+		case ChannelTypes.BLUESKY_FEED:
+			return <BirdIcon weight="fill" {...props} />;
+		case ChannelTypes.SSR_RENDER:
+			return <SparkleIcon weight="fill" {...props} />;
+		case ChannelTypes.GUILD_ANNOUNCEMENT:
+			return <BroadcastIcon weight="fill" {...props} />;
+		case ChannelTypes.GUILD_FORUM:
+			return <ChatsCircleIcon weight="fill" {...props} />;
+		case ChannelTypes.GUILD_STAGE:
+			return <SpeakerHighIcon weight="fill" {...props} />;
 		default:
 			return <HashIcon weight="bold" {...props} />;
 	}
@@ -70,6 +84,21 @@ export function getName(channel: ChannelRecord) {
 			break;
 		case ChannelTypes.GUILD_LINK:
 			baseName = i18n._(msg`Link`);
+			break;
+		case ChannelTypes.BLUESKY_FEED:
+			baseName = i18n._(msg`Bluesky Feed`);
+			break;
+		case ChannelTypes.SSR_RENDER:
+			baseName = i18n._(msg`SSR Render`);
+			break;
+		case ChannelTypes.GUILD_ANNOUNCEMENT:
+			baseName = i18n._(msg`Announcement`);
+			break;
+		case ChannelTypes.GUILD_FORUM:
+			baseName = i18n._(msg`Forum`);
+			break;
+		case ChannelTypes.GUILD_STAGE:
+			baseName = i18n._(msg`Stage`);
 			break;
 		default:
 			baseName = i18n._(msg`Text`);

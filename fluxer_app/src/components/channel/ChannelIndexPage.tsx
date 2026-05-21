@@ -18,6 +18,13 @@
  */
 
 import * as NavigationActionCreators from '@app/actions/NavigationActionCreators';
+import {LazyPluginComponent} from '@app/components/channel/channel_view/LazyPluginComponent';
+import {channelTypeRegistry} from '@app/lib/plugins/ChannelTypeRegistry';
+import {
+	getPluginComponentLoader,
+	getPluginId,
+	isPluginChannelType,
+} from '@app/lib/plugins/ChannelTypeInitializer';
 import {DMChannelView} from '@app/components/channel/channel_view/DMChannelView';
 import {GuildChannelView} from '@app/components/channel/channel_view/GuildChannelView';
 import {useLocation, useParams} from '@app/lib/router/React';
@@ -72,9 +79,40 @@ export const ChannelIndexPage = observer(() => {
 		return null;
 	}
 
-	if (channel?.isPrivate()) {
+	// Don't render until we know the channel type — prevents incorrect fallthrough to GuildChannelView
+	if (!channel) {
+		return null;
+	}
+
+	if (channel.isPrivate()) {
 		return <DMChannelView channelId={channelId} />;
 	}
 
+	// Handle channel types from registry
+	const channelTypeStr = String(channel.type);
+
+	// Fast path: component already in registry (pre-loaded or core type)
+	const component = channelTypeRegistry.getComponent(channelTypeStr);
+	if (component) {
+		const ChannelComponent = component;
+		return <ChannelComponent channelId={channelId} />;
+	}
+
+	// Slow path: plugin registered but not yet pre-loaded (brief startup window)
+	if (isPluginChannelType(channelTypeStr)) {
+		const loader = getPluginComponentLoader(channelTypeStr);
+		const pluginId = getPluginId(channelTypeStr) ?? `channel-type-${channelTypeStr}`;
+		if (loader) {
+			return (
+				<LazyPluginComponent
+					pluginId={pluginId}
+					loader={loader}
+					channelId={channelId}
+				/>
+			);
+		}
+	}
+
+	// Default to GuildChannelView for unregistered channel types
 	return <GuildChannelView channelId={channelId} guildId={derivedGuildId} messageId={messageId} />;
 });

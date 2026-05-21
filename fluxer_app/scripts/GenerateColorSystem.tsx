@@ -19,6 +19,7 @@
 
 import {mkdirSync, writeFileSync} from 'node:fs';
 import {dirname, join, relative} from 'node:path';
+import {fileURLToPath} from 'node:url';
 
 interface ColorFamily {
 	hue: number;
@@ -659,7 +660,8 @@ function generateCSS(
 }
 
 function main() {
-	const scriptDir = import.meta.dirname;
+	const scriptPath = fileURLToPath(import.meta.url);
+	const scriptDir = dirname(scriptPath);
 	const appDir = join(scriptDir, '..');
 
 	const rootTokens = expandTokens(CONFIG.tokens.root, CONFIG.scales);

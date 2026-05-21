@@ -1,0 +1,20 @@
+{
+  "id": "discord-presence",
+  "name": "Discord Rich Presence",
+  "version": "1.0.0",
+  "description": "Adds Discord-style rich presence showing what users are doing",
+  "author": "manikineko.nl",
+  "license": "MIT",
+  "main": "index.ts",
+  "target": "both",
+  "permissions": {
+    "api": {
+      "internal": true
+    }
+  },
+  "hooks": {
+    "onLoad": "onLoad",
+    "onEnable": "onEnable",
+    "onDisable": "onDisable"
+  }
+}

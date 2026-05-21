@@ -1,0 +1,24 @@
+{
+  "id": "announcement-channel",
+  "name": "Announcement Channel",
+  "version": "1.0.0",
+  "description": "Announcement channel type with fancy banner and styling",
+  "author": "Fluxer Contributors",
+  "license": "MIT",
+  "main": "index.ts",
+  "target": "client",
+  "permissions": {},
+  "hooks": {
+    "onLoad": "onLoad",
+    "onEnable": "onEnable",
+    "onDisable": "onDisable"
+  },
+  "channelTypes": [
+    {
+      "id": "GUILD_ANNOUNCEMENT",
+      "name": "Announcement",
+      "description": "Official announcement channel with prominent banner",
+      "icon": "megaphone"
+    }
+  ]
+}

@@ -104,7 +104,7 @@ export class User {
 		this.accentColor = row.accent_color ?? null;
 		this.dateOfBirth = row.date_of_birth ? row.date_of_birth.toString() : null;
 		this.locale = row.locale ?? null;
-		this.flags = row.flags ?? 0n;
+		this.flags = typeof row.flags === 'bigint' ? row.flags : BigInt(row.flags ?? 0);
 		this.premiumType = row.premium_type ?? null;
 		this.premiumSince = row.premium_since ?? null;
 		this.premiumUntil = row.premium_until ?? null;

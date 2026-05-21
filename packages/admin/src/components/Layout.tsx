@@ -29,6 +29,7 @@ import {CsrfInput} from '@fluxer/ui/src/components/CsrfInput';
 import {FlashMessage} from '@fluxer/ui/src/components/Flash';
 import {formatDiscriminator, getUserAvatarUrl} from '@fluxer/ui/src/utils/FormatUser';
 import type {FC, PropsWithChildren} from 'hono/jsx';
+import type {UIComponentDescriptor} from '@fluxer/admin/src/api/Plugins';
 
 interface LayoutProps {
 	title: string;
@@ -42,6 +43,7 @@ interface LayoutProps {
 	csrfToken: string;
 	extraScripts?: string;
 	inspectedVoiceRegionId?: string;
+	pluginComponents?: Array<UIComponentDescriptor>;
 }
 
 function cacheBustedAsset(basePath: string, assetVersion: string, path: string): string {
@@ -100,7 +102,8 @@ const Sidebar: FC<{
 	basePath: string;
 	selfHosted: boolean;
 	inspectedVoiceRegionId?: string;
-}> = ({activePage, adminAcls, basePath, selfHosted, inspectedVoiceRegionId}) => {
+	pluginComponents?: Array<UIComponentDescriptor>;
+}> = ({activePage, adminAcls, basePath, selfHosted, inspectedVoiceRegionId, pluginComponents = []}) => {
 	const sections = getAccessibleSections(adminAcls, {selfHosted, inspectedVoiceRegionId});
 
 	return (
@@ -134,6 +137,23 @@ const Sidebar: FC<{
 						))}
 					</SidebarSection>
 				))}
+				{pluginComponents.length > 0 && (
+					<SidebarSection title="Plugins">
+						{pluginComponents.map((component: UIComponentDescriptor) => (
+							<button
+								type="button"
+								onClick={() => {
+									if (component.props?.onClick) {
+										(component.props.onClick as () => void)();
+									}
+								}}
+								class="block px-3 py-2 rounded text-neutral-300 hover:bg-neutral-800 hover:text-white text-sm transition-colors w-full text-left"
+							>
+								{component.name}
+							</button>
+						))}
+					</SidebarSection>
+				)}
 			</nav>
 			<script
 				defer
@@ -336,6 +356,7 @@ export function Layout({
 	csrfToken,
 	extraScripts,
 	inspectedVoiceRegionId,
+	pluginComponents,
 	children,
 }: PropsWithChildren<LayoutProps>) {
 	const adminAcls = currentAdmin?.acls ?? [];
@@ -357,6 +378,7 @@ export function Layout({
 						basePath={config.basePath}
 						selfHosted={config.selfHosted}
 						inspectedVoiceRegionId={inspectedVoiceRegionId}
+						pluginComponents={pluginComponents}
 					/>
 					<div data-sidebar-overlay="" class="fixed inset-0 z-30 hidden bg-black/50 lg:hidden" />
 					<div class="flex h-screen w-full flex-1 flex-col overflow-y-auto">

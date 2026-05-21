@@ -48,6 +48,7 @@ import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import type {IEmailService} from '@fluxer/email/src/IEmailService';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
+import {PluginSystem} from '@fluxer/plugin';
 import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
 import {formatGeoipLocation, type GeoipResult, UNKNOWN_LOCATION} from '@fluxer/geoip/src/GeoipLookup';
 import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
@@ -194,7 +195,11 @@ export class AuthRegistrationService {
 		request,
 		requestCache,
 	}: RegisterParams): Promise<{user_id: string; token: string}> {
+		// Plugin hook: onRegisterAttempt
+		await PluginSystem.registry.executeHook('onRegisterAttempt', {email: data.email, username: data.username, request});
+
 		if (!data.consent) {
+			await PluginSystem.registry.executeHook('onRegisterFailure', {email: data.email, reason: 'no_consent'});
 			throw InputValidationError.create('consent', 'You must agree to the Terms of Service and Privacy Policy');
 		}
 
@@ -208,6 +213,7 @@ export class AuthRegistrationService {
 
 		const minAge = (countryCode && MINIMUM_AGE_BY_COUNTRY[countryCode]) || DEFAULT_MINIMUM_AGE;
 		if (!this.validateAge({dateOfBirth: data.date_of_birth, minAge})) {
+			await PluginSystem.registry.executeHook('onRegisterFailure', {email: data.email, reason: 'age_restriction'});
 			throw InputValidationError.create(
 				'date_of_birth',
 				`You must be at least ${minAge} years old to create an account`,
@@ -409,6 +415,9 @@ export class AuthRegistrationService {
 				.catch((error) => {
 					Logger.error({error}, '[AuthRegistrationService] Failed to log webhook error');
 				});
+
+			// Plugin hook: onRegisterSuccess
+			await PluginSystem.registry.executeHook('onRegisterSuccess', {userId: user.id, email: user.email, username: user.username, request});
 
 			return {
 				user_id: user.id.toString(),

@@ -17,10 +17,10 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {createEmojiID, createGuildID} from '@fluxer/api/src/BrandedTypes';
+import {createGuildID, createEmojiID} from '@fluxer/api/src/BrandedTypes';
 import {LoginRequired} from '@fluxer/api/src/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@fluxer/api/src/middleware/RateLimitMiddleware';
-import {OpenAPI} from '@fluxer/api/src/middleware/ResponseTypeMiddleware';
+import {OpenAPI, ResponseType} from '@fluxer/api/src/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@fluxer/api/src/RateLimitConfig';
 import type {HonoApp} from '@fluxer/api/src/types/HonoEnv';
 import {Validator} from '@fluxer/api/src/Validator';
@@ -91,6 +91,7 @@ export function PackEmojiController(app: HonoApp) {
 		RateLimitMiddleware(RateLimitConfigs.PACKS_EMOJIS_LIST),
 		LoginRequired,
 		Validator('param', PackIdParam),
+		ResponseType(GuildEmojiWithUserListResponse, {skipValidation: true}),
 		OpenAPI({
 			operationId: 'list_pack_emojis',
 			summary: 'List pack emojis',

@@ -1,0 +1,24 @@
+{
+  "id": "bluesky-feed-channel",
+  "name": "Bluesky Feed Channel",
+  "version": "1.0.0",
+  "description": "Bluesky social network feed channel type",
+  "author": "Fluxer Contributors",
+  "license": "MIT",
+  "main": "index.ts",
+  "target": "client",
+  "permissions": {},
+  "hooks": {
+    "onLoad": "onLoad",
+    "onEnable": "onEnable",
+    "onDisable": "onDisable"
+  },
+  "channelTypes": [
+    {
+      "id": "BLUESKY_FEED",
+      "name": "Bluesky Feed",
+      "description": "Bluesky social network feed",
+      "icon": "feed"
+    }
+  ]
+}

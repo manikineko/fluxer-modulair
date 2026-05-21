@@ -1,0 +1,24 @@
+{
+  "id": "discord-decos",
+  "name": "Discord Decorations",
+  "version": "1.0.0",
+  "description": "Adds Discord-style profile decorations (avatar decorations, banners, profile effects)",
+  "author": "manikineko.nl",
+  "license": "MIT",
+  "main": "index.ts",
+  "target": "both",
+  "permissions": {
+    "api": {
+      "internal": true
+    },
+    "userData": {
+      "read": true,
+      "write": true
+    }
+  },
+  "hooks": {
+    "onLoad": "onLoad",
+    "onEnable": "onEnable",
+    "onDisable": "onDisable"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "id": "forum-channel",
+  "name": "Forum Channel",
+  "version": "1.0.0",
+  "description": "Forum channel type for organized discussions",
+  "author": "Fluxer Contributors",
+  "license": "MIT",
+  "main": "index.ts",
+  "target": "client",
+  "permissions": {},
+  "hooks": {
+    "onLoad": "onLoad",
+    "onEnable": "onEnable",
+    "onDisable": "onDisable"
+  },
+  "channelTypes": [
+    {
+      "id": "GUILD_FORUM",
+      "name": "Forum",
+      "description": "Forum channel for organized discussions",
+      "icon": "users"
+    }
+  ]
+}

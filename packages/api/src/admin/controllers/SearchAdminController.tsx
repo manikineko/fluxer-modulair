@@ -19,7 +19,7 @@
 
 import {requireAdminACL} from '@fluxer/api/src/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@fluxer/api/src/middleware/RateLimitMiddleware';
-import {OpenAPI} from '@fluxer/api/src/middleware/ResponseTypeMiddleware';
+import {OpenAPI, ResponseType} from '@fluxer/api/src/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@fluxer/api/src/RateLimitConfig';
 import type {HonoApp} from '@fluxer/api/src/types/HonoEnv';
 import {Validator} from '@fluxer/api/src/Validator';
@@ -63,6 +63,7 @@ export function SearchAdminController(app: HonoApp) {
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
 		requireAdminACL(AdminACLs.USER_LOOKUP),
 		Validator('json', SearchUsersRequest),
+		ResponseType(SearchUsersResponse, {skipValidation: true}),
 		OpenAPI({
 			operationId: 'search_users',
 			summary: 'Search users',

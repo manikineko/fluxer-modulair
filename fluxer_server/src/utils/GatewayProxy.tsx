@@ -55,7 +55,7 @@ function cleanupSockets(clientSocket: Socket, proxySocket?: Socket): void {
 }
 
 export function createGatewayProxy(): GatewayProxy {
-	const gatewayHost = '127.0.0.1';
+	const gatewayHost = process.env.FLUXER_GATEWAY_HOST || '0.0.0.0';
 	const gatewayPort = Config.services.gateway.port;
 
 	Logger.info({host: gatewayHost, port: gatewayPort}, 'Gateway Proxy initialized');

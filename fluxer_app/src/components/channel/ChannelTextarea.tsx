@@ -94,7 +94,7 @@ import {Limits} from '@app/utils/limits/UserLimits';
 import {normalizeMessageContent} from '@app/utils/MessageRequestUtils';
 import * as MessageSubmitUtils from '@app/utils/MessageSubmitUtils';
 import * as PlaceholderUtils from '@app/utils/PlaceholderUtils';
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {
 	MAX_ATTACHMENTS_PER_MESSAGE,
 	MAX_MESSAGE_LENGTH_NON_PREMIUM,
@@ -1088,9 +1088,10 @@ export const ChannelTextarea = observer(({channel}: {channel: ChannelRecord}) =>
 	const forceNoSendMessages = DeveloperOptionsStore.forceNoSendMessages;
 	const forceNoAttachFiles = DeveloperOptionsStore.forceNoAttachFiles;
 
+	const isStageChannel = channel.type === ChannelTypes.GUILD_STAGE;
 	const disabled = channel.isPrivate()
 		? forceNoSendMessages
-		: forceNoSendMessages || !PermissionStore.can(Permissions.SEND_MESSAGES, channel);
+		: forceNoSendMessages || (!isStageChannel && !PermissionStore.can(Permissions.SEND_MESSAGES, channel));
 	const canAttachFiles = channel.isPrivate()
 		? !forceNoAttachFiles
 		: !forceNoAttachFiles && PermissionStore.can(Permissions.ATTACH_FILES, channel);

@@ -175,6 +175,19 @@ export interface APIConfig {
 		};
 	};
 
+	polar: {
+		enabled: boolean;
+		accessToken?: string;
+		webhookSecret?: string;
+	};
+
+	paypal: {
+		enabled: boolean;
+		clientId?: string;
+		clientSecret?: string;
+		mode: 'sandbox' | 'live';
+	};
+
 	cloudflare: {
 		purgeEnabled: boolean;
 		zoneId?: string;

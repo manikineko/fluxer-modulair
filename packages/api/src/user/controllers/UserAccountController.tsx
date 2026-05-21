@@ -22,7 +22,7 @@ import {createGuildID, createUserID} from '@fluxer/api/src/BrandedTypes';
 import {DefaultUserOnly, LoginRequired, LoginRequiredAllowSuspicious} from '@fluxer/api/src/middleware/AuthMiddleware';
 import {requireOAuth2ScopeForBearer} from '@fluxer/api/src/middleware/OAuth2ScopeMiddleware';
 import {RateLimitMiddleware} from '@fluxer/api/src/middleware/RateLimitMiddleware';
-import {OpenAPI} from '@fluxer/api/src/middleware/ResponseTypeMiddleware';
+import {OpenAPI, ResponseType} from '@fluxer/api/src/middleware/ResponseTypeMiddleware';
 import {SudoModeMiddleware} from '@fluxer/api/src/middleware/SudoModeMiddleware';
 import {RateLimitConfigs} from '@fluxer/api/src/RateLimitConfig';
 import type {HonoApp} from '@fluxer/api/src/types/HonoEnv';
@@ -94,16 +94,7 @@ export function UserAccountController(app: HonoApp) {
 		RateLimitMiddleware(RateLimitConfigs.USER_SETTINGS_GET),
 		requireOAuth2ScopeForBearer('identify'),
 		LoginRequired,
-		OpenAPI({
-			operationId: 'get_current_user',
-			summary: 'Get current user profile',
-			responseSchema: UserPrivateResponse,
-			statusCode: 200,
-			security: ['botToken', 'bearerToken', 'sessionToken'],
-			tags: ['Users'],
-			description:
-				"Retrieves the current authenticated user's profile information, including account details and settings. OAuth2 bearer tokens require identify scope, and email is returned only when the email scope is also present. Returns full user object with private fields visible only to the authenticated user.",
-		}),
+		ResponseType(UserPrivateResponse, {skipValidation: true}),
 		async (ctx) => {
 			const userAccountRequestService = ctx.get('userAccountRequestService');
 			return ctx.json(

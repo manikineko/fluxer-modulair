@@ -141,11 +141,51 @@ export const ChannelCreateLinkRequest = ChannelCreateCommon.extend({
 
 export type ChannelCreateLinkRequest = z.infer<typeof ChannelCreateLinkRequest>;
 
+export const ChannelCreateBlueskyFeedRequest = ChannelCreateCommon.extend({
+	type: createNamedLiteral(ChannelTypes.BLUESKY_FEED, 'BLUESKY_FEED', 'Channel type (Bluesky feed)'),
+	name: GeneralChannelNameType.describe('The name of the channel'),
+});
+
+export type ChannelCreateBlueskyFeedRequest = z.infer<typeof ChannelCreateBlueskyFeedRequest>;
+
+export const ChannelCreateSSRRenderRequest = ChannelCreateCommon.extend({
+	type: createNamedLiteral(ChannelTypes.SSR_RENDER, 'SSR_RENDER', 'Channel type (SSR render)'),
+	name: GeneralChannelNameType.describe('The name of the channel'),
+});
+
+export type ChannelCreateSSRRenderRequest = z.infer<typeof ChannelCreateSSRRenderRequest>;
+
+export const ChannelCreateAnnouncementRequest = ChannelCreateCommon.extend({
+	type: createNamedLiteral(ChannelTypes.GUILD_ANNOUNCEMENT, 'GUILD_ANNOUNCEMENT', 'Channel type (announcement channel)'),
+	name: GeneralChannelNameType.describe('The name of the channel'),
+});
+
+export type ChannelCreateAnnouncementRequest = z.infer<typeof ChannelCreateAnnouncementRequest>;
+
+export const ChannelCreateForumRequest = ChannelCreateCommon.extend({
+	type: createNamedLiteral(ChannelTypes.GUILD_FORUM, 'GUILD_FORUM', 'Channel type (forum channel)'),
+	name: GeneralChannelNameType.describe('The name of the channel'),
+});
+
+export type ChannelCreateForumRequest = z.infer<typeof ChannelCreateForumRequest>;
+
+export const ChannelCreateStageRequest = ChannelCreateCommon.extend({
+	type: createNamedLiteral(ChannelTypes.GUILD_STAGE, 'GUILD_STAGE', 'Channel type (stage channel)'),
+	name: GeneralChannelNameType.describe('The name of the channel'),
+});
+
+export type ChannelCreateStageRequest = z.infer<typeof ChannelCreateStageRequest>;
+
 export const ChannelCreateRequest = z.discriminatedUnion('type', [
 	ChannelCreateTextRequest,
 	ChannelCreateVoiceRequest,
 	ChannelCreateCategoryRequest,
 	ChannelCreateLinkRequest,
+	ChannelCreateBlueskyFeedRequest,
+	ChannelCreateSSRRenderRequest,
+	ChannelCreateAnnouncementRequest,
+	ChannelCreateForumRequest,
+	ChannelCreateStageRequest,
 ]);
 
 export type ChannelCreateRequest = z.infer<typeof ChannelCreateRequest>;
@@ -190,12 +230,52 @@ export const ChannelUpdateGroupDmRequest = z.object({
 
 export type ChannelUpdateGroupDmRequest = z.infer<typeof ChannelUpdateGroupDmRequest>;
 
+export const ChannelUpdateAnnouncementRequest = ChannelUpdateCommon.extend({
+	type: createNamedLiteral(ChannelTypes.GUILD_ANNOUNCEMENT, 'GUILD_ANNOUNCEMENT', 'Channel type (announcement channel)'),
+	name: GeneralChannelNameType.nullish().describe('The name of the channel'),
+});
+
+export type ChannelUpdateAnnouncementRequest = z.infer<typeof ChannelUpdateAnnouncementRequest>;
+
+export const ChannelUpdateForumRequest = ChannelUpdateCommon.extend({
+	type: createNamedLiteral(ChannelTypes.GUILD_FORUM, 'GUILD_FORUM', 'Channel type (forum channel)'),
+	name: GeneralChannelNameType.nullish().describe('The name of the channel'),
+});
+
+export type ChannelUpdateForumRequest = z.infer<typeof ChannelUpdateForumRequest>;
+
+export const ChannelUpdateStageRequest = ChannelUpdateCommon.extend({
+	type: createNamedLiteral(ChannelTypes.GUILD_STAGE, 'GUILD_STAGE', 'Channel type (stage channel)'),
+	name: GeneralChannelNameType.nullish().describe('The name of the channel'),
+});
+
+export type ChannelUpdateStageRequest = z.infer<typeof ChannelUpdateStageRequest>;
+
+export const ChannelUpdateSSRRenderRequest = ChannelUpdateCommon.extend({
+	type: createNamedLiteral(ChannelTypes.SSR_RENDER, 'SSR_RENDER', 'Channel type (SSR render)'),
+	name: GeneralChannelNameType.nullish().describe('The name of the channel'),
+});
+
+export type ChannelUpdateSSRRenderRequest = z.infer<typeof ChannelUpdateSSRRenderRequest>;
+
+export const ChannelUpdateBlueskyFeedRequest = ChannelUpdateCommon.extend({
+	type: createNamedLiteral(ChannelTypes.BLUESKY_FEED, 'BLUESKY_FEED', 'Channel type (Bluesky feed)'),
+	name: GeneralChannelNameType.nullish().describe('The name of the channel'),
+});
+
+export type ChannelUpdateBlueskyFeedRequest = z.infer<typeof ChannelUpdateBlueskyFeedRequest>;
+
 export const ChannelUpdateRequest = z.discriminatedUnion('type', [
 	ChannelUpdateTextRequest,
 	ChannelUpdateVoiceRequest,
 	ChannelUpdateCategoryRequest,
 	ChannelUpdateLinkRequest,
 	ChannelUpdateGroupDmRequest,
+	ChannelUpdateAnnouncementRequest,
+	ChannelUpdateForumRequest,
+	ChannelUpdateStageRequest,
+	ChannelUpdateSSRRenderRequest,
+	ChannelUpdateBlueskyFeedRequest,
 ]);
 
 export type ChannelUpdateRequest = z.infer<typeof ChannelUpdateRequest>;

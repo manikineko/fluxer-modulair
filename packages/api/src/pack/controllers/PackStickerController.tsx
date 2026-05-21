@@ -20,7 +20,7 @@
 import {createGuildID, createStickerID} from '@fluxer/api/src/BrandedTypes';
 import {LoginRequired} from '@fluxer/api/src/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@fluxer/api/src/middleware/RateLimitMiddleware';
-import {OpenAPI} from '@fluxer/api/src/middleware/ResponseTypeMiddleware';
+import {OpenAPI, ResponseType} from '@fluxer/api/src/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@fluxer/api/src/RateLimitConfig';
 import type {HonoApp} from '@fluxer/api/src/types/HonoEnv';
 import {Validator} from '@fluxer/api/src/Validator';
@@ -94,6 +94,7 @@ export function PackStickerController(app: HonoApp) {
 		RateLimitMiddleware(RateLimitConfigs.PACKS_STICKERS_LIST),
 		LoginRequired,
 		Validator('param', PackIdParam),
+		ResponseType(GuildStickerWithUserListResponse, {skipValidation: true}),
 		OpenAPI({
 			operationId: 'list_pack_stickers',
 			summary: 'List pack stickers',

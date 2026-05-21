@@ -39,6 +39,7 @@ import LinkedAccountsTab from '@app/components/modals/tabs/LinkedAccountsTab';
 import MyProfileTab from '@app/components/modals/tabs/MyProfileTab';
 import {NotificationsInlineContent} from '@app/components/modals/tabs/notifications_tab/Inline';
 import PlutoniumTab from '@app/components/modals/tabs/PlutoniumTab';
+import PluginsTab from '@app/components/modals/tabs/PluginsTab';
 import {PrivacySafetyInlineContent} from '@app/components/modals/tabs/privacy_safety_tab/Inline';
 import {VoiceVideoInlineContent} from '@app/components/modals/tabs/voice_video_tab/Inline';
 import {getSettingsTabComponent} from '@app/components/modals/utils/DesktopSettingsTabs';
@@ -92,6 +93,7 @@ const INLINE_TAB_COMPONENTS: Partial<Record<UserSettingsTabType, React.Component
 	component_gallery: ComponentGalleryInlineTab,
 	limits_config: LimitsConfigTab,
 	linked_accounts: LinkedAccountsTab,
+	plugins: PluginsTab,
 };
 
 const getInlineTabComponent = (tab: SettingsTab): React.ComponentType<Record<string, unknown>> | null => {

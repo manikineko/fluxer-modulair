@@ -16,7 +16,7 @@ COPY patches/ ./patches/
 COPY packages/ ./packages/
 COPY fluxer_admin/package.json ./fluxer_admin/
 
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --ignore-scripts
 
 FROM deps AS build
 
@@ -36,7 +36,7 @@ COPY patches/ ./patches/
 COPY packages/ ./packages/
 COPY fluxer_admin/package.json ./fluxer_admin/
 
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --ignore-scripts --prod
 
 COPY --from=build /usr/src/app/packages/admin/public /usr/src/app/packages/admin/public
 

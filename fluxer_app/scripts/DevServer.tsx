@@ -178,10 +178,6 @@ async function runCachedStep(
 	await saveMetadata();
 }
 
-async function gatherWasmInputs(): Promise<Record<string, number>> {
-	return collectDirectoryStats(path.join('crates', 'libfluxcore'), () => true);
-}
-
 async function gatherColorInputs(): Promise<Record<string, number>> {
 	return collectFileStats(['scripts/GenerateColorSystem.tsx']);
 }
@@ -337,7 +333,9 @@ async function main(): Promise<void> {
 	await loadMetadata();
 
 	try {
-		await runCachedStep('wasm', gatherWasmInputs, 'pnpm', ['wasm:codegen']);
+		// Skip wasm build due to network issues
+		console.log('Skipping wasm:codegen due to network issues');
+		// await runCachedStep('wasm', gatherWasmInputs, 'pnpm', ['wasm:codegen']);
 		await runCachedStep('colors', gatherColorInputs, 'pnpm', ['generate:colors']);
 		await runCachedStep('masks', gatherMaskInputs, 'pnpm', ['generate:masks']);
 		await runCachedStep('cssTypes', gatherCssModuleInputs, 'pnpm', ['generate:css-types']);

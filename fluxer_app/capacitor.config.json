@@ -1,0 +1,30 @@
+{
+  "appId": "com.fluxer.mobile",
+  "appName": "Fluxer",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  },
+  "android": {
+    "buildOptions": {
+      "signingType": "apksigner"
+    }
+  },
+  "ios": {
+    "scheme": "Fluxer"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "launchAutoHide": true,
+      "backgroundColor": "#1e1f22",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false,
+      "androidSpinnerStyle": "large",
+      "iosSpinnerStyle": "large",
+      "spinnerColor": "#ffffff"
+    }
+  }
+}

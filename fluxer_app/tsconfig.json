@@ -16,6 +16,8 @@
 			"@app/*": ["./src/*"],
 			"@app_scripts/*": ["./scripts/*"],
 			"@pkgs/*": ["./pkgs/*"],
+			"@fluxer/plugin": ["./../packages/plugin/src"],
+			"@fluxer/plugin/*": ["./../packages/plugin/src/*"],
 			"@fluxer/constants/src/*": ["./../packages/constants/src/*"],
 			"@fluxer/date_utils/src/*": ["./../packages/date_utils/src/*"],
 			"@fluxer/geo_utils/src/*": ["./../packages/geo_utils/src/*"],

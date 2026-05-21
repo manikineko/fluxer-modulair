@@ -1,0 +1,77 @@
+{
+  "name": "ipfs",
+  "version": "1.0.0",
+  "description": "IPFS plugin for decentralized storage and content addressing",
+  "author": "Fluxer Contributors",
+  "license": "MIT",
+  "permissions": [
+    "network",
+    "storage:read",
+    "storage:write"
+  ],
+  "hooks": {
+    "onLoad": "onLoad",
+    "onUnload": "onUnload"
+  },
+  "api": {
+    "enabled": true,
+    "prefix": "/api/ipfs",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/health",
+        "handler": "healthCheck"
+      },
+      {
+        "method": "POST",
+        "path": "/add",
+        "handler": "add"
+      },
+      {
+        "method": "GET",
+        "path": "/get/:cid",
+        "handler": "get"
+      },
+      {
+        "method": "GET",
+        "path": "/cat/:cid",
+        "handler": "cat"
+      },
+      {
+        "method": "POST",
+        "path": "/pin",
+        "handler": "pin"
+      },
+      {
+        "method": "DELETE",
+        "path": "/unpin/:cid",
+        "handler": "unpin"
+      },
+      {
+        "method": "GET",
+        "path": "/ls/:cid",
+        "handler": "ls"
+      },
+      {
+        "method": "GET",
+        "path": "/resolve/:name",
+        "handler": "resolve"
+      },
+      {
+        "method": "POST",
+        "path": "/publish",
+        "handler": "publish"
+      },
+      {
+        "method": "POST",
+        "path": "/configure",
+        "handler": "configure"
+      }
+    ]
+  },
+  "config": {
+    "gateway": "https://ipfs.io",
+    "apiEndpoint": "http://localhost:5001",
+    "useCustomGateway": false
+  }
+}

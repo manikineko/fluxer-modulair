@@ -1,0 +1,30 @@
+{
+  "name": "@fluxer/discord",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types.ts",
+    "./decos": "./src/decos.ts",
+    "./voice": "./src/voice.ts",
+    "./presence": "./src/presence.ts",
+    "./activities": "./src/activities.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "valibot": "^1.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.2",
+    "typescript": "^6.0.3",
+    "vitest": "^4.0.18"
+  }
+}

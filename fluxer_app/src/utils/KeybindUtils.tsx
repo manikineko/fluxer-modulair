@@ -23,7 +23,10 @@ import {SHIFT_KEY_SYMBOL} from '@app/utils/KeyboardUtils';
 const isMac = () => /Mac|iPod|iPhone|iPad/.test(navigator.platform);
 const CONTROL_KEY_SYMBOL = '⌃';
 
-export function formatKeyCombo(combo: KeyCombo): string {
+export function formatKeyCombo(combo: KeyCombo | undefined): string {
+	if (!combo) {
+		return '';
+	}
 	const parts: Array<string> = [];
 	if (combo.ctrl) {
 		parts.push(isMac() ? CONTROL_KEY_SYMBOL : 'Ctrl');

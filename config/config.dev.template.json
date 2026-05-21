@@ -28,6 +28,7 @@
 		},
 		"admin": {
 			"secret_key_base": "",
+			"oauth_client_id": "",
 			"oauth_client_secret": ""
 		},
 		"marketing": {

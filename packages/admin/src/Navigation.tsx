@@ -168,6 +168,24 @@ export function getSections(): Array<NavSection> {
 					activeKey: 'admin-api-keys',
 					requiredAcls: [AdminACLs.ADMIN_API_KEY_MANAGE],
 				},
+				{
+					title: 'Plugins',
+					path: '/plugins',
+					activeKey: 'plugins',
+					requiredAcls: [AdminACLs.INSTANCE_CONFIG_VIEW, AdminACLs.INSTANCE_CONFIG_UPDATE],
+				},
+				{
+					title: 'Partners',
+					path: '/partners',
+					activeKey: 'partners',
+					requiredAcls: [AdminACLs.PARTNER_VIEW, AdminACLs.PARTNER_CREATE, AdminACLs.PARTNER_UPDATE, AdminACLs.PARTNER_DELETE],
+				},
+				{
+					title: 'Badges',
+					path: '/badges',
+					activeKey: 'badges',
+					requiredAcls: [AdminACLs.BADGE_VIEW, AdminACLs.BADGE_CREATE, AdminACLs.BADGE_UPDATE, AdminACLs.BADGE_DELETE, AdminACLs.BADGE_GRANT, AdminACLs.BADGE_REVOKE],
+				},
 			],
 		},
 		{

@@ -1,0 +1,19 @@
+{
+	"id": "example-ui-plugin",
+	"name": "Example UI Plugin",
+	"version": "1.0.0",
+	"description": "An example plugin demonstrating UI component injection",
+	"author": "Fluxer Contributors",
+	"license": "MIT",
+	"main": "index.ts",
+	"target": "client",
+	"hooks": {
+		"onUIComponentRegister": "onUIComponentRegister",
+		"onUIComponentUnregister": "onUIComponentUnregister"
+	},
+	"permissions": {
+		"userData": {
+			"read": true
+		}
+	}
+}

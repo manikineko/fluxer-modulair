@@ -1,0 +1,844 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/* ── Shared layout ───────────────────────────────────────────────── */
+
+.scroll {
+	flex: 1;
+	overflow-y: auto;
+	padding: 1rem;
+	height: 100%;
+}
+
+.inner {
+	max-width: 48rem;
+	margin: 0 auto;
+}
+
+.innerWide {
+	max-width: 64rem;
+	margin: 0 auto;
+}
+
+.pageTitle {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-bottom: 1.5rem;
+}
+
+.pageTitleIcon {
+	color: var(--text-link);
+}
+
+.pageTitleText {
+	font-size: 1.25rem;
+	font-weight: 700;
+	color: var(--text-normal);
+}
+
+.sectionHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 1.5rem;
+}
+
+/* ── Bluesky Feed ────────────────────────────────────────────────── */
+
+.feedScroll {
+	flex: 1;
+	overflow-y: auto;
+	height: 100%;
+	padding: 1rem;
+}
+
+.feedContent {
+	max-width: 38rem;
+	margin: 0 auto;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.feedPost {
+	display: flex;
+	gap: 0.75rem;
+	padding: 0.875rem 1rem;
+	background: var(--background-secondary);
+	border-radius: 8px;
+	cursor: pointer;
+	transition: background 0.1s ease;
+}
+
+.feedPost:hover {
+	background: var(--background-modifier-hover);
+}
+
+.feedPostAvatar {
+	flex-shrink: 0;
+	width: 2.5rem;
+	height: 2.5rem;
+	border-radius: 50%;
+	background: var(--brand-experiment);
+	color: white;
+	font-weight: 700;
+	font-size: 1rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.feedPostBody {
+	flex: 1;
+	min-width: 0;
+}
+
+.feedPostMeta {
+	display: flex;
+	align-items: baseline;
+	gap: 0.5rem;
+	margin-bottom: 0.25rem;
+}
+
+.feedPostHandle {
+	font-weight: 600;
+	font-size: 0.875rem;
+	color: var(--text-normal);
+}
+
+.feedPostTime {
+	font-size: 0.75rem;
+	color: var(--text-muted);
+}
+
+.feedPostText {
+	font-size: 0.9375rem;
+	color: var(--text-normal);
+	line-height: 1.4;
+	margin: 0 0 0.625rem;
+}
+
+.feedPostActions {
+	display: flex;
+	gap: 1.25rem;
+}
+
+.feedAction {
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+	background: none;
+	border: none;
+	padding: 0;
+	cursor: pointer;
+	font-size: 0.8125rem;
+	color: var(--text-muted);
+	transition: color 0.1s ease;
+}
+
+.feedAction:hover {
+	color: var(--text-normal);
+}
+
+.feedActionLiked {
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+	background: none;
+	border: none;
+	padding: 0;
+	cursor: pointer;
+	font-size: 0.8125rem;
+	color: var(--text-danger);
+}
+
+.feedToolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	max-width: 38rem;
+	margin: 0 auto 0.75rem;
+	padding: 0 0.25rem;
+}
+
+.feedToolbarTitle {
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--text-muted);
+}
+
+.feedRefreshBtn {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	background: none;
+	border: none;
+	padding: 0.25rem 0.375rem;
+	border-radius: 4px;
+	cursor: pointer;
+	color: var(--text-muted);
+	transition: color 0.1s ease, background 0.1s ease;
+	font-size: 0.8125rem;
+}
+
+.feedRefreshBtn:hover {
+	color: var(--text-normal);
+	background: var(--background-modifier-hover);
+}
+
+.feedRefreshBtn:disabled {
+	opacity: 0.4;
+	cursor: default;
+}
+
+.feedCompose {
+	max-width: 38rem;
+	margin: 0.5rem auto 0;
+	display: flex;
+	gap: 0.5rem;
+	align-items: flex-end;
+	padding: 0.5rem 0;
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+.feedComposeInput {
+	flex: 1;
+	background: var(--background-tertiary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	padding: 0.5rem 0.75rem;
+	color: var(--text-normal);
+	font-size: 0.875rem;
+	resize: none;
+	outline: none;
+	line-height: 1.4;
+}
+
+.feedComposeInput:focus {
+	border-color: var(--brand-experiment);
+}
+
+.feedEmpty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.75rem;
+	padding: 4rem 1rem;
+	max-width: 38rem;
+	margin: 0 auto;
+}
+
+.feedEmptyIcon {
+	color: var(--text-muted);
+	opacity: 0.4;
+}
+
+.feedEmptyText {
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.feedEmptySubtext {
+	font-size: 0.875rem;
+	color: var(--text-muted);
+}
+
+.feedPostHandleSecondary {
+	font-size: 0.75rem;
+	color: var(--text-muted);
+	font-weight: 400;
+}
+
+/* ── SSR Render ──────────────────────────────────────────────────── */
+
+.ssrLayout {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	padding: 1rem;
+	gap: 0.75rem;
+	overflow: hidden;
+}
+
+.ssrPanes {
+	display: flex;
+	gap: 0.75rem;
+	flex: 1;
+	min-height: 0;
+}
+
+.ssrPane {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+}
+
+.ssrPaneLabel {
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	margin-bottom: 0.375rem;
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--text-muted);
+}
+
+.ssrTextarea {
+	flex: 1;
+	min-height: 0;
+	resize: none;
+	width: 100%;
+	background: var(--background-secondary);
+	color: var(--text-normal);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	padding: 0.75rem;
+	font-family: var(--font-code, monospace);
+	font-size: 0.8125rem;
+	line-height: 1.5;
+	outline: none;
+	transition: border-color 0.15s ease;
+}
+
+.ssrTextarea:focus {
+	border-color: var(--brand-experiment);
+}
+
+.ssrPreview {
+	flex: 1;
+	min-height: 0;
+	border-radius: 6px;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-tertiary);
+	overflow: hidden;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.ssrPreviewFrame {
+	width: 100%;
+	height: 100%;
+	border: none;
+}
+
+.ssrPreviewEmpty {
+	text-align: center;
+	color: var(--text-muted);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.ssrPreviewEmptyIcon {
+	opacity: 0.4;
+}
+
+.ssrPreviewEmptyText {
+	font-size: 0.875rem;
+}
+
+.ssrActions {
+	display: flex;
+	gap: 0.5rem;
+	flex-shrink: 0;
+}
+
+.ssrBtn {
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	padding: 0.5rem 0.875rem;
+	border-radius: 4px;
+	font-size: 0.875rem;
+	font-weight: 500;
+	border: none;
+	cursor: pointer;
+	transition: filter 0.1s ease, opacity 0.1s ease;
+}
+
+.ssrBtnPrimary {
+	composes: ssrBtn;
+	background: var(--brand-experiment);
+	color: #fff;
+}
+
+.ssrBtnPrimary:hover {
+	filter: brightness(1.1);
+}
+
+.ssrBtnPrimary:disabled {
+	opacity: 0.5;
+	cursor: default;
+}
+
+.ssrBtnSecondary {
+	composes: ssrBtn;
+	background: var(--background-secondary);
+	color: var(--text-normal);
+	border: 1px solid var(--background-modifier-border);
+}
+
+.ssrBtnSecondary:hover {
+	background: var(--background-modifier-hover);
+}
+
+/* ── Announcement Channel ────────────────────────────────────────── */
+
+.announcementScroll {
+	flex: 1;
+	overflow-y: auto;
+	height: 100%;
+	padding: 1rem;
+}
+
+.announcementContent {
+	max-width: 48rem;
+	margin: 0 auto;
+}
+
+.announcementCard {
+	padding: 1rem 1.25rem;
+	background: var(--background-secondary);
+	border-radius: 8px;
+	border-left: 3px solid var(--background-modifier-border);
+	margin-bottom: 0.75rem;
+	transition: background 0.1s ease;
+}
+
+.announcementCard:hover {
+	background: var(--background-modifier-hover);
+}
+
+.announcementCardHigh {
+	composes: announcementCard;
+	border-left-color: var(--text-danger);
+}
+
+.announcementCardMedium {
+	composes: announcementCard;
+	border-left-color: var(--text-warning);
+}
+
+.announcementCardLow {
+	composes: announcementCard;
+	border-left-color: var(--text-positive);
+}
+
+.announcementCardHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 0.375rem;
+}
+
+.announcementCardTitle {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.priorityDot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.priorityDotHigh { composes: priorityDot; background: var(--text-danger); }
+.priorityDotMedium { composes: priorityDot; background: var(--text-warning); }
+.priorityDotLow { composes: priorityDot; background: var(--text-positive); }
+
+.announcementTitle {
+	font-weight: 600;
+	font-size: 0.9375rem;
+	color: var(--text-normal);
+}
+
+.announcementTimestamp {
+	font-size: 0.75rem;
+	color: var(--text-muted);
+	flex-shrink: 0;
+}
+
+.announcementBody {
+	font-size: 0.875rem;
+	color: var(--text-normal);
+	line-height: 1.5;
+	margin: 0 0 0.5rem;
+}
+
+.announcementFooter {
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	font-size: 0.75rem;
+	color: var(--text-muted);
+}
+
+/* ── Forum Channel ───────────────────────────────────────────────── */
+
+.forumScroll {
+	flex: 1;
+	overflow-y: auto;
+	height: 100%;
+	padding: 1rem;
+}
+
+.forumContent {
+	max-width: 56rem;
+	margin: 0 auto;
+}
+
+.forumPost {
+	display: flex;
+	align-items: flex-start;
+	gap: 1rem;
+	padding: 0.875rem 1rem;
+	background: var(--background-secondary);
+	border-radius: 8px;
+	margin-bottom: 0.5rem;
+	cursor: pointer;
+	transition: background 0.1s ease;
+}
+
+.forumPost:hover {
+	background: var(--background-modifier-hover);
+}
+
+.forumPostPinned {
+	composes: forumPost;
+	border-left: 3px solid var(--brand-experiment);
+}
+
+.forumPostMain {
+	flex: 1;
+	min-width: 0;
+}
+
+.forumPostTitleRow {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-bottom: 0.25rem;
+}
+
+.pinnedBadge {
+	font-size: 0.6875rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--brand-experiment);
+	background: var(--brand-experiment-15a);
+	padding: 0.125rem 0.4rem;
+	border-radius: 3px;
+}
+
+.forumPostTitle {
+	font-weight: 600;
+	font-size: 0.9375rem;
+	color: var(--text-normal);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.forumPostMeta {
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	font-size: 0.75rem;
+	color: var(--text-muted);
+	margin-bottom: 0.375rem;
+}
+
+.forumPostDot {
+	width: 3px;
+	height: 3px;
+	border-radius: 50%;
+	background: var(--text-muted);
+}
+
+.forumPostTags {
+	display: flex;
+	gap: 0.375rem;
+}
+
+.forumTag {
+	font-size: 0.6875rem;
+	color: var(--text-muted);
+	background: var(--background-tertiary);
+	padding: 0.125rem 0.375rem;
+	border-radius: 3px;
+}
+
+.forumPostStats {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 0.375rem;
+	flex-shrink: 0;
+	font-size: 0.75rem;
+	color: var(--text-muted);
+}
+
+.forumStat {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.forumNewPostBtn {
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	padding: 0.5rem 0.875rem;
+	border-radius: 4px;
+	font-size: 0.875rem;
+	font-weight: 500;
+	background: var(--brand-experiment);
+	color: #fff;
+	border: none;
+	cursor: pointer;
+	transition: filter 0.1s ease;
+}
+
+.forumNewPostBtn:hover {
+	filter: brightness(1.1);
+}
+
+/* ── Stage Channel ───────────────────────────────────────────────── */
+
+.stageLayout {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow: hidden;
+}
+
+.stageScroll {
+	flex: 1;
+	overflow-y: auto;
+	padding: 1.5rem;
+	display: flex;
+	flex-direction: column;
+}
+
+.stageContent {
+	max-width: 56rem;
+	margin: 0 auto;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+}
+
+.stageLobby {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 1rem;
+	padding: 3rem 1rem;
+}
+
+.stageLobbyIcon {
+	color: var(--text-muted);
+	opacity: 0.4;
+}
+
+.stageLobbyTitle {
+	font-size: 1.125rem;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.stageLobbyDesc {
+	font-size: 0.875rem;
+	color: var(--text-muted);
+}
+
+.stageJoinBtn {
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	padding: 0.625rem 1.25rem;
+	border-radius: 4px;
+	font-size: 0.9375rem;
+	font-weight: 500;
+	background: var(--brand-experiment);
+	color: #fff;
+	border: none;
+	cursor: pointer;
+	margin-top: 0.5rem;
+	transition: filter 0.1s ease;
+}
+
+.stageJoinBtn:hover {
+	filter: brightness(1.1);
+}
+
+.stageSpeakersGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: 0.75rem;
+	margin-bottom: 1rem;
+}
+
+.stageSpeakerCard {
+	background: var(--background-secondary);
+	border-radius: 8px;
+	padding: 0.75rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.stageSpeakerCardActive {
+	composes: stageSpeakerCard;
+	outline: 2px solid var(--brand-experiment);
+}
+
+.stageSpeakerVideo {
+	width: 100%;
+	aspect-ratio: 16/9;
+	background: var(--background-tertiary);
+	border-radius: 6px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.stageSpeakerAvatar {
+	width: 3rem;
+	height: 3rem;
+	border-radius: 50%;
+	background: var(--brand-experiment);
+	color: #fff;
+	font-weight: 700;
+	font-size: 1.25rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.stageSpeakerName {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.stageSpeakerNameText {
+	font-weight: 600;
+	font-size: 0.875rem;
+	color: var(--text-normal);
+}
+
+.stageSpeakerIcons {
+	display: flex;
+	gap: 0.25rem;
+	color: var(--text-danger);
+}
+
+.stageBar {
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.75rem 1rem;
+	background: var(--background-secondary);
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+.stageBarBtn {
+	width: 2.5rem;
+	height: 2.5rem;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--background-tertiary);
+	color: var(--text-normal);
+	border: none;
+	cursor: pointer;
+	transition: background 0.1s ease;
+}
+
+.stageBarBtn:hover {
+	background: var(--background-modifier-hover);
+}
+
+.stageBarBtnActive {
+	composes: stageBarBtn;
+	background: var(--text-danger);
+	color: #fff;
+}
+
+.stageBarBtnActive:hover {
+	background: var(--text-danger);
+	filter: brightness(1.1);
+}
+
+.stageBarDivider {
+	width: 1px;
+	height: 1.5rem;
+	background: var(--background-modifier-border);
+}
+
+.stageBarInfo {
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	font-size: 0.8125rem;
+	color: var(--text-muted);
+}
+
+.stageBarSpacer {
+	flex: 1;
+}
+
+.stageLeaveBtn {
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	padding: 0.4rem 0.875rem;
+	border-radius: 4px;
+	font-size: 0.875rem;
+	font-weight: 500;
+	background: var(--text-danger);
+	color: #fff;
+	border: none;
+	cursor: pointer;
+	transition: filter 0.1s ease;
+}
+
+.stageLeaveBtn:hover {
+	filter: brightness(1.1);
+}

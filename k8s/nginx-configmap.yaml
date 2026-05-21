@@ -1,0 +1,108 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: fluxer
+data:
+  nginx.conf: |
+    events {
+        worker_connections 1024;
+    }
+
+    http {
+        server {
+            listen 80;
+            server_name localhost;
+
+            # Set default MIME types
+            types {
+                image/svg+xml svg svgz;
+                image/webp webp;
+                image/png png;
+                image/jpeg jpg jpeg;
+                image/x-icon ico;
+                font/woff woff;
+                font/woff2 woff2;
+                font/ttf ttf;
+                font/eot eot;
+                font/otf otf;
+            }
+
+            location / {
+                root /usr/share/nginx/html;
+                autoindex on;
+                try_files $uri $uri/ =404;
+            }
+
+            # Serve badges from assets directory
+            location /badges/ {
+                alias /usr/share/nginx/html/assets/badges/;
+                autoindex on;
+            }
+
+            # Serve icons from web directory
+            location /icons/ {
+                alias /usr/share/nginx/html/web/icons/;
+                autoindex on;
+            }
+
+            # Serve emoji
+            location /emoji/ {
+                alias /usr/share/nginx/html/emoji/;
+                autoindex on;
+            }
+
+            # Serve fonts
+            location /fonts/ {
+                alias /usr/share/nginx/html/fonts/;
+                autoindex on;
+            }
+
+            # Serve embeds
+            location /embeds/ {
+                alias /usr/share/nginx/html/embeds/;
+                autoindex on;
+            }
+
+            # Serve assets
+            location /assets/ {
+                alias /usr/share/nginx/html/assets/;
+                autoindex on;
+            }
+
+            # Serve static
+            location /static/ {
+                alias /usr/share/nginx/html/static/;
+                autoindex on;
+            }
+
+            # Serve desktop
+            location /desktop/ {
+                alias /usr/share/nginx/html/desktop/;
+                autoindex on;
+            }
+
+            # Serve web
+            location /web/ {
+                alias /usr/share/nginx/html/web/;
+                autoindex on;
+            }
+
+            # Serve libs
+            location /libs/ {
+                alias /usr/share/nginx/html/libs/;
+                autoindex on;
+            }
+
+            # Serve marketing
+            location /marketing/ {
+                alias /usr/share/nginx/html/marketing/;
+                autoindex on;
+            }
+
+            # Add CORS headers
+            add_header Access-Control-Allow-Origin *;
+            add_header Access-Control-Allow-Methods 'GET, OPTIONS';
+            add_header Access-Control-Allow-Headers '*';
+        }
+    }

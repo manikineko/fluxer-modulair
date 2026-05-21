@@ -1,0 +1,146 @@
+{
+	"$schema": "../packages/config/src/ConfigSchema.json",
+	"env": "development",
+	"domain": {
+		"base_domain": "localhost",
+		"public_port": 49319,
+		"public_scheme": "http",
+		"static_cdn_domain": "localhost:8082"
+	},
+	"endpoint_overrides": {
+		"api": "http://fluxer_server:49319/api",
+		"api_client": "http://fluxer_server:49319/api",
+		"gateway": "http://fluxer_server:49107",
+		"media": "http://172.17.0.1:49319/media",
+		"static_cdn": "http://localhost:8082",
+		"marketing": "http://localhost:49531",
+		"admin": "http://localhost:8081",
+		"invite": "http://localhost:48763/invite",
+		"gift": "http://localhost:48763/gift"
+	},
+	"database": {
+		"backend": "sqlite",
+		"sqlite_path": "./data/dev.db"
+	},
+	"cookie": {
+		"secure": false,
+		"domain": ""
+	},
+	"internal": {
+		"kv": "redis://valkey:6379/0",
+		"kv_mode": "standalone"
+	},
+	"s3": {
+		"access_key_id": "minioadmin",
+		"secret_access_key": "minioadmin",
+		"endpoint": "http://host.docker.internal:9000",
+		"buckets": {
+			"cdn": "fluxer",
+			"uploads": "fluxer-uploads",
+			"downloads": "fluxer-downloads",
+			"reports": "fluxer-reports",
+			"harvests": "fluxer-harvests",
+			"static": "fluxer-static"
+		}
+	},
+	"services": {
+		"server": {
+			"port": 49319,
+			"host": "0.0.0.0"
+		},
+		"media_proxy": {
+			"secret_key": ""
+		},
+		"admin": {
+			"secret_key_base": "dev-secret-key-base-change-in-production",
+			"oauth_client_id": "1234567890123456789",
+			"oauth_client_secret": "dev-oauth-client-secret",
+			"base_path": ""
+		},
+		"marketing": {
+			"enabled": true,
+			"port": 49531,
+			"host": "0.0.0.0",
+			"secret_key_base": ""
+		},
+		"gateway": {
+			"port": 49107,
+			"admin_reload_secret": "",
+			"media_proxy_endpoint": "http://host.docker.internal:49319/media",
+			"logger_level": "debug"
+		},
+		"nats": {
+			"core_url": "nats://host.docker.internal:4222",
+			"jetstream_url": "nats://host.docker.internal:4222"
+		}
+	},
+	"auth": {
+		"sudo_mode_secret": "",
+		"connection_initiation_secret": "",
+		"vapid": {
+			"public_key": "",
+			"private_key": ""
+		},
+		"bluesky": {
+			"enabled": false,
+			"keys": []
+		}
+	},
+	"discovery": {
+		"min_member_count": 1
+	},
+	"dev": {
+		"disable_rate_limits": true
+	},
+	"integrations": {
+		"stripe": {
+			"enabled": true,
+			"secret_key": "",
+			"webhook_secret": "",
+			"prices": {
+				"monthly_usd": "",
+				"monthly_eur": "",
+				"yearly_usd": "",
+				"yearly_eur": "",
+				"gift_1_month_usd": "",
+				"gift_1_month_eur": "",
+				"gift_1_year_usd": "",
+				"gift_1_year_eur": ""
+			}
+		},
+		"gif": {
+			"provider": "klipy"
+		},
+		"klipy": {
+			"api_key": ""
+		},
+		"tenor": {
+			"api_key": ""
+		},
+		"voice": {
+			"enabled": true,
+			"api_key": "",
+			"api_secret": "",
+			"url": "ws://host.docker.internal:7880",
+			"webhook_url": "http://host.docker.internal:49319/api/webhooks/livekit",
+			"default_region": {
+				"id": "default",
+				"name": "Default",
+				"emoji": "\ud83c\udf10",
+				"latitude": 0.0,
+				"longitude": 0.0
+			}
+		},
+		"search": {
+			"engine": "meilisearch",
+			"url": "http://meilisearch:7700",
+			"api_key": "dev-meilisearch-master-key"
+		}
+	},
+	"instance": {
+		"private_key_path": ""
+	},
+	"federation": {
+		"enabled": false
+	}
+}

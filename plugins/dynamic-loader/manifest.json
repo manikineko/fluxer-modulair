@@ -1,0 +1,23 @@
+{
+  "id": "dynamic-loader",
+  "name": "Dynamic Plugin Loader",
+  "version": "1.0.0",
+  "description": "Enables dynamic loading and unloading of plugins at runtime",
+  "author": "manikineko.nl",
+  "license": "MIT",
+  "main": "index.ts",
+  "target": "server",
+  "permissions": {
+    "network": {
+      "request": true
+    },
+    "api": {
+      "internal": true
+    }
+  },
+  "hooks": {
+    "onLoad": "onLoad",
+    "onEnable": "onEnable",
+    "onDisable": "onDisable"
+  }
+}

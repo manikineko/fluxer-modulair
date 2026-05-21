@@ -27,15 +27,21 @@ import {
 	updateInstanceConfig,
 } from '@fluxer/admin/src/api/InstanceConfig';
 import {getLimitConfig, updateLimitConfig} from '@fluxer/admin/src/api/LimitConfig';
+import {disablePlugin, enablePlugin, reloadPlugin, getUIComponents} from '@fluxer/admin/src/api/Plugins';
 import {refreshSearchIndex, refreshSearchIndexWithGuild} from '@fluxer/admin/src/api/Search';
 import {reloadAllGuilds} from '@fluxer/admin/src/api/System';
+import {createPartner, deletePartner, updatePartner} from '@fluxer/admin/src/api/Partners';
+import {createBadge, deleteBadge, updateBadge, grantBadge, revokeBadge} from '@fluxer/admin/src/api/Badges';
 import {redirectWithFlash} from '@fluxer/admin/src/middleware/Auth';
 import {getFirstAccessiblePath} from '@fluxer/admin/src/Navigation';
 import {AssetPurgePage} from '@fluxer/admin/src/pages/AssetPurgePage';
 import {AuditLogsPage} from '@fluxer/admin/src/pages/AuditLogsPage';
+import {BadgesPage} from '@fluxer/admin/src/pages/BadgesPage';
 import {GatewayPage} from '@fluxer/admin/src/pages/GatewayPage';
 import {InstanceConfigPage} from '@fluxer/admin/src/pages/InstanceConfigPage';
 import {LimitConfigPage} from '@fluxer/admin/src/pages/LimitConfigPage';
+import {PartnersPage} from '@fluxer/admin/src/pages/PartnersPage';
+import {PluginsPage} from '@fluxer/admin/src/pages/PluginsPage';
 import {SearchIndexPage} from '@fluxer/admin/src/pages/SearchIndexPage';
 import {StrangePlacePage} from '@fluxer/admin/src/pages/StrangePlacePage';
 import {getRouteContext} from '@fluxer/admin/src/routes/RouteContext';
@@ -602,6 +608,362 @@ export function createSystemRoutes({config, assetVersion, requireAuth}: RouteFac
 				message: result.ok ? `Purged ${assetIds.length} asset(s)` : 'Failed to purge assets',
 				type: result.ok ? 'success' : 'error',
 			});
+		} catch {
+			return redirectInvalidForm(c, redirectUrl);
+		}
+	});
+
+	router.get('/plugins', requireAuth, async (c) => {
+		const {session, currentAdmin, flash, csrfToken} = getRouteContext(c);
+		const pageConfig = getPageConfig(c, config);
+
+		const uiComponentsResult = await getUIComponents(pageConfig, session, 'sidebar');
+		const uiComponents = uiComponentsResult.ok ? uiComponentsResult.data.components : [];
+
+		const page = await PluginsPage({
+			config: pageConfig,
+			session,
+			currentAdmin,
+			flash,
+			assetVersion,
+			csrfToken,
+			pluginComponents: uiComponents,
+		});
+		return c.html(page ?? '');
+	});
+
+	router.post('/plugins', requireAuth, async (c) => {
+		const session = c.get('session')!;
+		const redirectUrl = `${config.basePath}/plugins`;
+
+		try {
+			const formData = (await c.req.parseBody()) as ParsedBody;
+			const action = getOptionalString(formData, 'action');
+			const pluginId = getOptionalString(formData, 'plugin_id');
+
+			if (!pluginId) {
+				return redirectWithFlash(c, redirectUrl, {message: 'Plugin ID is required', type: 'error'});
+			}
+
+			if (action === 'enable') {
+				const result = await enablePlugin(config, session, pluginId);
+				return redirectWithFlash(c, redirectUrl, {
+					message: result.ok ? 'Plugin enabled' : 'Failed to enable plugin',
+					type: result.ok ? 'success' : 'error',
+				});
+			}
+
+			if (action === 'disable') {
+				const result = await disablePlugin(config, session, pluginId);
+				return redirectWithFlash(c, redirectUrl, {
+					message: result.ok ? 'Plugin disabled' : 'Failed to disable plugin',
+					type: result.ok ? 'success' : 'error',
+				});
+			}
+
+			if (action === 'reload') {
+				const result = await reloadPlugin(config, session, pluginId);
+				return redirectWithFlash(c, redirectUrl, {
+					message: result.ok ? 'Plugin reloaded' : 'Failed to reload plugin',
+					type: result.ok ? 'success' : 'error',
+				});
+			}
+
+			return redirectWithFlash(c, redirectUrl, {message: 'Unknown action', type: 'error'});
+		} catch {
+			return redirectInvalidForm(c, redirectUrl);
+		}
+	});
+
+	router.post('/plugins/upload', requireAuth, async (c) => {
+		const session = c.get('session')!;
+		const redirectUrl = `${config.basePath}/plugins`;
+
+		try {
+			const formData = await c.req.formData();
+			const file = formData.get('file') as File;
+
+			if (!file) {
+				return redirectWithFlash(c, redirectUrl, {message: 'No file provided', type: 'error'});
+			}
+
+			if (!file.name.endsWith('.zip')) {
+				return redirectWithFlash(c, redirectUrl, {message: 'File must be a .zip file', type: 'error'});
+			}
+
+			// Directly proxy the request to the server
+			const apiUrl = new URL('/api/plugins/upload', config.apiEndpoint);
+			const proxyFormData = new FormData();
+			proxyFormData.append('file', file);
+
+			const response = await fetch(apiUrl.toString(), {
+				method: 'POST',
+				headers: {
+					Authorization: `Bearer ${session.accessToken}`,
+				},
+				body: proxyFormData,
+			});
+
+			const result = (await response.json()) as {success: boolean; pluginId?: string; error?: string};
+
+			if (response.ok) {
+				return redirectWithFlash(c, redirectUrl, {
+					message: `Plugin uploaded successfully: ${result.pluginId}`,
+					type: 'success',
+				});
+			}
+
+			return redirectWithFlash(c, redirectUrl, {
+				message: result.error || 'Failed to upload plugin',
+				type: 'error',
+			});
+		} catch (error) {
+			console.error('Upload error:', error);
+			return redirectWithFlash(c, redirectUrl, {message: 'Failed to upload plugin', type: 'error'});
+		}
+	});
+
+	// Partners page
+	router.get('/partners', requireAuth, async (c) => {
+		const {session, currentAdmin, flash, adminAcls, csrfToken} = getRouteContext(c);
+		const pageConfig = getPageConfig(c, config);
+
+		const page = await PartnersPage({
+			config: pageConfig,
+			session,
+			currentAdmin,
+			flash,
+			assetVersion,
+			adminAcls,
+			csrfToken,
+		});
+		return c.html(page ?? '');
+	});
+
+	router.post('/partners', requireAuth, async (c) => {
+		const session = c.get('session')!;
+		const redirectUrl = `${config.basePath}/partners`;
+
+		try {
+			const formData = (await c.req.parseBody()) as ParsedBody;
+			const action = c.req.query('action');
+
+			if (action === 'create') {
+				const name = trimToUndefined(getOptionalString(formData, 'name'));
+				const description = trimToUndefined(getOptionalString(formData, 'description'));
+				const iconHash = trimToUndefined(getOptionalString(formData, 'icon_hash'));
+				const bannerHash = trimToUndefined(getOptionalString(formData, 'banner_hash'));
+				const websiteUrl = trimToUndefined(getOptionalString(formData, 'website_url'));
+				const supportUrl = trimToUndefined(getOptionalString(formData, 'support_url'));
+				const privacyPolicyUrl = trimToUndefined(getOptionalString(formData, 'privacy_policy_url'));
+				const termsOfServiceUrl = trimToUndefined(getOptionalString(formData, 'terms_of_service_url'));
+				const ownerUserId = trimToUndefined(getOptionalString(formData, 'owner_user_id'));
+				const partnerType = trimToUndefined(getOptionalString(formData, 'partner_type'));
+				const metadata = trimToUndefined(getOptionalString(formData, 'metadata'));
+
+				if (!name || !ownerUserId || !partnerType) {
+					return redirectInvalidForm(c, redirectUrl);
+				}
+
+				const result = await createPartner(config, session, {
+					name,
+					description,
+					icon_hash: iconHash,
+					banner_hash: bannerHash,
+					website_url: websiteUrl,
+					support_url: supportUrl,
+					privacy_policy_url: privacyPolicyUrl,
+					terms_of_service_url: termsOfServiceUrl,
+					owner_user_id: ownerUserId,
+					partner_type: partnerType as any,
+					metadata,
+				});
+
+				return redirectWithFlash(c, redirectUrl, {
+					message: result.ok ? 'Partner created successfully' : 'Failed to create partner',
+					type: result.ok ? 'success' : 'error',
+				});
+			}
+
+			if (action === 'update') {
+				const partnerId = trimToUndefined(getOptionalString(formData, 'partner_id'));
+				if (!partnerId) {
+					return redirectInvalidForm(c, redirectUrl);
+				}
+
+				const result = await updatePartner(config, session, partnerId, {
+					name: trimToUndefined(getOptionalString(formData, 'name')),
+					description: trimToUndefined(getOptionalString(formData, 'description')),
+					icon_hash: trimToUndefined(getOptionalString(formData, 'icon_hash')),
+					banner_hash: trimToUndefined(getOptionalString(formData, 'banner_hash')),
+					website_url: trimToUndefined(getOptionalString(formData, 'website_url')),
+					support_url: trimToUndefined(getOptionalString(formData, 'support_url')),
+					privacy_policy_url: trimToUndefined(getOptionalString(formData, 'privacy_policy_url')),
+					terms_of_service_url: trimToUndefined(getOptionalString(formData, 'terms_of_service_url')),
+					is_active: parseBooleanFlag(getOptionalString(formData, 'is_active')),
+					partner_type: trimToUndefined(getOptionalString(formData, 'partner_type')) as any,
+					metadata: trimToUndefined(getOptionalString(formData, 'metadata')),
+					expires_at: trimToUndefined(getOptionalString(formData, 'expires_at')),
+				});
+
+				return redirectWithFlash(c, redirectUrl, {
+					message: result.ok ? 'Partner updated successfully' : 'Failed to update partner',
+					type: result.ok ? 'success' : 'error',
+				});
+			}
+
+			if (action === 'delete') {
+				const partnerId = trimToUndefined(getOptionalString(formData, 'partner_id'));
+				if (!partnerId) {
+					return redirectInvalidForm(c, redirectUrl);
+				}
+
+				const result = await deletePartner(config, session, partnerId);
+				return redirectWithFlash(c, redirectUrl, {
+					message: result.ok ? 'Partner deleted successfully' : 'Failed to delete partner',
+					type: result.ok ? 'success' : 'error',
+				});
+			}
+
+			return redirectWithFlash(c, redirectUrl, {message: 'Unknown action', type: 'error'});
+		} catch {
+			return redirectInvalidForm(c, redirectUrl);
+		}
+	});
+
+	// Badges page
+	router.get('/badges', requireAuth, async (c) => {
+		const {session, currentAdmin, flash, adminAcls, csrfToken} = getRouteContext(c);
+		const pageConfig = getPageConfig(c, config);
+
+		const page = await BadgesPage({
+			config: pageConfig,
+			session,
+			currentAdmin,
+			flash,
+			assetVersion,
+			adminAcls,
+			csrfToken,
+		});
+		return c.html(page ?? '');
+	});
+
+	router.post('/badges', requireAuth, async (c) => {
+		const session = c.get('session')!;
+		const redirectUrl = `${config.basePath}/badges`;
+
+		try {
+			const formData = (await c.req.parseBody()) as ParsedBody;
+			const action = c.req.query('action');
+
+			if (action === 'create') {
+				const name = trimToUndefined(getOptionalString(formData, 'name'));
+				const description = trimToUndefined(getOptionalString(formData, 'description'));
+				const iconHash = trimToUndefined(getOptionalString(formData, 'icon_hash'));
+				const iconColor = trimToUndefined(getOptionalString(formData, 'icon_color'));
+				const badgeType = trimToUndefined(getOptionalString(formData, 'badge_type'));
+				const isVisible = parseBooleanFlag(getOptionalString(formData, 'is_visible'));
+				const priority = trimToUndefined(getOptionalString(formData, 'priority'));
+
+				if (!name || !description || !iconHash || !badgeType) {
+					return redirectInvalidForm(c, redirectUrl);
+				}
+
+				const result = await createBadge(config, session, {
+					name,
+					description,
+					icon_hash: iconHash,
+					icon_color: iconColor ? Number.parseInt(iconColor, 10) : undefined,
+					badge_type: badgeType as any,
+					is_visible: isVisible,
+					priority: priority ? Number.parseInt(priority, 10) : undefined,
+				});
+
+				return redirectWithFlash(c, redirectUrl, {
+					message: result.ok ? 'Badge created successfully' : 'Failed to create badge',
+					type: result.ok ? 'success' : 'error',
+				});
+			}
+
+			if (action === 'update') {
+				const badgeId = trimToUndefined(getOptionalString(formData, 'badge_id'));
+				if (!badgeId) {
+					return redirectInvalidForm(c, redirectUrl);
+				}
+
+				const result = await updateBadge(config, session, badgeId, {
+					name: trimToUndefined(getOptionalString(formData, 'name')),
+					description: trimToUndefined(getOptionalString(formData, 'description')),
+					icon_hash: trimToUndefined(getOptionalString(formData, 'icon_hash')),
+					icon_color: trimToUndefined(getOptionalString(formData, 'icon_color')) ? Number.parseInt(trimToUndefined(getOptionalString(formData, 'icon_color'))!, 10) : undefined,
+					badge_type: trimToUndefined(getOptionalString(formData, 'badge_type')) as any,
+					is_active: parseBooleanFlag(getOptionalString(formData, 'is_active')),
+					is_visible: parseBooleanFlag(getOptionalString(formData, 'is_visible')),
+					priority: trimToUndefined(getOptionalString(formData, 'priority')) ? Number.parseInt(trimToUndefined(getOptionalString(formData, 'priority'))!, 10) : undefined,
+				});
+
+				return redirectWithFlash(c, redirectUrl, {
+					message: result.ok ? 'Badge updated successfully' : 'Failed to update badge',
+					type: result.ok ? 'success' : 'error',
+				});
+			}
+
+			if (action === 'delete') {
+				const badgeId = trimToUndefined(getOptionalString(formData, 'badge_id'));
+				if (!badgeId) {
+					return redirectInvalidForm(c, redirectUrl);
+				}
+
+				const result = await deleteBadge(config, session, badgeId);
+				return redirectWithFlash(c, redirectUrl, {
+					message: result.ok ? 'Badge deleted successfully' : 'Failed to delete badge',
+					type: result.ok ? 'success' : 'error',
+				});
+			}
+
+			if (action === 'grant') {
+				const userId = trimToUndefined(getOptionalString(formData, 'user_id'));
+				const badgeId = trimToUndefined(getOptionalString(formData, 'badge_id'));
+				const reason = trimToUndefined(getOptionalString(formData, 'reason'));
+				const expiresAt = trimToUndefined(getOptionalString(formData, 'expires_at'));
+
+				if (!userId || !badgeId) {
+					return redirectInvalidForm(c, redirectUrl);
+				}
+
+				const result = await grantBadge(config, session, {
+					user_id: userId,
+					badge_id: badgeId,
+					reason,
+					expires_at: expiresAt,
+				});
+
+				return redirectWithFlash(c, redirectUrl, {
+					message: result.ok ? 'Badge granted successfully' : 'Failed to grant badge',
+					type: result.ok ? 'success' : 'error',
+				});
+			}
+
+			if (action === 'revoke') {
+				const userId = trimToUndefined(getOptionalString(formData, 'user_id'));
+				const badgeId = trimToUndefined(getOptionalString(formData, 'badge_id'));
+
+				if (!userId || !badgeId) {
+					return redirectInvalidForm(c, redirectUrl);
+				}
+
+				const result = await revokeBadge(config, session, {
+					user_id: userId,
+					badge_id: badgeId,
+				});
+
+				return redirectWithFlash(c, redirectUrl, {
+					message: result.ok ? 'Badge revoked successfully' : 'Failed to revoke badge',
+					type: result.ok ? 'success' : 'error',
+				});
+			}
+
+			return redirectWithFlash(c, redirectUrl, {message: 'Unknown action', type: 'error'});
 		} catch {
 			return redirectInvalidForm(c, redirectUrl);
 		}

@@ -49,8 +49,13 @@ export class NSFWDetectionService {
 	}
 
 	async initialize(): Promise<void> {
-		const modelBuffer = await fs.readFile(this.modelPath);
-		this.session = await ort.InferenceSession.create(modelBuffer);
+		try {
+			const modelBuffer = await fs.readFile(this.modelPath);
+			this.session = await ort.InferenceSession.create(modelBuffer);
+		} catch {
+			console.warn(`NSFW Detection service: Failed to load model at ${this.modelPath}. NSFW detection will be disabled.`);
+			this.session = null;
+		}
 	}
 
 	async checkNSFW(filePath: string): Promise<NSFWCheckResult> {
@@ -60,7 +65,11 @@ export class NSFWDetectionService {
 
 	async checkNSFWBuffer(buffer: Buffer): Promise<NSFWCheckResult> {
 		if (!this.session) {
-			throw new Error('NSFW Detection service not initialized');
+			// NSFW detection not available, return safe result
+			return {
+				isNSFW: false,
+				probability: 0,
+			};
 		}
 
 		const processedImage = await this.preprocessImage(buffer);

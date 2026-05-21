@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: livekit
+  namespace: fluxer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: livekit
+  template:
+    metadata:
+      labels:
+        app: livekit
+    spec:
+      containers:
+      - name: livekit
+        image: livekit/livekit-server:v1.9.11
+        ports:
+        - containerPort: 7880
+        - containerPort: 7881
+        - containerPort: 3478
+          protocol: UDP
+        command: ["--config", "/etc/livekit/livekit.yaml"]
+        volumeMounts:
+        - name: livekit-config
+          mountPath: /etc/livekit/livekit.yaml
+          subPath: livekit.yaml
+          readOnly: true
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 7880
+          initialDelaySeconds: 15
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 5
+      volumes:
+      - name: livekit-config
+        configMap:
+          name: livekit-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: livekit
+  namespace: fluxer
+spec:
+  selector:
+    app: livekit
+  ports:
+  - protocol: TCP
+    port: 7880
+    targetPort: 7880
+  - protocol: TCP
+    port: 7881
+    targetPort: 7881
+  - protocol: UDP
+    port: 3478
+    targetPort: 3478
+  type: ClusterIP

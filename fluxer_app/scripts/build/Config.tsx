@@ -18,8 +18,12 @@
  */
 
 import * as path from 'node:path';
+import {fileURLToPath} from 'node:url';
 
-export const ROOT_DIR = path.resolve(import.meta.dirname, '..', '..');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export const ROOT_DIR = path.resolve(__dirname, '..', '..');
 export const SRC_DIR = path.join(ROOT_DIR, 'src');
 export const DIST_DIR = path.join(ROOT_DIR, 'dist');
 export const ASSETS_DIR = path.join(DIST_DIR, 'assets');

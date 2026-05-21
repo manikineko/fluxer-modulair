@@ -1,0 +1,33 @@
+{
+  "id": "discord-voice",
+  "name": "Discord Voice Features",
+  "version": "1.0.0",
+  "description": "Adds Discord-style voice features including voice channels, voice states, and audio management",
+  "author": "manikineko.nl",
+  "license": "MIT",
+  "main": "index.ts",
+  "target": "both",
+  "permissions": {
+    "network": {
+      "request": true
+    },
+    "api": {
+      "internal": true
+    }
+  },
+  "hooks": {
+    "onLoad": "onLoad",
+    "onEnable": "onEnable",
+    "onDisable": "onDisable"
+  },
+  "uiComponents": [
+    {
+      "id": "discord-voice-controls",
+      "name": "Voice Controls",
+      "component": "VoiceControlsComponent",
+      "location": "channel_header",
+      "priority": 80,
+      "props": {}
+    }
+  ]
+}

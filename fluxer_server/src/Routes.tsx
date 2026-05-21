@@ -129,6 +129,26 @@ export async function mountRoutes(options: MountRoutesOptions): Promise<MountedR
 			app.route('/api', apiService.app);
 			app.get('/.well-known/fluxer', (ctx) => apiService.app.fetch(ctx.req.raw));
 			logger.info('API service mounted at /api');
+			
+			// Forward AT Protocol xrpc requests to API service
+			app.all('/xrpc/*', async (ctx) => {
+				const url = new URL(ctx.req.url);
+				// Don't add /api prefix since apiService.app is called directly
+				// and its routes are registered without the /api prefix
+				const newRequest = new Request(url.toString(), ctx.req.raw);
+				return apiService.app.fetch(newRequest);
+			});
+			
+			// Forward .well-known/did.json to API service
+			app.get('/.well-known/did.json', async (ctx) => {
+				const url = new URL(ctx.req.url);
+				// Don't add /api prefix since apiService.app is called directly
+				// and its routes are registered without the /api prefix
+				const newRequest = new Request(url.toString(), ctx.req.raw);
+				return apiService.app.fetch(newRequest);
+			});
+			
+			logger.info('AT Protocol xrpc endpoints forwarded to API service');
 		}
 
 		const healthHandler = createHealthCheckHandler({

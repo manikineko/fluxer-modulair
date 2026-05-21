@@ -1,0 +1,33 @@
+{
+  "id": "discord-soundboard",
+  "name": "Discord Soundboard",
+  "version": "1.0.0",
+  "description": "Adds Discord-style soundboard for playing audio clips in voice channels",
+  "author": "manikineko.nl",
+  "license": "MIT",
+  "main": "index.ts",
+  "target": "both",
+  "permissions": {
+    "network": {
+      "request": true
+    },
+    "api": {
+      "internal": true
+    }
+  },
+  "hooks": {
+    "onLoad": "onLoad",
+    "onEnable": "onEnable",
+    "onDisable": "onDisable"
+  },
+  "uiComponents": [
+    {
+      "id": "discord-soundboard-button",
+      "name": "Soundboard",
+      "component": "SoundboardComponent",
+      "location": "channel_header",
+      "priority": 90,
+      "props": {}
+    }
+  ]
+}

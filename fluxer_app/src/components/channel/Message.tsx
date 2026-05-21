@@ -26,6 +26,7 @@ import {MessageViewContextProvider} from '@app/components/channel/MessageViewCon
 import {MessageContextMenu} from '@app/components/uikit/context_menu/MessageContextMenu';
 import FocusRing from '@app/components/uikit/focus_ring/FocusRing';
 import {useContextMenuHoverState} from '@app/hooks/useContextMenuHoverState';
+import {usePluginUIComponents} from '@app/hooks/usePluginUIComponents';
 import {parse} from '@app/lib/markdown/renderers';
 import {MarkdownContext} from '@app/lib/markdown/renderers/RendererTypes';
 import type {ChannelRecord} from '@app/records/ChannelRecord';
@@ -157,6 +158,7 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 	} = props;
 
 	const {i18n} = useLingui();
+	const {components: pluginComponents} = usePluginUIComponents('message');
 
 	const [showActionBar, setShowActionBar] = useState(false);
 	const [isLongPressing, setIsLongPressing] = useState(false);
@@ -596,6 +598,15 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 					}}
 				>
 					{messageComponent}
+					{pluginComponents.length > 0 && (
+						<div style={{marginTop: '4px', display: 'flex', gap: '4px', flexWrap: 'wrap'}}>
+							{pluginComponents.map((component) => (
+								<span key={component.id} style={{fontSize: '0.75rem', padding: '2px 6px', background: 'var(--background-modifier-accent)', borderRadius: '4px', color: 'var(--text-secondary)'}}>
+									{component.name}
+								</span>
+							))}
+						</div>
+					)}
 					{shouldShowActionBar &&
 						(previewMode ? (
 							<MessageActionBarCore

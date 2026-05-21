@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: valkey
+  namespace: fluxer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: valkey
+  template:
+    metadata:
+      labels:
+        app: valkey
+    spec:
+      containers:
+      - name: valkey
+        image: valkey/valkey:8.0.6-alpine
+        ports:
+        - containerPort: 6379
+        command: ['valkey-server', '--appendonly', 'yes', '--save', '60', '1', '--loglevel', 'warning']
+        volumeMounts:
+        - name: valkey-data
+          mountPath: /data
+      volumes:
+      - name: valkey-data
+        persistentVolumeClaim:
+          claimName: valkey-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: valkey
+  namespace: fluxer
+spec:
+  selector:
+    app: valkey
+  ports:
+  - protocol: TCP
+    port: 6379
+    targetPort: 6379
+  type: ClusterIP

@@ -1,0 +1,15 @@
+{
+  "id": "discord-types",
+  "name": "Discord Channel Types",
+  "version": "1.0.0",
+  "description": "Ports Discord's channel types (text, voice, announcement, forum, stage) to Fluxer",
+  "author": "Fluxer Contributors",
+  "license": "AGPL-3.0",
+  "main": "index.ts",
+  "permissions": [],
+  "hooks": {
+    "onLoad": true,
+    "onEnable": true,
+    "onDisable": true
+  }
+}

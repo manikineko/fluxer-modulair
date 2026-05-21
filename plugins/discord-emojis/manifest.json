@@ -1,0 +1,34 @@
+{
+  "id": "discord-emojis",
+  "name": "Discord Emojis & Stickers",
+  "version": "1.0.0",
+  "description": "Adds Discord-style emojis and stickers support",
+  "author": "manikineko.nl",
+  "license": "MIT",
+  "main": "index.ts",
+  "target": "both",
+  "permissions": {
+    "api": {
+      "internal": true
+    },
+    "userData": {
+      "read": true,
+      "write": true
+    }
+  },
+  "hooks": {
+    "onLoad": "onLoad",
+    "onEnable": "onEnable",
+    "onDisable": "onDisable"
+  },
+  "uiComponents": [
+    {
+      "id": "discord-emojis-picker",
+      "name": "Emoji Picker",
+      "component": "EmojiPickerComponent",
+      "location": "channel_header",
+      "priority": 100,
+      "props": {}
+    }
+  ]
+}

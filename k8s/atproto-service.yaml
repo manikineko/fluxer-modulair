@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: atproto-service
+  namespace: fluxer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: atproto-service
+  template:
+    metadata:
+      labels:
+        app: atproto-service
+    spec:
+      containers:
+      - name: atproto-service
+        image: fluxer/atproto-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3002
+        env:
+        - name: NODE_ENV
+          value: "production"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: atproto-service
+  namespace: fluxer
+spec:
+  selector:
+    app: atproto-service
+  ports:
+  - protocol: TCP
+    port: 3002
+    targetPort: 3002
+  type: ClusterIP

@@ -22,7 +22,13 @@ import * as ChannelUtils from '@app/utils/ChannelUtils';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 
 export const isTextChannel = (ch: ChannelRecord) =>
-	ch.type === ChannelTypes.GUILD_TEXT || ch.type === ChannelTypes.GUILD_LINK;
+	ch.type === ChannelTypes.GUILD_TEXT ||
+	ch.type === ChannelTypes.GUILD_LINK ||
+	ch.type === ChannelTypes.BLUESKY_FEED ||
+	ch.type === ChannelTypes.SSR_RENDER ||
+	ch.type === ChannelTypes.GUILD_ANNOUNCEMENT ||
+	ch.type === ChannelTypes.GUILD_FORUM ||
+	ch.type === ChannelTypes.GUILD_STAGE;
 
 const isVoiceChannel = (ch: ChannelRecord) => ch.type === ChannelTypes.GUILD_VOICE;
 

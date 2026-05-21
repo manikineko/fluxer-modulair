@@ -62,13 +62,17 @@ export function createAuthRoutes({config}: RouteFactoryDeps) {
 		const state = c.req.query('state');
 		const storedState = getCookie(c, 'oauth_state');
 
+		console.log('[OAuth Callback] code:', !!code, 'state:', !!state, 'storedState:', !!storedState);
+
 		deleteCookie(c, 'oauth_state', {path: '/'});
 
 		if (!code || !state || state !== storedState) {
+			console.log('[OAuth Callback] State validation failed');
 			return c.redirect(`${config.basePath}/login?error=oauth_failed`);
 		}
 
 		try {
+			console.log('[OAuth Callback] Starting token exchange to', `${config.apiEndpoint}/oauth2/token`);
 			const tokenResponse = await fetch(`${config.apiEndpoint}/oauth2/token`, {
 				method: 'POST',
 				headers: {
@@ -81,28 +85,39 @@ export function createAuthRoutes({config}: RouteFactoryDeps) {
 					client_id: config.oauthClientId,
 					client_secret: config.oauthClientSecret,
 				}),
+			}).catch((error) => {
+				console.log('[OAuth Callback] Token exchange fetch error:', error);
+				throw error;
 			});
 
+			console.log('[OAuth Callback] Token response status:', tokenResponse.status);
+
 			if (!tokenResponse.ok) {
+				console.log('[OAuth Callback] Token exchange failed');
 				return c.redirect(`${config.basePath}/login?error=oauth_failed`);
 			}
 
 			const tokenData = (await tokenResponse.json()) as {access_token: string; token_type: string};
 			const accessToken = tokenData.access_token;
 
+			console.log('[OAuth Callback] Token received, fetching user info');
 			const userResponse = await fetch(`${config.apiEndpoint}/users/@me`, {
 				headers: {
 					Authorization: `Bearer ${accessToken}`,
 				},
 			});
 
+			console.log('[OAuth Callback] User response status:', userResponse.status);
+
 			if (!userResponse.ok) {
+				console.log('[OAuth Callback] User info fetch failed');
 				return c.redirect(`${config.basePath}/login?error=oauth_failed`);
 			}
 
 			const userData = (await userResponse.json()) as {id: string};
 			const userId = userData.id;
 
+			console.log('[OAuth Callback] User ID:', userId, 'fetching admin ACLs');
 			const adminResult = await usersApi.getCurrentAdmin(config, {
 				userId,
 				accessToken,

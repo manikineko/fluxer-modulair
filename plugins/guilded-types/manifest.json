@@ -1,0 +1,15 @@
+{
+  "id": "guilded-types",
+  "name": "Guilded Channel Types",
+  "version": "1.0.0",
+  "description": "Ports Guilded's channel types (text, voice, docs, list, calendar, media, streaming) to Fluxer",
+  "author": "Fluxer Contributors",
+  "license": "AGPL-3.0",
+  "main": "index.ts",
+  "permissions": [],
+  "hooks": {
+    "onLoad": true,
+    "onEnable": true,
+    "onDisable": true
+  }
+}

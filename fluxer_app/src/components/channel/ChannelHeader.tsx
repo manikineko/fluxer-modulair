@@ -54,6 +54,7 @@ import FocusRing from '@app/components/uikit/focus_ring/FocusRing';
 import {StatusAwareAvatar} from '@app/components/uikit/StatusAwareAvatar';
 import {Tooltip} from '@app/components/uikit/tooltip/Tooltip';
 import {useCanFitMemberList} from '@app/hooks/useMemberListVisible';
+import {usePluginUIComponents} from '@app/hooks/usePluginUIComponents';
 import {useTextOverflow} from '@app/hooks/useTextOverflow';
 import {ComponentDispatch} from '@app/lib/ComponentDispatch';
 import {SafeMarkdown} from '@app/lib/markdown';
@@ -123,6 +124,7 @@ export const ChannelHeader = observer(
 		forceVoiceCallStyle = false,
 	}: ChannelHeaderProps) => {
 		const {t, i18n} = useLingui();
+		const {components: pluginComponents} = usePluginUIComponents('channel_header');
 
 		const location = useLocation();
 		const {isMembersOpen} = MemberListStore;
@@ -755,6 +757,15 @@ export const ChannelHeader = observer(
 							{!isMobile && <UpdaterIcon />}
 
 							{!isMobile && <InboxButton />}
+
+							{pluginComponents.length > 0 && (
+								<div style={{display: 'flex', gap: '4px', marginLeft: '8px', alignItems: 'center'}}>
+									{pluginComponents.map((component) => {
+										const Component = component.component;
+										return <Component key={component.id} {...component.props} />;
+									})}
+								</div>
+							)}
 						</div>
 					</NativeDragRegion>
 				</div>

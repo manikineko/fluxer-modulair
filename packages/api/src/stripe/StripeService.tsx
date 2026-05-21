@@ -164,6 +164,14 @@ export class StripeService {
 		return this.premiumService.rejoinOperatorsGuild(userId);
 	}
 
+	getPremiumService(): StripePremiumService {
+		return this.premiumService;
+	}
+
+	getGiftService(): StripeGiftService {
+		return this.giftService;
+	}
+
 	async handleWebhook(params: HandleWebhookParams): Promise<void> {
 		return this.webhookService.handleWebhook(params);
 	}

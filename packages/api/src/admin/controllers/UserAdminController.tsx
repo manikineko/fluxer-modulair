@@ -19,10 +19,11 @@
 
 import {mapUserToAdminResponse} from '@fluxer/api/src/admin/models/UserTypes';
 import {createUserID} from '@fluxer/api/src/BrandedTypes';
+import {DefaultUserOnly, LoginRequired, LoginRequiredAllowSuspicious} from '@fluxer/api/src/middleware/AuthMiddleware';
 import {requireAdminACL} from '@fluxer/api/src/middleware/AdminMiddleware';
-import {RateLimitMiddleware} from '@fluxer/api/src/middleware/RateLimitMiddleware';
-import {OpenAPI} from '@fluxer/api/src/middleware/ResponseTypeMiddleware';
+import {OpenAPI, ResponseType} from '@fluxer/api/src/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@fluxer/api/src/RateLimitConfig';
+import {RateLimitMiddleware} from '@fluxer/api/src/middleware/RateLimitMiddleware';
 import type {HonoApp} from '@fluxer/api/src/types/HonoEnv';
 import {Validator} from '@fluxer/api/src/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
@@ -68,16 +69,7 @@ export function UserAdminController(app: HonoApp) {
 	app.get(
 		'/admin/users/me',
 		requireAdminACL(AdminACLs.AUTHENTICATE),
-		OpenAPI({
-			operationId: 'get_authenticated_admin_user',
-			summary: 'Get authenticated admin user',
-			responseSchema: AdminUsersMeResponse,
-			statusCode: 200,
-			security: 'adminApiKey',
-			tags: 'Admin',
-			description:
-				'Get profile of currently authenticated admin user. Returns admin permissions, roles, and metadata. Requires AUTHENTICATE permission.',
-		}),
+		ResponseType(AdminUsersMeResponse, {skipValidation: true}),
 		async (ctx) => {
 			const adminUser = ctx.get('user');
 			const cacheService = ctx.get('cacheService');
@@ -92,6 +84,7 @@ export function UserAdminController(app: HonoApp) {
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
 		requireAdminACL(AdminACLs.USER_LOOKUP),
 		Validator('json', LookupUserRequest),
+		ResponseType(LookupUserResponse, {skipValidation: true}),
 		OpenAPI({
 			operationId: 'lookup_user',
 			summary: 'Lookup user',

@@ -1,0 +1,68 @@
+{
+  "name": "s3-storage",
+  "version": "1.0.0",
+  "description": "S3-compatible storage plugin supporting MinIO, Backblaze B2, and Amazon S3",
+  "author": "Fluxer Contributors",
+  "license": "MIT",
+  "permissions": [
+    "network",
+    "storage:read",
+    "storage:write",
+    "storage:delete"
+  ],
+  "hooks": {
+    "onLoad": "onLoad",
+    "onUnload": "onUnload"
+  },
+  "api": {
+    "enabled": true,
+    "prefix": "/api/s3",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/health",
+        "handler": "healthCheck"
+      },
+      {
+        "method": "POST",
+        "path": "/upload",
+        "handler": "upload"
+      },
+      {
+        "method": "GET",
+        "path": "/download/:key",
+        "handler": "download"
+      },
+      {
+        "method": "DELETE",
+        "path": "/delete/:key",
+        "handler": "deleteObject"
+      },
+      {
+        "method": "GET",
+        "path": "/list",
+        "handler": "list"
+      },
+      {
+        "method": "GET",
+        "path": "/presigned-url/:key",
+        "handler": "generatePresignedUrl"
+      },
+      {
+        "method": "POST",
+        "path": "/configure",
+        "handler": "configure"
+      }
+    ]
+  },
+  "config": {
+    "provider": "minio",
+    "endpoint": "http://localhost:9000",
+    "accessKeyId": "",
+    "secretAccessKey": "",
+    "region": "us-east-1",
+    "bucket": "fluxer-storage",
+    "useSSL": false,
+    "forcePathStyle": true
+  }
+}

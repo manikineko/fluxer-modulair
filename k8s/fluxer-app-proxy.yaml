@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fluxer-app-proxy
+  namespace: fluxer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fluxer-app-proxy
+  template:
+    metadata:
+      labels:
+        app: fluxer-app-proxy
+    spec:
+      containers:
+      - name: fluxer-app-proxy
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: fluxer-static
+          mountPath: /usr/share/nginx/html
+          readOnly: true
+        - name: nginx-config
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+          readOnly: true
+      volumes:
+      - name: fluxer-static
+        emptyDir: {}
+      - name: nginx-config
+        configMap:
+          name: nginx-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fluxer-app-proxy
+  namespace: fluxer
+spec:
+  selector:
+    app: fluxer-app-proxy
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: ClusterIP

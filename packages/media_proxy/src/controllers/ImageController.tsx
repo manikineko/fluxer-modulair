@@ -207,58 +207,6 @@ export function createGuildMemberImageRouteHandler(deps: ImageControllerDeps) {
 	};
 }
 
-async function processSimpleImageRequest(params: {
-	coalescer: InMemoryCoalescer;
-	s3Utils: S3Utils;
-	bucketCdn: string;
-	ctx: Context<HonoEnv>;
-	cacheKey: string;
-	s3Key: string;
-	aspectRatio: number;
-	size: string;
-	quality: string;
-	animated: boolean;
-}): Promise<Response> {
-	const {coalescer, s3Utils, bucketCdn, ctx, cacheKey, s3Key, aspectRatio, size, quality, animated} = params;
-
-	const result = await coalescer.coalesce(cacheKey, async () => {
-		const {data} = await s3Utils.readS3Object(bucketCdn, s3Key);
-		assert(data instanceof Buffer);
-
-		const metadata = await sharp(data).metadata();
-		const requestedWidth = Number(size);
-		const originalAspectRatio = (metadata.width || 1) / (metadata.height || 1);
-		const effectiveAspectRatio = aspectRatio === 0 ? originalAspectRatio : aspectRatio;
-		const requestedHeight = Math.floor(requestedWidth / effectiveAspectRatio);
-
-		const width = Math.min(requestedWidth, metadata.width || 0);
-		const height = Math.min(requestedHeight, metadata.height || 0);
-
-		const isAnimatedSource = (metadata.pages ?? 0) > 1;
-
-		const shouldOutputAnimation = isAnimatedSource && animated;
-
-		const image = await sharp(data, {animated: shouldOutputAnimation})
-			.resize(width, height, {
-				fit: 'contain',
-				background: {r: 255, g: 255, b: 255, alpha: 0},
-				withoutEnlargement: true,
-			})
-			.toFormat('webp', {
-				quality: quality === 'high' ? 80 : quality === 'low' ? 20 : 100,
-			})
-			.toBuffer();
-
-		return {data: image, contentType: 'image/webp'};
-	});
-
-	const range = parseRange(ctx.req.header('Range') ?? '', result.data.length);
-	setHeaders(ctx, result.data.length, result.contentType, range);
-
-	const fileData = range ? result.data.subarray(range.start, range.end + 1) : result.data;
-	return ctx.body(toBodyData(fileData));
-}
-
 export function createSimpleImageRouteHandler(deps: ImageControllerDeps) {
 	return async (ctx: Context<HonoEnv>, pathPrefix: string, aspectRatio = 0): Promise<Response> => {
 		const {id} = ctx.req.param();
@@ -273,17 +221,19 @@ export function createSimpleImageRouteHandler(deps: ImageControllerDeps) {
 
 		const [filename, ext] = parts;
 		if (!filename || !ext) throw new HTTPException(400);
+
 		const normalizedExt = ext.toLowerCase();
 		const cacheKey = `${pathPrefix}_${filename}_${normalizedExt}_${size}_${quality}_${aspectRatio}_${animated}`;
 		const s3Key = `${pathPrefix}/${filename}`;
+		const fallbackS3Key = `${pathPrefix}/${filename}.${normalizedExt}`;
 
-		return processSimpleImageRequest({
-			coalescer: deps.coalescer,
-			s3Utils: deps.s3Utils,
-			bucketCdn: deps.bucketCdn,
+		return processImageRequest({
+			...deps,
 			ctx,
 			cacheKey,
 			s3Key,
+			fallbackS3Key,
+			ext: normalizedExt,
 			aspectRatio,
 			size,
 			quality,

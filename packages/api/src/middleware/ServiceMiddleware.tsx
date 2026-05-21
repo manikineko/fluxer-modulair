@@ -139,6 +139,7 @@ import {PolarCheckoutService} from '@fluxer/api/src/polar/services/PolarCheckout
 import {PolarSubscriptionService} from '@fluxer/api/src/polar/services/PolarSubscriptionService';
 import {PolarWebhookService} from '@fluxer/api/src/polar/services/PolarWebhookService';
 import {StripeService} from '@fluxer/api/src/stripe/StripeService';
+import {PayPalService} from '@fluxer/api/src/paypal/PayPalService';
 import {TenorService} from '@fluxer/api/src/tenor/TenorService';
 import {ThemeService} from '@fluxer/api/src/theme/ThemeService';
 import type {HonoEnv} from '@fluxer/api/src/types/HonoEnv';
@@ -797,9 +798,22 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 
 	const donationRepository = new DonationRepository();
 	let stripeService: StripeService | null = null;
+	let paypalService: PayPalService | null = null;
 	let donationService: DonationService | null = null;
 	if (!Config.instance.selfHosted) {
 		stripeService = new StripeService(
+			userRepository,
+			userCacheService,
+			authService,
+			gatewayService,
+			emailService,
+			guildRepository,
+			guildService,
+			cacheService,
+			donationRepository,
+		);
+
+		paypalService = new PayPalService(
 			userRepository,
 			userCacheService,
 			authService,
@@ -970,6 +984,9 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 	ctx.set('themeService', themeService);
 	if (stripeService) {
 		ctx.set('stripeService', stripeService);
+	}
+	if (paypalService) {
+		ctx.set('paypalService', paypalService);
 	}
 	if (polarCheckoutService) ctx.set('polarCheckoutService', polarCheckoutService);
 	if (polarSubscriptionService) ctx.set('polarSubscriptionService', polarSubscriptionService);

@@ -37,6 +37,7 @@ import LinkedAccountsTab from '@app/components/modals/tabs/LinkedAccountsTab';
 import MyProfileTab from '@app/components/modals/tabs/MyProfileTab';
 import NotificationsTab from '@app/components/modals/tabs/NotificationsTab';
 import PlutoniumTab from '@app/components/modals/tabs/PlutoniumTab';
+import PluginsTab from '@app/components/modals/tabs/PluginsTab';
 import PrivacySafetyTab from '@app/components/modals/tabs/PrivacySafetyTab';
 import VoiceVideoTab from '@app/components/modals/tabs/VoiceVideoTab';
 import type {UserSettingsTabType} from '@app/components/modals/utils/SettingsSectionRegistry';
@@ -65,6 +66,7 @@ const DESKTOP_TAB_COMPONENTS: Partial<Record<UserSettingsTabType, React.Componen
 	developer_options: DeveloperOptionsTab,
 	component_gallery: ComponentGalleryTab,
 	expression_packs: ExpressionPacksTab,
+	plugins: PluginsTab,
 };
 
 export const getSettingsTabComponent = (

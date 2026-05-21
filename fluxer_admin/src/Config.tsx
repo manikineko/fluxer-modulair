@@ -24,8 +24,6 @@ import {
 	extractKVClientConfig,
 	extractRateLimit,
 } from '@fluxer/config/src/ServiceConfigSlices';
-import {ADMIN_OAUTH2_APPLICATION_ID} from '@fluxer/constants/src/Core';
-
 const master = await loadConfig();
 const adminOAuthRedirectUri = `${master.endpoints.admin}/oauth2_callback`;
 
@@ -39,7 +37,7 @@ export const Config = {
 	staticCdnEndpoint: master.endpoints.static_cdn,
 	adminEndpoint: master.endpoints.admin,
 	webAppEndpoint: master.endpoints.app,
-	oauthClientId: ADMIN_OAUTH2_APPLICATION_ID.toString(),
+	oauthClientId: master.services.admin.oauth_client_id,
 	oauthClientSecret: master.services.admin.oauth_client_secret,
 	oauthRedirectUri: adminOAuthRedirectUri,
 	port: master.services.admin.port,

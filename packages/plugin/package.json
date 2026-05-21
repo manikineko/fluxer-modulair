@@ -1,0 +1,33 @@
+{
+  "name": "@fluxer/plugin",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types.ts",
+    "./manifest": "./src/manifest.ts",
+    "./registry": "./src/registry.ts",
+    "./hooks": "./src/hooks.ts",
+    "./lifecycle": "./src/lifecycle.ts",
+    "./managers": "./src/managers/PluginManager.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "valibot": "^1.2.0",
+    "react": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.2",
+    "@types/react": "^18.3.12",
+    "typescript": "^6.0.3",
+    "vitest": "^4.0.18"
+  }
+}

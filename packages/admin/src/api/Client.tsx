@@ -147,6 +147,52 @@ export class ApiClient {
 		});
 	}
 
+	async postWithFile<T>(path: string, formData: FormData, auditLogReason?: string): Promise<ApiResult<T>> {
+		try {
+			const url = this.buildUrl(path);
+			const headers: Record<string, string> = {
+				Authorization: `Bearer ${this.session.accessToken}`,
+			};
+
+			if (auditLogReason) {
+				headers['X-Audit-Log-Reason'] = auditLogReason;
+			}
+
+			const fetchOptions: RequestInit = {
+				method: 'POST',
+				headers,
+				body: formData,
+			};
+
+			const response = await fetch(url, fetchOptions);
+
+			if (response.status === 204) {
+				return {ok: true, data: undefined as T};
+			}
+
+			if (response.ok) {
+				const contentLength = response.headers.get('content-length');
+				if (contentLength === '0') {
+					return {ok: true, data: undefined as T};
+				}
+
+				try {
+					const data = (await response.json()) as T;
+					return {ok: true, data};
+				} catch {
+					return {ok: true, data: undefined as T};
+				}
+			}
+
+			return parseApiResponse<T>(response);
+		} catch (e) {
+			return {
+				ok: false,
+				error: {type: 'networkError', message: (e as Error).message},
+			};
+		}
+	}
+
 	async postVoid(path: string, body?: JsonValue | string, auditLogReason?: string): Promise<ApiResult<void>> {
 		return this.request<void>({
 			method: 'POST',

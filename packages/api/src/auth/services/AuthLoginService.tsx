@@ -48,6 +48,7 @@ import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidat
 import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import {formatGeoipLocation, UNKNOWN_LOCATION} from '@fluxer/geoip/src/GeoipLookup';
+import {PluginSystem} from '@fluxer/plugin';
 import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import type {IRateLimitService, RateLimitResult} from '@fluxer/rate_limit/src/IRateLimitService';
 import type {LoginRequest} from '@fluxer/schema/src/domains/auth/AuthSchemas';
@@ -251,6 +252,9 @@ export class AuthLoginService {
 	> {
 		const skipRateLimits = Config.dev.testModeEnabled || Config.dev.disableRateLimits;
 
+		// Plugin hook: onLoginAttempt
+		await PluginSystem.registry.executeHook('onLoginAttempt', {email: data.email, request});
+
 		const emailRateLimit = await this.rateLimitService.checkLimit({
 			identifier: `login:email:${data.email}`,
 			maxAttempts: 5,
@@ -258,6 +262,7 @@ export class AuthLoginService {
 		});
 
 		if (!emailRateLimit.allowed && !skipRateLimits) {
+			await PluginSystem.registry.executeHook('onLoginFailure', {email: data.email, reason: 'rate_limit'});
 			throwLoginRateLimit(emailRateLimit);
 		}
 
@@ -271,6 +276,7 @@ export class AuthLoginService {
 		});
 
 		if (!ipRateLimit.allowed && !skipRateLimits) {
+			await PluginSystem.registry.executeHook('onLoginFailure', {email: data.email, reason: 'rate_limit', ip: clientIp});
 			throwLoginRateLimit(ipRateLimit);
 		}
 
@@ -280,6 +286,7 @@ export class AuthLoginService {
 				name: 'auth.login.failure',
 				dimensions: {reason: 'invalid_credentials'},
 			});
+			await PluginSystem.registry.executeHook('onLoginFailure', {email: data.email, reason: 'invalid_credentials'});
 			throw InputValidationError.fromCodes([
 				{path: 'email', code: ValidationErrorCodes.INVALID_EMAIL_OR_PASSWORD},
 				{path: 'password', code: ValidationErrorCodes.INVALID_EMAIL_OR_PASSWORD},
@@ -298,6 +305,7 @@ export class AuthLoginService {
 				name: 'auth.login.failure',
 				dimensions: {reason: 'invalid_credentials'},
 			});
+			await PluginSystem.registry.executeHook('onLoginFailure', {email: data.email, reason: 'invalid_credentials', userId: user.id});
 			throw InputValidationError.fromCodes([
 				{path: 'email', code: ValidationErrorCodes.INVALID_EMAIL_OR_PASSWORD},
 				{path: 'password', code: ValidationErrorCodes.INVALID_EMAIL_OR_PASSWORD},
@@ -412,6 +420,9 @@ export class AuthLoginService {
 		getMetricsService().counter({
 			name: 'auth.login.success',
 		});
+
+		// Plugin hook: onLoginSuccess
+		await PluginSystem.registry.executeHook('onLoginSuccess', {userId: currentUser.id, email: currentUser.email, request});
 
 		return {
 			user_id: currentUser.id.toString(),

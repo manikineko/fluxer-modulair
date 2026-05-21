@@ -233,6 +233,16 @@ import {
 	type UserSettingsRow,
 	type UsersPendingDeletionRow,
 } from '@fluxer/api/src/database/types/UserTypes';
+import {
+	BADGE_COLUMNS,
+	PARTNER_BADGE_COLUMNS,
+	PARTNER_COLUMNS,
+	USER_BADGE_COLUMNS,
+	type BadgeRow,
+	type PartnerBadgeRow,
+	type PartnerRow,
+	type UserBadgeRow,
+} from '@fluxer/api/src/database/types/PartnerBadgeTypes';
 import {ATTACHMENT_DECAY_COLUMNS, type AttachmentDecayRow} from '@fluxer/api/src/types/AttachmentDecayTypes';
 
 export const Users = defineTable<UserRow, 'user_id'>({
@@ -1080,4 +1090,43 @@ export const E2EEGroupSessionBlobs = defineTable<
 	name: 'e2ee_group_session_blobs',
 	columns: E2EE_GROUP_SESSION_BLOB_COLUMNS,
 	primaryKey: ['recipient_user_id', 'channel_id', 'session_id', 'recipient_device_id', 'sender_device_id'],
+});
+
+// Partner Tables
+export const Partners = defineTable<PartnerRow, 'partner_id'>({
+	name: 'partners',
+	columns: PARTNER_COLUMNS,
+	primaryKey: ['partner_id'],
+});
+
+export const PartnersByOwner = defineTable<PartnerRow, 'owner_user_id' | 'partner_id'>({
+	name: 'partners_by_owner',
+	columns: PARTNER_COLUMNS,
+	primaryKey: ['owner_user_id', 'partner_id'],
+});
+
+// Badge Tables
+export const Badges = defineTable<BadgeRow, 'badge_id'>({
+	name: 'badges',
+	columns: BADGE_COLUMNS,
+	primaryKey: ['badge_id'],
+});
+
+export const UserBadges = defineTable<UserBadgeRow, 'user_id' | 'badge_id'>({
+	name: 'user_badges',
+	columns: USER_BADGE_COLUMNS,
+	primaryKey: ['user_id', 'badge_id'],
+});
+
+export const BadgesByUser = defineTable<UserBadgeRow, 'badge_id' | 'user_id'>({
+	name: 'badges_by_user',
+	columns: USER_BADGE_COLUMNS,
+	primaryKey: ['badge_id', 'user_id'],
+});
+
+// Partner Badge Junction
+export const PartnerBadges = defineTable<PartnerBadgeRow, 'partner_id' | 'badge_id'>({
+	name: 'partner_badges',
+	columns: PARTNER_BADGE_COLUMNS,
+	primaryKey: ['partner_id', 'badge_id'],
 });

@@ -50,6 +50,31 @@ export const channelTypeOptions: Array<ChannelTypeOption> = [
 		name: 'Link Channel',
 		desc: 'Quick access to an external website or resource',
 	},
+	{
+		value: ChannelTypes.BLUESKY_FEED,
+		name: 'Bluesky Feed',
+		desc: 'AT Protocol feed for Bluesky timeline',
+	},
+	{
+		value: ChannelTypes.SSR_RENDER,
+		name: 'SSR Render',
+		desc: 'Sandboxed server-side rendering for custom content',
+	},
+	{
+		value: ChannelTypes.GUILD_ANNOUNCEMENT,
+		name: 'Announcement Channel',
+		desc: 'Send important announcements to followers',
+	},
+	{
+		value: ChannelTypes.GUILD_FORUM,
+		name: 'Forum Channel',
+		desc: 'Organized discussions with posts and threads',
+	},
+	{
+		value: ChannelTypes.GUILD_STAGE,
+		name: 'Stage Channel',
+		desc: 'Voice channels for events and presentations',
+	},
 ];
 
 export async function createChannel(guildId: string, data: FormInputs, parentId?: string): Promise<void> {

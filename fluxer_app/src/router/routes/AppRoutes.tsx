@@ -203,7 +203,12 @@ const channelRoute = createRoute({
 	onEnter: (ctx) => {
 		const {guildId, channelId} = ctx.params;
 		const channel = ChannelStore.getChannel(channelId);
-		if (channel && (channel.type === ChannelTypes.GUILD_CATEGORY || channel.type === ChannelTypes.GUILD_LINK)) {
+		if (
+			channel &&
+			(channel.type === ChannelTypes.GUILD_CATEGORY ||
+				channel.type === ChannelTypes.GUILD_LINK ||
+				channel.type === ChannelTypes.GUILD_STAGE)
+		) {
 			return new Redirect(Routes.guildChannel(guildId));
 		}
 		return undefined;
@@ -222,7 +227,12 @@ const messageRoute = createRoute({
 	onEnter: (ctx) => {
 		const {guildId, channelId} = ctx.params;
 		const channel = ChannelStore.getChannel(channelId);
-		if (channel && (channel.type === ChannelTypes.GUILD_CATEGORY || channel.type === ChannelTypes.GUILD_LINK)) {
+		if (
+			channel &&
+			(channel.type === ChannelTypes.GUILD_CATEGORY ||
+				channel.type === ChannelTypes.GUILD_LINK ||
+				channel.type === ChannelTypes.GUILD_STAGE)
+		) {
 			return new Redirect(Routes.guildChannel(guildId));
 		}
 		return undefined;

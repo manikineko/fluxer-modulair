@@ -1,0 +1,48 @@
+ARG BUILD_SHA
+ARG BUILD_NUMBER
+ARG BUILD_TIMESTAMP
+ARG RELEASE_CHANNEL=nightly
+
+FROM node:24-bookworm-slim
+
+ARG BUILD_SHA
+ARG BUILD_NUMBER
+ARG BUILD_TIMESTAMP
+ARG RELEASE_CHANNEL
+
+WORKDIR /usr/src/app
+
+RUN corepack enable && corepack prepare pnpm@10.26.0 --activate
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+		curl \
+		openssl \
+		&& rm -rf /var/lib/apt/lists/*
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY patches/ ./patches/
+COPY fluxer_server/package.json ./fluxer_server/
+COPY packages/ ./packages/
+
+RUN pnpm install --prod
+
+COPY fluxer_server/src ./fluxer_server/src
+
+RUN mkdir -p /usr/src/app/data && \
+	mkdir -p /usr/src/app/plugins && \
+	chown -R nobody:nogroup /usr/src/app
+
+ENV HOME=/usr/src/app
+ENV NODE_ENV=production
+ENV FLUXER_PLUGIN_DIR=/usr/src/app/plugins
+ENV FLUXER_PLUGIN_AUTOLOAD=true
+ENV BUILD_SHA=${BUILD_SHA}
+ENV BUILD_NUMBER=${BUILD_NUMBER}
+ENV BUILD_TIMESTAMP=${BUILD_TIMESTAMP}
+ENV RELEASE_CHANNEL=${RELEASE_CHANNEL}
+
+USER nobody
+
+EXPOSE 8080
+
+CMD ["node", "packages/fluxer_server/src/index.js"]

@@ -27,6 +27,12 @@ export const ChannelTypes = {
 	GUILD_CATEGORY: 4,
 	GUILD_LINK: 998,
 	DM_PERSONAL_NOTES: 999,
+	// Custom channel types
+	BLUESKY_FEED: 100,
+	SSR_RENDER: 101,
+	GUILD_ANNOUNCEMENT: 102,
+	GUILD_FORUM: 103,
+	GUILD_STAGE: 104,
 } as const;
 
 export type ChannelType = ValueOf<typeof ChannelTypes>;
@@ -36,6 +42,10 @@ export const TEXT_BASED_CHANNEL_TYPES = new Set<number>([
 	ChannelTypes.DM,
 	ChannelTypes.DM_PERSONAL_NOTES,
 	ChannelTypes.GROUP_DM,
+	ChannelTypes.GUILD_ANNOUNCEMENT,
+	ChannelTypes.GUILD_FORUM,
+	ChannelTypes.BLUESKY_FEED,
+	ChannelTypes.SSR_RENDER,
 ]);
 
 export const ChannelOverwriteTypes = {

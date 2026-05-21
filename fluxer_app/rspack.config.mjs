@@ -34,8 +34,9 @@ const SRC_DIR = path.join(ROOT_DIR, 'src');
 const DIST_DIR = path.join(ROOT_DIR, 'dist');
 const PKGS_DIR = path.join(ROOT_DIR, 'pkgs');
 const PUBLIC_DIR = path.join(ROOT_DIR, 'assets');
+const STATIC_DIR = path.join(MONOREPO_ROOT, 'fluxer_static');
 
-const CDN_ENDPOINT = 'https://fluxerstatic.com';
+const CDN_ENDPOINT = process.env.FLUXER_STATIC_CDN || 'https://fluxerstatic.com';
 
 function resolveMode() {
 	const modeIndex = process.argv.indexOf('--mode');
@@ -275,6 +276,8 @@ export default () => {
 				'~': SRC_DIR,
 				'@app': SRC_DIR,
 				'@pkgs': PKGS_DIR,
+				'@fluxer/plugin': path.join(MONOREPO_ROOT, 'packages/plugin/src'),
+				'@fluxer/plugin/*': path.join(MONOREPO_ROOT, 'packages/plugin/src/*'),
 				'@fluxer/constants/src': path.join(MONOREPO_ROOT, 'packages/constants/src'),
 				'@fluxer/date_utils/src': path.join(MONOREPO_ROOT, 'packages/date_utils/src'),
 				'@fluxer/geo_utils/src': path.join(MONOREPO_ROOT, 'packages/geo_utils/src'),
@@ -609,7 +612,6 @@ export default () => {
 		},
 
 		devServer: {
-			port: Number(process.env.FLUXER_APP_DEV_PORT) || 49427,
 			hot: false,
 			liveReload: false,
 			client: false,
@@ -622,11 +624,11 @@ export default () => {
 				'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization',
 			},
 			static: {
-				directory: DIST_DIR,
+				directory: isDevelopment ? STATIC_DIR : DIST_DIR,
 				watch: false,
 			},
 		},
 
 		experiments: {css: true},
 	};
-};
+}; 

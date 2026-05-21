@@ -37,7 +37,6 @@ import {WorkerService} from '@fluxer/api/src/worker/WorkerService';
 import {createAppServer} from '@fluxer/app_proxy/src/AppServer';
 import type {AppServerResult} from '@fluxer/app_proxy/src/AppServerTypes';
 import {getBuildMetadata} from '@fluxer/config/src/BuildMetadata';
-import {ADMIN_OAUTH2_APPLICATION_ID} from '@fluxer/constants/src/Core';
 import {createServiceTelemetry} from '@fluxer/hono/src/middleware/TelemetryAdapters';
 import type {IKVProvider} from '@fluxer/kv_client/src/IKVProvider';
 import {KVClient} from '@fluxer/kv_client/src/KVClient';
@@ -48,6 +47,7 @@ import {JetStreamConnectionManager} from '@fluxer/nats/src/JetStreamConnectionMa
 import type {S3AppResult} from '@fluxer/s3/src/App';
 import {createS3App} from '@fluxer/s3/src/App';
 import {setUser} from '@fluxer/sentry/src/Sentry';
+import {serverPluginManager} from '@app/lib/plugins';
 
 export interface ServiceInitializationContext {
 	config: Config;
@@ -168,6 +168,7 @@ async function createMediaProxyInitializer(
 	const globalS3Config = requireValue(config.s3, 's3');
 	const bucketCdn = requireValue(globalS3Config.buckets?.cdn, 's3.buckets.cdn');
 	const bucketUploads = requireValue(globalS3Config.buckets?.uploads, 's3.buckets.uploads');
+	const bucketStatic = globalS3Config.buckets?.static;
 	const s3Host = requireValue(config.services.s3?.host, 'services.s3.host');
 	const s3Port = requireValue(config.services.s3?.port, 'services.s3.port');
 	const s3Endpoint = globalS3Config.endpoint ?? `http://${s3Host}:${s3Port}`;
@@ -188,6 +189,7 @@ async function createMediaProxyInitializer(
 				secretAccessKey: requireValue(globalS3Config.secret_access_key, 's3.secret_access_key'),
 				bucketCdn,
 				bucketUploads,
+				bucketStatic,
 			},
 		},
 		requestMetricsCollector: telemetry.metricsCollector,
@@ -237,7 +239,7 @@ function createAdminInitializer(
 		adminEndpoint,
 		webAppEndpoint: requireValue(config.endpoints.app, 'endpoints.app'),
 		kvUrl: requireValue(config.internal.kv, 'internal.kv'),
-		oauthClientId: ADMIN_OAUTH2_APPLICATION_ID.toString(),
+		oauthClientId: requireValue(adminConfigSrc.oauth_client_id, 'services.admin.oauth_client_id'),
 		oauthClientSecret: requireValue(adminConfigSrc.oauth_client_secret, 'services.admin.oauth_client_secret'),
 		oauthRedirectUri: adminOAuthRedirectUri,
 		basePath: adminBasePath,
@@ -341,6 +343,25 @@ async function createAPIInitializer(context: ServiceInitializationContext): Prom
 	};
 }
 
+function createPluginInitializer(context: ServiceInitializationContext): ServiceInitializer {
+	const {logger} = context;
+	const componentLogger = logger.child({component: 'plugins'});
+
+	return {
+		name: 'Plugins',
+		initialize: async () => {
+			componentLogger.info('Initializing Server Plugin Manager');
+			await serverPluginManager.initialize();
+			componentLogger.info('Server Plugin Manager initialized - plugins are now instance-wide');
+		},
+		shutdown: async () => {
+			componentLogger.info('Shutting down Server Plugin Manager');
+			await serverPluginManager.shutdown();
+		},
+		service: serverPluginManager,
+	};
+}
+
 export async function initializeAllServices(context: ServiceInitializationContext): Promise<{
 	services: InitializedServices;
 	initializers: Array<ServiceInitializer>;
@@ -413,6 +434,10 @@ export async function initializeAllServices(context: ServiceInitializationContex
 		} else {
 			rootLogger.info('No static directory configured, SPA App server disabled');
 		}
+
+		rootLogger.info('Initializing Server Plugin Manager for instance-wide plugins');
+		const pluginInit = createPluginInitializer(context);
+		initializers.push(pluginInit);
 
 		rootLogger.info({serviceCount: initializers.length}, 'All services created successfully');
 

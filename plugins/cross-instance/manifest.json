@@ -1,0 +1,80 @@
+{
+  "name": "cross-instance",
+  "version": "1.0.0",
+  "description": "Cross-instance communication plugin for federating with other Fluxer instances and fluxer.app",
+  "author": "Fluxer Contributors",
+  "license": "MIT",
+  "permissions": [
+    "network",
+    "internal:api"
+  ],
+  "hooks": {
+    "onLoad": "onLoad",
+    "onUnload": "onUnload",
+    "onRequest": "onRequest"
+  },
+  "api": {
+    "enabled": true,
+    "prefix": "/api/federation",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/health",
+        "handler": "healthCheck"
+      },
+      {
+        "method": "GET",
+        "path": "/instances",
+        "handler": "listInstances"
+      },
+      {
+        "method": "POST",
+        "path": "/instances",
+        "handler": "addInstance"
+      },
+      {
+        "method": "DELETE",
+        "path": "/instances/:id",
+        "handler": "removeInstance"
+      },
+      {
+        "method": "POST",
+        "path": "/sync/:instanceId",
+        "handler": "syncWithInstance"
+      },
+      {
+        "method": "POST",
+        "path": "/broadcast",
+        "handler": "broadcast"
+      },
+      {
+        "method": "POST",
+        "path": "/relay",
+        "handler": "relay"
+      },
+      {
+        "method": "POST",
+        "path": "/configure",
+        "handler": "configure"
+      },
+      {
+        "method": "GET",
+        "path": "/fluxer-app/status",
+        "handler": "fluxerAppStatus"
+      },
+      {
+        "method": "POST",
+        "path": "/fluxer-app/connect",
+        "handler": "connectToFluxerApp"
+      }
+    ]
+  },
+  "config": {
+    "enabled": true,
+    "fluxerAppUrl": "https://fluxer.app",
+    "fluxerAppApiKey": "",
+    "autoSync": true,
+    "syncInterval": 300000,
+    "relayEnabled": true
+  }
+}

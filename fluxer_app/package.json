@@ -35,7 +35,13 @@
 		"test:ui": "vitest --ui",
 		"test:watch": "vitest",
 		"tsc:all": "pnpm wasm:codegen && pnpm tsgo -p tsconfig.json",
-		"wasm:codegen": "cd crates/libfluxcore && wasm-pack build --target web --out-dir ../../pkgs/libfluxcore --release"
+		"wasm:codegen": "cd crates/libfluxcore && rm -f Cargo.lock && cargo build --release --target wasm32-unknown-unknown && /home/linux/.cargo/bin/wasm-bindgen --out-dir ../../pkgs/libfluxcore --target web target/wasm32-unknown-unknown/release/libfluxcore.wasm",
+		"cap:build": "pnpm build && pnpm cap sync",
+		"cap:sync": "cap sync",
+		"cap:open:android": "cap open android",
+		"cap:open:ios": "cap open ios",
+		"cap:build:android": "cap build android",
+		"cap:build:ios": "cap build ios"
 	},
 	"browserslist": [
 		"chrome >= 47",
@@ -49,6 +55,10 @@
 		"not op_mini all"
 	],
 	"dependencies": {
+		"@capacitor/android": "^8.3.4",
+		"@capacitor/cli": "^8.3.4",
+		"@capacitor/core": "^8.3.4",
+		"@capacitor/ios": "^8.3.4",
 		"@floating-ui/react": "catalog:",
 		"@floating-ui/react-dom": "catalog:",
 		"@fluxer/constants": "workspace:*",

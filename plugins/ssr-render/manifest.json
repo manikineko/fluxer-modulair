@@ -1,0 +1,15 @@
+{
+  "id": "ssr-render",
+  "name": "SSR Rendering",
+  "version": "1.0.0",
+  "description": "Sandboxed SSR rendering for custom records with HTML/CSS/JS support",
+  "author": "Fluxer Contributors",
+  "license": "AGPL-3.0",
+  "main": "index.ts",
+  "permissions": [],
+  "hooks": {
+    "onLoad": true,
+    "onEnable": true,
+    "onDisable": true
+  }
+}

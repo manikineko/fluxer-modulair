@@ -1,0 +1,26 @@
+{
+  "id": "atproto-pds",
+  "name": "ATProto PDS Server",
+  "version": "1.0.0",
+  "description": "Transforms Fluxer into an AT Protocol Personal Data Server (PDS)",
+  "author": "manikineko.nl",
+  "license": "MIT",
+  "main": "index.ts",
+  "target": "server",
+  "permissions": {
+    "network": {
+      "request": true,
+      "requestDomains": []
+    },
+    "api": {
+      "internal": true,
+      "external": true
+    }
+  },
+  "hooks": {
+    "onLoad": "onLoad",
+    "onEnable": "onEnable",
+    "onDisable": "onDisable",
+    "onRequest": "onRequest"
+  }
+}

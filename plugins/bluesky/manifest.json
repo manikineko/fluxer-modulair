@@ -1,0 +1,36 @@
+{
+  "id": "bluesky",
+  "name": "Bluesky",
+  "version": "1.0.0",
+  "description": "Bluesky social network implementation using ATProto features including PDS, blobs, and lectures",
+  "author": "manikineko.nl",
+  "license": "MIT",
+  "main": "index.ts",
+  "target": "both",
+  "permissions": {
+    "network": {
+      "request": true
+    },
+    "api": {
+      "internal": true,
+      "external": true
+    }
+  },
+  "hooks": {
+    "onLoad": "onLoad",
+    "onEnable": "onEnable",
+    "onDisable": "onDisable",
+    "onRequest": "onRequest"
+  },
+  "uiComponents": [
+    {
+      "id": "bluesky-timeline",
+      "name": "Bluesky Timeline",
+      "component": "BlueskyTimelineComponent",
+      "location": "channel_header",
+      "priority": 70,
+      "props": {}
+    }
+  ]
+}
+

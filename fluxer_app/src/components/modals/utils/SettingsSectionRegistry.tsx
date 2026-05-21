@@ -44,7 +44,8 @@ export type UserSettingsTabType =
 	| 'keybinds'
 	| 'expression_packs'
 	| 'limits_config'
-	| 'linked_accounts';
+	| 'linked_accounts'
+	| 'plugins';
 
 export interface SectionDefinition {
 	id: string;

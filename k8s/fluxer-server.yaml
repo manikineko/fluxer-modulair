@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fluxer-server
+  namespace: fluxer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fluxer-server
+  template:
+    metadata:
+      labels:
+        app: fluxer-server
+    spec:
+      containers:
+      - name: fluxer-server
+        image: ${FLUXER_SERVER_IMAGE:-ghcr.io/fluxerapp/fluxer-server:stable}
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: FLUXER_CONFIG
+          value: "/usr/src/app/config/config.json"
+        - name: FLUXER_PLUGIN_DIR
+          value: "/usr/src/app/plugins"
+        - name: FLUXER_PLUGIN_AUTOLOAD
+          value: "true"
+        volumeMounts:
+        - name: config
+          mountPath: /usr/src/app/config
+          readOnly: true
+        - name: plugins
+          mountPath: /usr/src/app/plugins
+          readOnly: true
+        - name: fluxer-data
+          mountPath: /usr/src/app/data
+        - name: fluxer-plugins
+          mountPath: /usr/src/app/plugins/data
+      volumes:
+      - name: config
+        configMap:
+          name: fluxer-config
+      - name: plugins
+        configMap:
+          name: fluxer-plugins
+      - name: fluxer-data
+        emptyDir: {}
+      - name: fluxer-plugins
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fluxer-server
+  namespace: fluxer
+spec:
+  selector:
+    app: fluxer-server
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+  type: LoadBalancer

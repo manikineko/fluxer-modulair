@@ -29,6 +29,7 @@
 		},
 		"admin": {
 			"secret_key_base": "GENERATE_A_64_CHAR_HEX_SECRET",
+			"oauth_client_id": "GENERATE_A_64_CHAR_HEX_SECRET",
 			"oauth_client_secret": "GENERATE_A_64_CHAR_HEX_SECRET"
 		},
 		"marketing": {

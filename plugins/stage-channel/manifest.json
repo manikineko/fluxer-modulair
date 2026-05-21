@@ -1,0 +1,24 @@
+{
+  "id": "stage-channel",
+  "name": "Stage Channel",
+  "version": "1.0.0",
+  "description": "Stage channel type for voice events",
+  "author": "Fluxer Contributors",
+  "license": "MIT",
+  "main": "index.ts",
+  "target": "client",
+  "permissions": {},
+  "hooks": {
+    "onLoad": "onLoad",
+    "onEnable": "onEnable",
+    "onDisable": "onDisable"
+  },
+  "channelTypes": [
+    {
+      "id": "GUILD_STAGE",
+      "name": "Stage",
+      "description": "Stage channel for voice events",
+      "icon": "microphone"
+    }
+  ]
+}

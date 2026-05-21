@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cassandra
+  namespace: fluxer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cassandra
+  template:
+    metadata:
+      labels:
+        app: cassandra
+    spec:
+      containers:
+      - name: cassandra
+        image: cassandra:5.0
+        ports:
+        - containerPort: 9042
+        env:
+        - name: CASSANDRA_CLUSTER_NAME
+          value: fluxer-cluster
+        - name: CASSANDRA_DC
+          value: dc1
+        - name: CASSANDRA_RACK
+          value: rack1
+        - name: CASSANDRA_ENDPOINT_SNITCH
+          value: GossipingPropertyFileSnitch
+        - name: CASSANDRA_SEEDS
+          value: cassandra
+        - name: MAX_HEAP_SIZE
+          value: 2G
+        - name: HEAP_NEWSIZE
+          value: 512M
+        - name: CASSANDRA_BROADCAST_ADDRESS
+          value: cassandra
+        - name: CASSANDRA_LISTEN_ADDRESS
+          value: auto
+        - name: CASSANDRA_RPC_ADDRESS
+          value: 0.0.0.0
+        - name: CASSANDRA_AUTHENTICATOR
+          value: PasswordAuthenticator
+        - name: CASSANDRA_AUTHORIZER
+          value: CassandraAuthorizer
+        volumeMounts:
+        - name: cassandra-data
+          mountPath: /var/lib/cassandra
+        livenessProbe:
+          exec:
+            command:
+            - cqlsh
+            - -e
+            - "DESCRIBE KEYSPACES;"
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 5
+      volumes:
+      - name: cassandra-data
+        persistentVolumeClaim:
+          claimName: cassandra-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cassandra
+  namespace: fluxer
+spec:
+  selector:
+    app: cassandra
+  ports:
+  - protocol: TCP
+    port: 9042
+    targetPort: 9042
+  type: ClusterIP

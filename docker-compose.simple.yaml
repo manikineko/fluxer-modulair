@@ -1,0 +1,279 @@
+# Simplified Docker Compose with profiles for easy setup
+# Usage:
+#   Minimal setup (core services only): docker-compose -f docker-compose.simple.yaml --profile minimal up
+#   Full setup (all features): docker-compose -f docker-compose.simple.yaml --profile full up
+#   Development setup: docker-compose -f docker-compose.simple.yaml --profile dev up
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '5'
+
+services:
+  # Core infrastructure (always required)
+  valkey:
+    image: valkey/valkey:8.0.6-alpine
+    container_name: valkey
+    restart: unless-stopped
+    logging: *default-logging
+    profiles: [minimal, full, dev]
+
+  nats:
+    image: nats:2.10.25-alpine
+    container_name: nats
+    restart: unless-stopped
+    command: ["-js"]
+    ports:
+      - "4222:4222"
+      - "4223:4223"
+    logging: *default-logging
+    profiles: [minimal, full, dev]
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=fluxer
+      - POSTGRES_PASSWORD=fluxer
+      - POSTGRES_DB=fluxer
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    profiles: [minimal, full, dev]
+
+  # Storage services (minimal+)
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    ports:
+      - '${MINIO_PORT:-9000}:9000'
+      - '${MINIO_CONSOLE_PORT:-9001}:9001'
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    profiles: [minimal, full, dev]
+
+  ipfs:
+    image: ipfs/kubo:latest
+    container_name: ipfs
+    restart: unless-stopped
+    environment:
+      - IPFS_PROFILE=server
+    ports:
+      - '${IPFS_SWARM_PORT:-4001}:4001'
+      - '${IPFS_API_PORT:-5001}:5001'
+      - '${IPFS_GATEWAY_PORT:-8080}:8080'
+    volumes:
+      - ipfs_data:/data/ipfs
+    healthcheck:
+      test: ['CMD', 'ipfs', 'swarm', 'peers']
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    profiles: [minimal, full, dev]
+
+  # Core Fluxer services (minimal+)
+  fluxer_app:
+    build:
+      context: .
+      dockerfile: ./fluxer_app/Dockerfile
+    container_name: fluxer_app
+    restart: unless-stopped
+    environment:
+      - FLUXER_CONFIG=/usr/src/app/config/config.json
+      - NODE_ENV=production
+      - FLUXER_PUBLIC_PORT=${FLUXER_PUBLIC_PORT:-48763}
+      - FLUXER_STATIC_CDN=http://172.17.0.1:8082
+    ports:
+      - '${FLUXER_PUBLIC_PORT:-48763}:8080'
+    volumes:
+      - ./config:/usr/src/app/config:ro
+      - ./plugins:/usr/src/app/plugins:ro
+      - ./fluxer_static:/usr/src/app/fluxer_static:ro
+    depends_on:
+      - valkey
+      - postgres
+    logging: *default-logging
+    profiles: [minimal, full, dev]
+
+  fluxer_admin:
+    build:
+      context: .
+      dockerfile: ./fluxer_admin/Dockerfile
+    container_name: fluxer_admin
+    restart: unless-stopped
+    environment:
+      - FLUXER_CONFIG=/usr/src/app/config/admin-config.json
+      - NODE_ENV=development
+      - LOG_LEVEL=debug
+      - FLUXER_ADMIN_PORT=${FLUXER_ADMIN_PORT:-8081}
+      - FLUXER_CONFIG__INTERNAL__KV=redis://valkey:6379/0
+      - FLUXER_ADMIN_REDIRECT_URL=http://localhost:8081
+      - FLUXER_STATIC_CDN=http://172.17.0.1:8082
+      - OAUTH_CLIENT_ID=1234567890123456789
+      - OAUTH_CLIENT_SECRET=dev-oauth-client-secret
+      - OAUTH_REDIRECT_URI=http://localhost:8081/oauth2_callback
+    ports:
+      - '${FLUXER_ADMIN_PORT:-8081}:3001'
+    volumes:
+      - ./config:/usr/src/app/config:ro
+      - ./fluxer_static:/usr/src/app/fluxer_static:ro
+      - ./fluxer_static:/usr/src/app/fluxer_admin/public/static:ro
+    depends_on:
+      - valkey
+      - postgres
+    logging: *default-logging
+    profiles: [minimal, full, dev]
+
+  fluxer_app_proxy:
+    image: nginx:alpine
+    container_name: fluxer_app_proxy
+    restart: unless-stopped
+    ports:
+      - '8082:80'
+    volumes:
+      - ./fluxer_static:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    logging: *default-logging
+    profiles: [minimal, full, dev]
+
+  fluxer_server:
+    build:
+      context: .
+      dockerfile: ./fluxer_server/Dockerfile
+    container_name: fluxer_server
+    restart: unless-stopped
+    environment:
+      - FLUXER_CONFIG=/usr/src/app/config/config.json
+      - FLUXER_PLUGIN_DIR=/usr/src/app/plugins
+      - FLUXER_PLUGIN_AUTOLOAD=true
+    ports:
+      - '49319:49319'
+      - '49107:49107'
+    volumes:
+      - ./config:/usr/src/app/config:ro
+      - ./fluxer_static:/usr/src/app/fluxer_static:ro
+      - ./plugins:/usr/src/app/plugins:ro
+    depends_on:
+      - nats
+      - valkey
+      - postgres
+    logging: *default-logging
+    profiles: [minimal, full, dev]
+
+  # Search services (full only)
+  meilisearch:
+    image: getmeili/meilisearch:v1.14
+    container_name: meilisearch
+    profiles: [full, dev]
+    restart: unless-stopped
+    environment:
+      MEILI_ENV: production
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-dev-meilisearch-master-key}
+      MEILI_DB_PATH: /meili_data
+      MEILI_HTTP_ADDR: 0.0.0.0:7700
+    ports:
+      - '${MEILI_PORT:-7700}:7700'
+    volumes:
+      - meilisearch_data:/meili_data
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fsS http://127.0.0.1:7700/health || exit 1']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+
+  elasticsearch:
+    image: elasticsearch:8.19.11
+    container_name: elasticsearch
+    profiles: [full]
+    restart: unless-stopped
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: 'false'
+      xpack.security.http.ssl.enabled: 'false'
+      ES_JAVA_OPTS: '-Xms512m -Xmx512m'
+    ports:
+      - '${ELASTICSEARCH_PORT:-9200}:9200'
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fsS http://127.0.0.1:9200/_cluster/health || exit 1']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+
+  # Voice services (full only)
+  livekit:
+    image: livekit/livekit-server:v1.9.11
+    container_name: livekit
+    profiles: [full, dev]
+    restart: unless-stopped
+    command: ['--config', '/etc/livekit/livekit.yaml']
+    volumes:
+      - ./config/livekit.yaml:/etc/livekit/livekit.yaml:ro
+    ports:
+      - '${LIVEKIT_PORT:-7880}:7880'
+      - '7881:7881'
+      - '3478:3478/udp'
+      - '50000-50100:50000-50100/udp'
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:7880 || exit 1']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+
+  # Database for large-scale deployments (full only)
+  cassandra:
+    image: cassandra:5.0
+    container_name: cassandra
+    profiles: [full]
+    restart: unless-stopped
+    environment:
+      - CASSANDRA_CLUSTER_NAME=fluxer-cluster
+      - CASSANDRA_DC=dc1
+      - CASSANDRA_RACK=rack1
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - CASSANDRA_SEEDS=cassandra
+      - MAX_HEAP_SIZE=2G
+      - HEAP_NEWSIZE=512M
+      - CASSANDRA_BROADCAST_ADDRESS=cassandra
+      - CASSANDRA_LISTEN_ADDRESS=auto
+      - CASSANDRA_RPC_ADDRESS=0.0.0.0
+      - CASSANDRA_AUTHENTICATOR=PasswordAuthenticator
+      - CASSANDRA_AUTHORIZER=CassandraAuthorizer
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    ports:
+      - '9042:9042'
+    healthcheck:
+      test: ['CMD-SHELL', 'cqlsh -e "DESCRIBE KEYSPACES;" || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    logging: *default-logging
+
+volumes:
+  valkey_data:
+  postgres_data:
+  fluxer_data:
+  meilisearch_data:
+  elasticsearch_data:
+  fluxer_plugins:
+  minio_data:
+  ipfs_data:
+  cassandra_data:

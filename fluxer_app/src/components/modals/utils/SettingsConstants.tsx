@@ -35,7 +35,6 @@ import {
 	CrownIcon,
 	DevicesIcon,
 	EyeSlashIcon,
-	FlagIcon,
 	FlaskIcon,
 	GiftIcon,
 	type Icon,
@@ -43,8 +42,8 @@ import {
 	KeyboardIcon,
 	MicrophoneIcon,
 	PaintBrushIcon,
-	PaletteIcon,
 	PersonSimpleCircleIcon,
+	PuzzlePieceIcon,
 	ProhibitIcon,
 	RobotIcon,
 	ShieldIcon,
@@ -63,6 +62,7 @@ export type PrivacySafetyTabType = 'connections' | 'communication' | 'data-expor
 export type AccountSecurityTabType = 'account' | 'security' | 'danger_zone';
 export type DevTab = 'general' | 'account_premium' | 'mocking' | 'nagbars' | 'tools' | 'typography';
 export type ComponentGalleryTabType = 'buttons' | 'inputs' | 'selections' | 'overlays' | 'indicators' | 'markdown';
+export type PluginsTabType = 'installed' | 'store';
 
 export type UserSettingsSubtabType =
 	| AppearanceTabType
@@ -72,7 +72,8 @@ export type UserSettingsSubtabType =
 	| PrivacySafetyTabType
 	| AccountSecurityTabType
 	| DevTab
-	| ComponentGalleryTabType;
+	| ComponentGalleryTabType
+	| PluginsTabType;
 
 type UserSettingsTabCategories = 'user_settings' | 'app_settings' | 'developer' | 'staff_only';
 
@@ -223,23 +224,10 @@ const ALL_TABS_DESCRIPTORS: Array<SettingsTabDescriptor> = [
 		iconWeight: 'bold',
 	},
 	{
-		type: 'developer_options',
-		category: 'staff_only',
-		label: msg`Developer Tools`,
-		icon: CodeIcon,
-		iconWeight: 'bold',
-	},
-	{
-		type: 'limits_config',
-		category: 'staff_only',
-		label: msg`Limits Config`,
-		icon: FlagIcon,
-	},
-	{
-		type: 'component_gallery',
-		category: 'staff_only',
-		label: msg`UI Kit`,
-		icon: PaletteIcon,
+		type: 'plugins',
+		category: 'app_settings',
+		label: msg`Plugins`,
+		icon: PuzzlePieceIcon,
 	},
 ];
 
@@ -311,6 +299,9 @@ const SETTINGS_SUBTABS_DESCRIPTORS: Array<SettingsSubtabDescriptor> = [
 	{type: 'overlays', parentTab: 'component_gallery', label: msg`Overlays & Menus`},
 	{type: 'indicators', parentTab: 'component_gallery', label: msg`Indicators & Status`},
 	{type: 'markdown', parentTab: 'component_gallery', label: msg`Markdown`},
+
+	{type: 'installed', parentTab: 'plugins', label: msg`Installed`},
+	{type: 'store', parentTab: 'plugins', label: msg`Plugin Shop`},
 ];
 
 export const getSettingsSubtabs = (i18n: I18n): Array<SettingsSubtab> => {

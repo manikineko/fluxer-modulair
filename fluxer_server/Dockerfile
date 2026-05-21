@@ -77,11 +77,12 @@ COPY packages/mime_utils/package.json ./packages/mime_utils/
 COPY packages/nats/package.json ./packages/nats/
 COPY packages/number_utils/package.json ./packages/number_utils/
 COPY packages/openapi/package.json ./packages/openapi/
+COPY packages/plugin/package.json ./packages/plugin/
 COPY packages/time/package.json ./packages/time/
 COPY fluxer_server/package.json ./fluxer_server/
 COPY fluxer_app/package.json ./fluxer_app/
 
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --ignore-scripts --config.trust-policy=loose
 
 RUN pnpm approve-builds msgpackr-extract@3.0.3 @parcel/watcher@2.5.6
 
@@ -97,7 +98,7 @@ COPY fluxer_server/ ./fluxer_server/
 
 RUN pnpm --filter @fluxer/marketing build:css
 
-COPY fluxer_media_proxy/data/model.onnx ./fluxer_media_proxy/data/model.onnx
+# COPY fluxer_media_proxy/data/model.onnx ./fluxer_media_proxy/data/model.onnx
 
 
 FROM erlang:28-slim AS gateway-build
@@ -125,8 +126,8 @@ COPY fluxer_gateway/rebar.config fluxer_gateway/rebar.lock* ./
 RUN rebar3 compile --deps_only
 
 COPY fluxer_gateway/. ./fluxer_gateway
-RUN LOGGER_LEVEL=${LOGGER_LEVEL} envsubst '${LOGGER_LEVEL}' < fluxer_gateway/config/vm.args.template > fluxer_gateway/config/vm.args && \
-	LOGGER_LEVEL=${LOGGER_LEVEL} envsubst '${LOGGER_LEVEL}' < fluxer_gateway/config/sys.config.template > fluxer_gateway/config/sys.config && \
+RUN envsubst '${LOGGER_LEVEL}' < fluxer_gateway/config/vm.args.template > fluxer_gateway/config/vm.args && \
+	envsubst '${LOGGER_LEVEL}' < fluxer_gateway/config/sys.config.template > fluxer_gateway/config/sys.config && \
 	(cd fluxer_gateway && rebar3 as prod release)
 
 FROM deps AS app-build
@@ -135,9 +136,7 @@ COPY tsconfigs /usr/src/app/tsconfigs
 
 COPY packages/ ./packages/
 COPY config/ ./config/
-COPY fluxer_app/ ./fluxer_app/
-
-RUN cd fluxer_app && FLUXER_CONFIG=/usr/src/app/config/config.json pnpm build
+COPY fluxer_server/ ./fluxer_server/
 
 FROM node:24-trixie-slim AS production
 
@@ -174,7 +173,7 @@ COPY --from=build /usr/src/app/tsconfigs ./tsconfigs
 COPY --from=build /usr/src/app/pnpm-workspace.yaml ./
 COPY --from=build /usr/src/app/package.json ./
 COPY --from=gateway-build /usr/src/app/gateway/fluxer_gateway/_build/prod/rel/fluxer_gateway /opt/fluxer_gateway
-COPY --from=app-build /usr/src/app/fluxer_app/dist /usr/src/app/assets
+# COPY --from=app-build /usr/src/app/fluxer_app/dist /usr/src/app/assets
 
 RUN mkdir -p /usr/src/app/data/storage && \
 	mkdir -p /usr/src/app/data/db && \
@@ -189,13 +188,7 @@ RUN mkdir -p /usr/src/app/data/storage && \
 
 ARG INCLUDE_NSFW_ML=false
 
-RUN --mount=type=bind,from=build,source=/usr/src/app/fluxer_media_proxy/data/model.onnx,target=/tmp/model.onnx \
-    if [ "$INCLUDE_NSFW_ML" = "true" ]; then \
-        echo "Including NSFW detection model..."; \
-        cp /tmp/model.onnx /opt/data/model.onnx; \
-    else \
-        echo "Skipping NSFW detection model (INCLUDE_NSFW_ML=$INCLUDE_NSFW_ML)"; \
-    fi
+RUN echo "Skipping NSFW detection model (INCLUDE_NSFW_ML=$INCLUDE_NSFW_ML)"
 
 
 
@@ -220,6 +213,6 @@ ENV BUILD_TIMESTAMP=${BUILD_TIMESTAMP}
 ENV RELEASE_CHANNEL=${RELEASE_CHANNEL}
 
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-	CMD curl -f http://localhost:8080/_health || exit 1
+	CMD curl -f http://localhost:49319/_health || exit 1
 
 ENTRYPOINT ["pnpm", "--dir", "fluxer_server", "start"]

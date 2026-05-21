@@ -36,6 +36,7 @@ import {
 	UserProfilePreviewBio,
 	UserProfileRoles,
 } from '@app/components/popouts/UserProfileShared';
+import {usePluginUIComponents} from '@app/hooks/usePluginUIComponents';
 import {ProfileCardActions} from '@app/components/profile/profile_card/ProfileCardActions';
 import {ProfileCardBanner} from '@app/components/profile/profile_card/ProfileCardBanner';
 import {ProfileCardContent} from '@app/components/profile/profile_card/ProfileCardContent';
@@ -86,6 +87,7 @@ export const UserProfilePopout: React.FC<UserProfilePopoutProps> = observer(
 	({popoutKey, user, isWebhook, guildId, isPreview}) => {
 		const {t, i18n} = useLingui();
 		const [hoverRef, isHovering] = useHover();
+		const {components: pluginComponents} = usePluginUIComponents('user_popout');
 		const [profile, setProfile] = useState<ProfileRecord | null>(() => {
 			const cachedProfile = UserProfileStore.getProfile(user.id, guildId);
 			return cachedProfile ?? createMockProfile(user);
@@ -336,6 +338,20 @@ export const UserProfilePopout: React.FC<UserProfilePopoutProps> = observer(
 								/>
 							)}
 							{profile && <UserProfileConnections profile={profile} variant="compact" />}
+							{pluginComponents.length > 0 && (
+								<div style={{marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid var(--background-modifier-accent)'}}>
+									{pluginComponents.map((component) => (
+										<div key={component.id} style={{padding: '0.25rem 0'}}>
+											<h4 style={{fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 0.125rem 0'}}>
+												{component.name}
+											</h4>
+											<p style={{fontSize: '0.6875rem', color: 'var(--text-secondary)', margin: 0}}>
+												Component: {component.name}
+											</p>
+										</div>
+									))}
+								</div>
+							)}
 						</ProfileCardContent>
 
 						{!isWebhook && (

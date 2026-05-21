@@ -1,0 +1,58 @@
+{
+  "id": "example-plugin",
+  "name": "Example Plugin",
+  "version": "1.0.0",
+  "description": "A simple example plugin demonstrating the Fluxer plugin framework",
+  "author": "manikineko.nl",
+  "license": "MIT",
+  "main": "index.ts",
+  "target": "both",
+  "permissions": {},
+  "hooks": {
+    "onLoad": "onLoad",
+    "onEnable": "onEnable",
+    "onDisable": "onDisable"
+  },
+  "uiComponents": [
+    {
+      "id": "example-plugin-settings",
+      "name": "Example Plugin Settings",
+      "component": "ExamplePluginSettings",
+      "location": "settings",
+      "priority": 100,
+      "props": {}
+    },
+    {
+      "id": "example-plugin-profile",
+      "name": "Example Profile Widget",
+      "component": "ExampleProfileWidget",
+      "location": "user_popout",
+      "priority": 100,
+      "props": {}
+    },
+    {
+      "id": "example-plugin-channel-header",
+      "name": "Example Channel Header Widget",
+      "component": "ExampleChannelHeaderWidget",
+      "location": "channel_header",
+      "priority": 100,
+      "props": {}
+    },
+    {
+      "id": "example-plugin-guild-menu",
+      "name": "Example Guild Menu Item",
+      "component": "ExampleGuildMenuItem",
+      "location": "guild_menu",
+      "priority": 100,
+      "props": {}
+    },
+    {
+      "id": "example-plugin-message",
+      "name": "Example Message Widget",
+      "component": "ExampleMessageWidget",
+      "location": "message",
+      "priority": 100,
+      "props": {}
+    }
+  ]
+}

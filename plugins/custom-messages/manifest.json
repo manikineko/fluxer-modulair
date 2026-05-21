@@ -1,0 +1,15 @@
+{
+  "id": "custom-messages",
+  "name": "Custom Message Types",
+  "version": "1.0.0",
+  "description": "Custom message types with AT Protocol record support for polls, embeds, code blocks, and more",
+  "author": "Fluxer Contributors",
+  "license": "AGPL-3.0",
+  "main": "index.ts",
+  "permissions": [],
+  "hooks": {
+    "onLoad": true,
+    "onEnable": true,
+    "onDisable": true
+  }
+}

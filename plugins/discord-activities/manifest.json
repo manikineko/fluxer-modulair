@@ -1,0 +1,24 @@
+{
+  "id": "discord-activities",
+  "name": "Discord Activities",
+  "version": "1.0.0",
+  "description": "Adds Discord-style activities (playing games, streaming, listening to music, etc.)",
+  "author": "manikineko.nl",
+  "license": "MIT",
+  "main": "index.ts",
+  "target": "both",
+  "permissions": {
+    "api": {
+      "internal": true
+    },
+    "userData": {
+      "read": true,
+      "write": true
+    }
+  },
+  "hooks": {
+    "onLoad": "onLoad",
+    "onEnable": "onEnable",
+    "onDisable": "onDisable"
+  }
+}

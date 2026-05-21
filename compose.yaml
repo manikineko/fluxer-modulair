@@ -9,38 +9,149 @@ services:
     image: valkey/valkey:8.0.6-alpine
     container_name: valkey
     restart: unless-stopped
-    command: ['valkey-server', '--appendonly', 'yes', '--save', '60', '1', '--loglevel', 'warning']
+    logging: *default-logging
+
+  nats:
+    image: nats:2.10.25-alpine
+    container_name: nats
+    restart: unless-stopped
+    command: ["-js"]  # Enable JetStream
+    ports:
+      - "4222:4222"
+      - "4223:4223"
+    logging: *default-logging
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=fluxer
+      - POSTGRES_PASSWORD=fluxer
+      - POSTGRES_DB=fluxer
     volumes:
-      - valkey_data:/data
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    ports:
+      - '${MINIO_PORT:-9000}:9000'
+      - '${MINIO_CONSOLE_PORT:-9001}:9001'
+    volumes:
+      - minio_data:/data
     healthcheck:
-      test: ['CMD', 'valkey-cli', 'ping']
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  ipfs:
+    image: ipfs/kubo:latest
+    container_name: ipfs
+    restart: unless-stopped
+    environment:
+      - IPFS_PROFILE=server
+    ports:
+      - '${IPFS_SWARM_PORT:-4001}:4001'
+      - '${IPFS_API_PORT:-5001}:5001'
+      - '${IPFS_GATEWAY_PORT:-8080}:8080'
+    volumes:
+      - ipfs_data:/data/ipfs
+    healthcheck:
+      test: ['CMD', 'ipfs', 'swarm', 'peers']
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  fluxer_app:
+    build:
+      context: .
+      dockerfile: ./fluxer_app/Dockerfile
+    container_name: fluxer_app
+    restart: unless-stopped
+    environment:
+      - FLUXER_CONFIG=/usr/src/app/config/config.json
+      - NODE_ENV=production
+      - FLUXER_PUBLIC_PORT=${FLUXER_PUBLIC_PORT:-48763}
+      - FLUXER_STATIC_CDN=http://172.17.0.1:8082
+    ports:
+      - '${FLUXER_PUBLIC_PORT:-48763}:8080'
+    volumes:
+      - ./config:/usr/src/app/config:ro
+      - ./plugins:/usr/src/app/plugins:ro
+      - ./fluxer_static:/usr/src/app/fluxer_static:ro
+    depends_on:
+      - valkey
+      - postgres
+    logging: *default-logging
+
+  fluxer_admin:
+    build:
+      context: .
+      dockerfile: ./fluxer_admin/Dockerfile
+    container_name: fluxer_admin
+    restart: unless-stopped
+    environment:
+      - FLUXER_CONFIG=/usr/src/app/config/admin-config.json
+      - NODE_ENV=development
+      - LOG_LEVEL=debug
+      - FLUXER_ADMIN_PORT=${FLUXER_ADMIN_PORT:-8081}
+      - FLUXER_CONFIG__INTERNAL__KV=redis://valkey:6379/0
+      - FLUXER_ADMIN_REDIRECT_URL=http://localhost:8081
+      - FLUXER_STATIC_CDN=http://172.17.0.1:8082
+      - OAUTH_CLIENT_ID=1234567890123456789
+      - OAUTH_CLIENT_SECRET=dev-oauth-client-secret
+      - OAUTH_REDIRECT_URI=http://localhost:8081/oauth2_callback
+    ports:
+      - '${FLUXER_ADMIN_PORT:-8081}:3001'
+    volumes:
+      - ./config:/usr/src/app/config:ro
+      - ./fluxer_static:/usr/src/app/fluxer_static:ro
+      - ./fluxer_static:/usr/src/app/fluxer_admin/public/static:ro
+    depends_on:
+      - valkey
+      - postgres
+    logging: *default-logging
+
+  fluxer_app_proxy:
+    image: nginx:alpine
+    container_name: fluxer_app_proxy
+    restart: unless-stopped
+    ports:
+      - '8082:80'
+    volumes:
+      - ./fluxer_static:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
     logging: *default-logging
 
   fluxer_server:
-    image: ${FLUXER_SERVER_IMAGE:-ghcr.io/fluxerapp/fluxer-server:stable}
+    build:
+      context: .
+      dockerfile: ./fluxer_server/Dockerfile
     container_name: fluxer_server
     restart: unless-stopped
-    init: true
     environment:
-      FLUXER_CONFIG: /usr/src/app/config/config.json
-      NODE_ENV: production
+      - FLUXER_CONFIG=/usr/src/app/config/config.json
+      - FLUXER_PLUGIN_DIR=/usr/src/app/plugins
+      - FLUXER_PLUGIN_AUTOLOAD=true
+      - FLUXER_GATEWAY_HOST=0.0.0.0
     ports:
-      - '${FLUXER_HTTP_PORT:-8080}:8080'
-    depends_on:
-      valkey:
-        condition: service_healthy
+      - '49319:49319'
+      - '49107:49107'
     volumes:
       - ./config:/usr/src/app/config:ro
-      - fluxer_data:/usr/src/app/data
-    healthcheck:
-      test: ['CMD-SHELL', 'curl -fsS http://127.0.0.1:8080/_health || exit 1']
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 15s
+      - ./fluxer_static:/usr/src/app/fluxer_static:ro
+      - ./plugins:/usr/src/app/plugins:ro
+    depends_on:
+      - nats
+      - valkey
+      - postgres
     logging: *default-logging
 
   meilisearch:
@@ -105,8 +216,41 @@ services:
       retries: 5
     logging: *default-logging
 
+  cassandra:
+    image: cassandra:5.0
+    container_name: cassandra
+    restart: unless-stopped
+    environment:
+      - CASSANDRA_CLUSTER_NAME=fluxer-cluster
+      - CASSANDRA_DC=dc1
+      - CASSANDRA_RACK=rack1
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - CASSANDRA_SEEDS=cassandra
+      - MAX_HEAP_SIZE=2G
+      - HEAP_NEWSIZE=512M
+      - CASSANDRA_BROADCAST_ADDRESS=cassandra
+      - CASSANDRA_LISTEN_ADDRESS=auto
+      - CASSANDRA_RPC_ADDRESS=0.0.0.0
+      - CASSANDRA_AUTHENTICATOR=PasswordAuthenticator
+      - CASSANDRA_AUTHORIZER=CassandraAuthorizer
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    ports:
+      - '9042:9042'
+    healthcheck:
+      test: ['CMD-SHELL', 'cqlsh -e "DESCRIBE KEYSPACES;" || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    logging: *default-logging
+
 volumes:
   valkey_data:
+  postgres_data:
   fluxer_data:
   meilisearch_data:
   elasticsearch_data:
+  fluxer_plugins:
+  minio_data:
+  ipfs_data:
+  cassandra_data:

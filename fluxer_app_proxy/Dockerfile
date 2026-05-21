@@ -16,7 +16,7 @@ COPY patches/ ./patches/
 COPY packages/config/ ./packages/config/
 COPY packages/constants/ ./packages/constants/
 
-RUN pnpm install --frozen-lockfile --filter @fluxer/config...
+RUN pnpm install --filter @fluxer/config...
 RUN pnpm --filter @fluxer/config generate
 
 FROM base AS deps
@@ -26,7 +26,7 @@ COPY patches/ ./patches/
 COPY packages/ ./packages/
 COPY fluxer_app_proxy/package.json ./fluxer_app_proxy/
 
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --prod
 
 FROM node:24-bookworm-slim
 

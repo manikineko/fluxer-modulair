@@ -66,6 +66,7 @@ function getAdminRedirectUri(): string {
 }
 
 function buildAdminApplication(secretHash: string | null): Application {
+	const redirectUri = getAdminRedirectUri();
 	const row: ApplicationRow = {
 		application_id: createApplicationID(ADMIN_OAUTH2_APPLICATION_ID),
 		owner_user_id: SYSTEM_USER_ID,
@@ -73,7 +74,7 @@ function buildAdminApplication(secretHash: string | null): Application {
 		bot_user_id: null,
 		bot_is_public: false,
 		bot_require_code_grant: false,
-		oauth2_redirect_uris: new Set<string>([getAdminRedirectUri()]),
+		oauth2_redirect_uris: new Set<string>([redirectUri]),
 		client_secret_hash: secretHash,
 		bot_token_hash: null,
 		bot_token_preview: null,

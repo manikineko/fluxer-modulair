@@ -40,6 +40,7 @@ import {openClaimAccountModal} from '@app/components/modals/ClaimAccountModal';
 import {Scroller, type ScrollerHandle} from '@app/components/uikit/Scroller';
 import {Tooltip} from '@app/components/uikit/tooltip/Tooltip';
 import {useRovingFocusList} from '@app/hooks/useRovingFocusList';
+import {usePluginUIComponents} from '@app/hooks/usePluginUIComponents';
 import {ComponentDispatch} from '@app/lib/ComponentDispatch';
 import {Platform} from '@app/lib/Platform';
 import {useLocation} from '@app/lib/router/React';
@@ -286,6 +287,7 @@ const GuildList = observer(() => {
 	);
 	const getGuildScrollContainer = useCallback(() => scrollRef.current?.getScrollerNode() ?? null, []);
 	const [visibleDMChannels, setVisibleDMChannels] = useState(unreadDMChannels);
+	const {components: pluginComponents} = usePluginUIComponents('sidebar');
 	const pinnedCallChannel =
 		MediaEngineStore.connected && MediaEngineStore.channelId
 			? (() => {
@@ -666,6 +668,20 @@ const GuildList = observer(() => {
 						<AddGuildButton />
 						{!Platform.isElectron && !Platform.isPWA && <DownloadButton />}
 						<HelpButton />
+						{process.env.NODE_ENV === 'development' && pluginComponents.map((component) => (
+							<button
+								key={component.id}
+								type="button"
+								onClick={() => {
+									if (component.props?.onClick) {
+										(component.props.onClick as () => void)();
+									}
+								}}
+								className={styles.guildListItemSlot}
+							>
+								{component.name}
+							</button>
+						))}
 					</div>
 				</div>
 			</Scroller>

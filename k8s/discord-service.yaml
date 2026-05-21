@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: discord-service
+  namespace: fluxer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: discord-service
+  template:
+    metadata:
+      labels:
+        app: discord-service
+    spec:
+      containers:
+      - name: discord-service
+        image: fluxer/discord-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3003
+        env:
+        - name: NODE_ENV
+          value: "production"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: discord-service
+  namespace: fluxer
+spec:
+  selector:
+    app: discord-service
+  ports:
+  - protocol: TCP
+    port: 3003
+    targetPort: 3003
+  type: ClusterIP

@@ -38,7 +38,7 @@ import type {Context as HonoContext} from 'hono';
 export interface MiddlewarePipelineOptions {
 	logger: ILogger;
 	nodeEnv: string;
-	corsOrigins: Array<string>;
+	corsOrigins: Array<string> | '*';
 	setSentryUser?: (user: {id?: string; username?: string; email?: string; ip_address?: string}) => void;
 	isTelemetryActive?: () => boolean;
 }
@@ -64,9 +64,35 @@ export function configureMiddleware(routes: HonoApp, options: MiddlewarePipeline
 		skipPaths: ['/_health', '/internal/telemetry'],
 	});
 
+	// Add explicit CORS headers before other middleware
+	if (nodeEnv === 'development') {
+		routes.use('*', async (ctx, next) => {
+			// Add fake X-Forwarded-For header for development
+			if (!ctx.req.header('X-Forwarded-For')) {
+				ctx.req.raw.headers.set('X-Forwarded-For', '127.0.0.1');
+			}
+			
+			if (ctx.req.method === 'OPTIONS') {
+				ctx.header('Access-Control-Allow-Origin', '*');
+				ctx.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+				ctx.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept-Language, X-Request-ID, x-fluxer-platform, x-fluxer-client-version, x-fluxer-build-number');
+				ctx.header('Access-Control-Max-Age', '86400');
+				return ctx.newResponse(null, 204);
+			}
+			
+			await next();
+			
+			// Set CORS headers after response is generated
+			ctx.header('Access-Control-Allow-Origin', '*');
+			ctx.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+			ctx.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept-Language, X-Request-ID, x-fluxer-platform, x-fluxer-client-version, x-fluxer-build-number');
+			ctx.header('Access-Control-Max-Age', '86400');
+		});
+	}
+
 	applyMiddlewareStack(routes, {
 		requestId: {},
-		cors: {origins: corsOrigins},
+		cors: nodeEnv === 'development' ? undefined : {origins: corsOrigins},
 		tracing: requestTelemetry.tracing,
 		metrics: {
 			enabled: true,
@@ -107,7 +133,9 @@ export function configureMiddleware(routes: HonoApp, options: MiddlewarePipeline
 	routes.use(ConcurrencyLimitMiddleware);
 	routes.use(MetricsMiddleware);
 	routes.use(AuditLogMiddleware);
-	routes.use(RequireXForwardedForMiddleware());
+	if (nodeEnv !== 'development') {
+		routes.use(RequireXForwardedForMiddleware());
+	}
 	routes.use(RequestCacheMiddleware);
 	routes.use(ServiceMiddleware);
 	routes.use(UserMiddleware);

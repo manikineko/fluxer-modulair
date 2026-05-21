@@ -1,0 +1,26 @@
+{
+  "id": "plugin-shop",
+  "name": "Plugin Shop",
+  "version": "1.0.0",
+  "description": "Plugin marketplace for discovering, installing, and managing plugins",
+  "author": "manikineko.nl",
+  "license": "MIT",
+  "main": "index.ts",
+  "target": "both",
+  "permissions": {
+    "network": {
+      "request": true,
+      "requestDomains": ["api.manikineko.nl", "cdn.manikineko.nl"]
+    },
+    "api": {
+      "internal": true,
+      "external": true
+    }
+  },
+  "hooks": {
+    "onLoad": "onLoad",
+    "onEnable": "onEnable",
+    "onDisable": "onDisable",
+    "onRequest": "onRequest"
+  }
+}

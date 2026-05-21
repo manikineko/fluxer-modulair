@@ -33,7 +33,7 @@ import type React from 'react';
 interface ChannelChatLayoutProps {
 	channel: ChannelRecord;
 	messages: React.ReactNode;
-	textarea: React.ReactNode;
+	textarea?: React.ReactNode;
 	hideSlowmodeIndicator?: boolean;
 }
 

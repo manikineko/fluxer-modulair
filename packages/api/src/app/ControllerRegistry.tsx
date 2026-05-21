@@ -19,6 +19,7 @@
 
 import {registerAdminControllers} from '@fluxer/api/src/admin/controllers';
 import {AuthController} from '@fluxer/api/src/auth/AuthController';
+import {AtprotoPDSController} from '@fluxer/api/src/atproto/AtprotoPDSController';
 import {BlueskyOAuthController} from '@fluxer/api/src/bluesky/BlueskyOAuthController';
 import {ChannelController} from '@fluxer/api/src/channel/ChannelController';
 import type {APIConfig} from '@fluxer/api/src/config/APIConfig';
@@ -34,7 +35,11 @@ import {InviteController} from '@fluxer/api/src/invite/InviteController';
 import {KlipyController} from '@fluxer/api/src/klipy/KlipyController';
 import {OAuth2ApplicationsController} from '@fluxer/api/src/oauth/OAuth2ApplicationsController';
 import {OAuth2Controller} from '@fluxer/api/src/oauth/OAuth2Controller';
+import {PluginController} from '@fluxer/api/src/plugin/PluginController';
 import {registerPackControllers} from '@fluxer/api/src/pack/controllers';
+import {registerPartnerRoutes} from '@fluxer/api/src/partners/PartnerController';
+import {registerBadgeRoutes} from '@fluxer/api/src/badges/BadgeController';
+import {registerSystemBotRoutes} from '@fluxer/api/src/system_bot/SystemBotController';
 import {ReadStateController} from '@fluxer/api/src/read_state/ReadStateController';
 import {ReportController} from '@fluxer/api/src/report/ReportController';
 import {SearchController} from '@fluxer/api/src/search/controllers/SearchController';
@@ -54,6 +59,7 @@ export function registerControllers(routes: HonoApp, config: APIConfig): void {
 	ChannelController(routes);
 	ConnectionController(routes);
 	BlueskyOAuthController(routes);
+	AtprotoPDSController(routes);
 	InstanceController(routes);
 	DownloadController(routes);
 	FavoriteMemeController(routes);
@@ -66,6 +72,7 @@ export function registerControllers(routes: HonoApp, config: APIConfig): void {
 	KlipyController(routes);
 	TenorController(routes);
 	ThemeController(routes);
+	PluginController(routes);
 
 	if (config.dev.testModeEnabled || config.nodeEnv === 'development') {
 		TestHarnessController(routes);
@@ -84,4 +91,11 @@ export function registerControllers(routes: HonoApp, config: APIConfig): void {
 			PolarController(routes);
 		}
 	}
+
+	// Partner and Badge management
+	registerPartnerRoutes(routes);
+	registerBadgeRoutes(routes);
+
+	// System Bot management
+	registerSystemBotRoutes(routes);
 }

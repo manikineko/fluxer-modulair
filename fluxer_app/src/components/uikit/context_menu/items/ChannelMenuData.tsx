@@ -127,7 +127,13 @@ function getChannelMenuState(channel: ChannelRecord, guild: GuildRecord | undefi
 	const currentUserId = AuthenticationStore.currentUserId;
 	const isGroupDM = channel.type === ChannelTypes.GROUP_DM;
 	const isDM = channel.type === ChannelTypes.DM;
-	const isTextChannel = channel.type === ChannelTypes.GUILD_TEXT;
+	const isTextChannel =
+		channel.type === ChannelTypes.GUILD_TEXT ||
+		channel.type === ChannelTypes.BLUESKY_FEED ||
+		channel.type === ChannelTypes.SSR_RENDER ||
+		channel.type === ChannelTypes.GUILD_ANNOUNCEMENT ||
+		channel.type === ChannelTypes.GUILD_FORUM ||
+		channel.type === ChannelTypes.GUILD_STAGE;
 	const isVoiceChannel = channel.type === ChannelTypes.GUILD_VOICE;
 	const isLinkChannel = channel.type === ChannelTypes.GUILD_LINK;
 	const isOwner = isGroupDM && channel.ownerId === currentUserId;
