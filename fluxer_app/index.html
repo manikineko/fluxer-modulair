@@ -5,11 +5,10 @@
 <title>Fluxer</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content, maximum-scale=1, user-scalable=no">
 <meta name="description" content="Fluxer is a free and open source instant messaging and VoIP platform built for friends, groups, and communities.">
-<link rel="preconnect" href="https://fluxerstatic.com">
-<link rel="stylesheet" href="https://fluxerstatic.com/fonts/ibm-plex.css">
+<link rel="stylesheet" href="/fonts/ibm-plex.css">
 <link rel="manifest" href="/manifest.json">
-<link rel="icon" type="image/png" sizes="32x32" href="https://fluxerstatic.com/web/favicon-32x32.png">
-<link rel="apple-touch-icon" sizes="180x180" href="https://fluxerstatic.com/web/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Fluxer">
@@ -17,14 +16,32 @@
 <meta name="theme-color" content="#4641D9">
 <meta name="msapplication-navbutton-color" content="#4641D9">
 <meta name="msapplication-TileColor" content="#4641D9">
-<meta name="msapplication-config" content="https://fluxerstatic.com/web/browserconfig.xml">
+<meta name="msapplication-config" content="/browserconfig.xml">
 <meta name="format-detection" content="telephone=no">
 <meta name="display" content="standalone">
 <script nonce="{{CSP_NONCE_PLACEHOLDER}}">(function(){try{var loc=window.location;if(loc.pathname==='/'){var target='/channels/@me';if(loc.search)target+=loc.search;if(loc.hash)target+=loc.hash;loc.replace(target);}}catch(e){}})();</script>
 <script nonce="{{CSP_NONCE_PLACEHOLDER}}">(function(){try{var t=localStorage.getItem('theme');if(t){document.documentElement.classList.add('theme-'+t)}}catch{}})()</script>
+<style>
+/* Inline pre-React splash so the window isn't blank between the Electron
+   loading.html and React's first paint (~3s of JS bundle + bootstrap).
+   Colours mirror SPA --background-secondary tokens so the transition is
+   invisible. React mounts into #root and replaces #preboot-splash. */
+html,body{margin:0;padding:0;height:100%;background:hsl(220,13%,11.18%);color:hsl(220,13%,96%);font-family:'IBM Plex Sans',system-ui,sans-serif}
+html.theme-light,html.theme-light body{background:hsl(220,10%,92.84%);color:hsl(220,10%,15%)}
+@media (prefers-color-scheme:light){html:not(.theme-dark):not(.theme-coal),html:not(.theme-dark):not(.theme-coal) body{background:hsl(220,10%,92.84%);color:hsl(220,10%,15%)}}
+#preboot-splash{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:1}
+#preboot-splash svg{width:64px;height:64px;animation:pb-pulse 1.6s ease-in-out infinite}
+@keyframes pb-pulse{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:1;transform:scale(1.08)}}
+#root:not(:empty)+#preboot-splash{display:none}
+</style>
 </head>
 <body>
 <div id="root"></div>
+<div id="preboot-splash" aria-hidden="true">
+  <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="32" cy="32" r="28" stroke="hsl(242,70%,55%)" stroke-width="4" fill="none" stroke-dasharray="6 10" />
+  </svg>
+</div>
 <noscript>JavaScript is required to use this application.</noscript>
 </body>
 </html>

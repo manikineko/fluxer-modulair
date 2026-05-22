@@ -22,12 +22,15 @@ import {
 	deleteAllGroupSessionsForChannel,
 	deleteOutboundGroupSession,
 	deleteSessionsForRemoteDevice,
+	getAttachmentKeys,
 	getInboundGroupSession,
 	getMessagePlaintext,
 	getOutboundGroupSession,
 	getPeerIdentityKey,
 	getSessionsForRemoteDevice,
+	putAttachmentKeys,
 	putMessagePlaintext,
+	putOutboundGroupSession,
 	setPeerIdentityKey,
 } from '@app/lib/e2ee/E2EEKeyStore';
 import {e2eeManager} from '@app/lib/e2ee/E2EEManager';
@@ -224,6 +227,24 @@ export function recordAttachmentKeys(messageId: string, entries: ReadonlyArray<C
 		attachmentKeyCache.set(messageId, bucket);
 	}
 	for (const entry of entries) bucket.set(entry.id, entry);
+	// Persist alongside the in-memory cache so attachments still decrypt
+	// after a page refresh. Olm ratchets are one-shot, so without this
+	// the bubble can never recover the AES key for a historical message.
+	void putAttachmentKeys({
+		message_id: messageId,
+		entries: entries.map((e) => ({
+			id: e.id,
+			key: e.key,
+			iv: e.iv,
+			mime: e.mime,
+			name: e.name,
+			width: e.width,
+			height: e.height,
+		})),
+		created_at: Date.now(),
+	}).catch((err: unknown) => {
+		logger.warn('Failed to persist attachment keys', {messageId, err});
+	});
 }
 
 export function getAttachmentKey(messageId: string, attachmentId: string): CachedAttachmentEntry | null {
@@ -232,6 +253,26 @@ export function getAttachmentKey(messageId: string, attachmentId: string): Cache
 
 export function hasAttachmentKey(messageId: string, attachmentId: string): boolean {
 	return attachmentKeyCache.get(messageId)?.has(attachmentId) ?? false;
+}
+
+// Lazy-load attachment keys from IDB for a message that's about to be
+// rendered. Returns true if anything was hydrated. The bubble calls
+// this on mount when hasAttachmentKey misses in memory — after this
+// resolves, hasAttachmentKey/getAttachmentKey will return the durable
+// entry.
+export async function loadAttachmentKeysFromStorage(messageId: string): Promise<boolean> {
+	if (attachmentKeyCache.has(messageId)) return true;
+	try {
+		const stored = await getAttachmentKeys(messageId);
+		if (!stored || stored.entries.length === 0) return false;
+		const bucket = new Map<string, CachedAttachmentEntry>();
+		for (const entry of stored.entries) bucket.set(entry.id, entry);
+		attachmentKeyCache.set(messageId, bucket);
+		return true;
+	} catch (err) {
+		logger.warn('Failed to load attachment keys from storage', {messageId, err});
+		return false;
+	}
 }
 
 // Pair the envelope's order-matched attachment entries with the wire
@@ -451,6 +492,36 @@ export async function tryEncryptForChannel(
 // 4. Wire shape uses the EncryptedPayloadMegolm discriminator so the
 //    receive path knows to branch on session_id rather than per-device
 //    ciphertexts.
+// Builds a stable fingerprint of the current recipient device set for a
+// channel. Sorted so different orderings produce the same hash; hashed
+// so the value stored alongside the outbound session stays small even
+// for large groups. Failures to fetch a member's device list contribute
+// an empty list to the hash — same outcome as "no devices" — which is
+// safe: a recovered device list on the next send will change the hash
+// and trigger rotation then.
+async function computeRecipientSetHash(memberUserIds: ReadonlyArray<string>): Promise<string> {
+	const allDeviceKeys: Array<string> = [];
+	const devicesPerMember = await Promise.all(
+		memberUserIds.map(async (uid) => {
+			try {
+				return await E2EEActionCreators.listPublicDevices(uid);
+			} catch {
+				return [];
+			}
+		}),
+	);
+	for (let i = 0; i < memberUserIds.length; i++) {
+		const uid = memberUserIds[i];
+		for (const d of devicesPerMember[i]) {
+			allDeviceKeys.push(`${uid}|${d.device_id}`);
+		}
+	}
+	allDeviceKeys.sort();
+	const encoded = new TextEncoder().encode(allDeviceKeys.join('\n'));
+	const digest = await crypto.subtle.digest('SHA-256', encoded);
+	return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 async function tryEncryptForGroupDm(
 	channel: ChannelRecord,
 	currentUserId: string,
@@ -463,6 +534,28 @@ async function tryEncryptForGroupDm(
 	// to encrypt to, so fall through to plaintext (which the channel
 	// toggle will eventually prevent at the UI level).
 	if (otherRecipientIds.length === 0) return null;
+
+	// Compute the current recipient-device set across all members. This is
+	// the source-of-truth for "who should hold the current session_key".
+	// We hash it and compare against what we stored on the cached outbound
+	// session — if the set has changed (peer rotated devices, new install,
+	// stale dead device retired), we drop the cached session so the next
+	// send creates a fresh one and redistributes to everyone currently
+	// present. Without this rotation, a previously-cached session sticks
+	// around forever and never reaches devices that registered after it
+	// was created.
+	const memberUserIds = [...otherRecipientIds, currentUserId];
+	const currentRecipientHash = await computeRecipientSetHash(memberUserIds);
+
+	const cachedSession = await getOutboundGroupSession(channel.id);
+	if (cachedSession && cachedSession.recipient_set_hash !== currentRecipientHash) {
+		logger.info('Recipient device set changed, rotating outbound group session', {
+			channelId: channel.id,
+			previousHash: cachedSession.recipient_set_hash ?? '(unset)',
+			currentHash: currentRecipientHash,
+		});
+		await deleteOutboundGroupSession(channel.id);
+	}
 
 	const sessionInfo = await e2eeManager.getOrCreateOutboundGroupSession(channel.id);
 
@@ -485,7 +578,7 @@ async function tryEncryptForGroupDm(
 			senderIdentityKey,
 			sessionId: sessionInfo.sessionId,
 			sessionKey: sessionInfo.sessionKey,
-			memberUserIds: [...otherRecipientIds, currentUserId],
+			memberUserIds,
 		});
 		if (!distributed) {
 			// Couldn't reach any recipient device — fall back to plaintext
@@ -494,6 +587,13 @@ async function tryEncryptForGroupDm(
 			return null;
 		}
 
+		// Record which recipient set this freshly-distributed session was
+		// addressed to. Future sends compare against this hash to know when
+		// rotation is required.
+		const fresh = await getOutboundGroupSession(channel.id);
+		if (fresh) {
+			await putOutboundGroupSession({...fresh, recipient_set_hash: currentRecipientHash});
+		}
 	}
 
 	// Self-readback: Megolm outbound sessions are encrypt-only — they

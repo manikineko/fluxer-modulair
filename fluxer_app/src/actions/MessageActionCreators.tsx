@@ -17,6 +17,7 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import {unfurlEmbedsForContent} from '@app/actions/EmbedActionCreators';
 import * as ModalActionCreators from '@app/actions/ModalActionCreators';
 import {modal} from '@app/actions/ModalActionCreators';
 import * as NavigationActionCreators from '@app/actions/NavigationActionCreators';
@@ -65,6 +66,7 @@ import {MessageFlags} from '@fluxer/constants/src/ChannelConstants';
 import type {JumpType} from '@fluxer/constants/src/JumpConstants';
 import {MAX_MESSAGES_PER_CHANNEL} from '@fluxer/constants/src/LimitConstants';
 import type {MessageId} from '@fluxer/schema/src/branded/WireIds';
+import type {RichEmbedRequest} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import type {
 	AllowedMentions,
 	Message,
@@ -144,6 +146,7 @@ interface SendMessageParams {
 	favoriteMemeId?: string;
 	stickers?: Array<MessageStickerItem>;
 	tts?: boolean;
+	embeds?: Array<RichEmbedRequest>;
 	isRetry?: boolean;
 	// Caller-side override to bypass the channel's E2EE state. Set when
 	// the user has explicitly chosen "send unencrypted" after an
@@ -258,9 +261,20 @@ async function decryptHistoryMessages(messages: ReadonlyArray<Message>): Promise
 			if (result) {
 				recordMessageVerification(msg.id, result.verificationStatus);
 			}
+			const decryptedContent = buildDecryptedContent(result);
 			MessageStore.handleMessageUpdate({
-				message: {...msg, content: buildDecryptedContent(result)},
+				message: {...msg, content: decryptedContent},
 			});
+			// Pull link-preview embeds for the decrypted body — same client-
+			// side unfurl path used by the MESSAGE_CREATE gateway handler.
+			if (decryptedContent) {
+				void unfurlEmbedsForContent(decryptedContent).then((embeds) => {
+					if (!embeds.length) return;
+					MessageStore.handleMessageUpdate({
+						message: {id: msg.id, channel_id: msg.channel_id, embeds} as unknown as typeof msg,
+					});
+				});
+			}
 		} catch (error) {
 			logger.warn('Decrypt history message failed', {messageId: msg.id, error});
 		}
@@ -500,6 +514,7 @@ export function send(channelId: string, params: SendMessageParams): Promise<Mess
 					favoriteMemeId: params.favoriteMemeId,
 					stickers: params.stickers,
 					tts: params.tts,
+					embeds: params.embeds,
 					isRetry: params.isRetry,
 					encryptedPayload,
 				},

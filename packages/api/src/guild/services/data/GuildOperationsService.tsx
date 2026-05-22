@@ -336,6 +336,7 @@ export class GuildOperationsService {
 						soft_deleted: false,
 						e2ee_enabled: false,
 						indexed_at: null,
+						e2ee_enabled: false,
 						version: 1,
 					}),
 				);

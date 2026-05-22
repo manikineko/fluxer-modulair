@@ -177,15 +177,15 @@ export interface APIConfig {
 
 	polar: {
 		enabled: boolean;
-		accessToken?: string;
-		webhookSecret?: string;
-	};
-
-	paypal: {
-		enabled: boolean;
-		clientId?: string;
-		clientSecret?: string;
-		mode: 'sandbox' | 'live';
+		sandbox: boolean;
+		apiKey: string;
+		webhookSecret: string;
+		products: {
+			monthlySubscription: string;
+			yearlySubscription: string;
+			gift1Month: string;
+			gift1Year: string;
+		};
 	};
 
 	cloudflare: {
