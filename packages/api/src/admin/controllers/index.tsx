@@ -21,6 +21,7 @@ import {AdminApiKeyAdminController} from '@fluxer/api/src/admin/controllers/Admi
 import {ArchiveAdminController} from '@fluxer/api/src/admin/controllers/ArchiveAdminController';
 import {AssetAdminController} from '@fluxer/api/src/admin/controllers/AssetAdminController';
 import {AuditLogAdminController} from '@fluxer/api/src/admin/controllers/AuditLogAdminController';
+import {BadgeAdminController} from '@fluxer/api/src/admin/controllers/BadgeAdminController';
 import {BanAdminController} from '@fluxer/api/src/admin/controllers/BanAdminController';
 import {BulkAdminController} from '@fluxer/api/src/admin/controllers/BulkAdminController';
 import {ChildSafetyAdminController} from '@fluxer/api/src/admin/controllers/ChildSafetyAdminController';
@@ -31,6 +32,7 @@ import {GuildAdminController} from '@fluxer/api/src/admin/controllers/GuildAdmin
 import {InstanceConfigAdminController} from '@fluxer/api/src/admin/controllers/InstanceConfigAdminController';
 import {LimitConfigAdminController} from '@fluxer/api/src/admin/controllers/LimitConfigAdminController';
 import {MessageAdminController} from '@fluxer/api/src/admin/controllers/MessageAdminController';
+import {PartnerAdminController} from './PartnerAdminController';
 import {ReportAdminController} from '@fluxer/api/src/admin/controllers/ReportAdminController';
 import {SearchAdminController} from '@fluxer/api/src/admin/controllers/SearchAdminController';
 import {SnowflakeReservationAdminController} from '@fluxer/api/src/admin/controllers/SnowflakeReservationAdminController';
@@ -62,4 +64,6 @@ export function registerAdminControllers(app: HonoApp) {
 	DiscoveryAdminController(app);
 	VisionarySlotAdminController(app);
 	SystemDmAdminController(app);
+	BadgeAdminController(app);
+	PartnerAdminController(app);
 }

@@ -724,7 +724,9 @@ export class ReportService {
 
 	async listMyReports(reporterId: UserID, limit?: number, offset?: number): Promise<Array<IARSubmission>> {
 		if (!this.reportSearchService) {
-			throw new Error('Search service not available');
+			Logger.warn('Search service not available, falling back to repository for listMyReports');
+			const allReports = await this.reportRepository.listAllReportsPaginated(limit || 50);
+			return allReports.filter((report) => report.reporterId === reporterId);
 		}
 
 		const {hits} = await this.reportSearchService.listReportsByReporter(reporterId, limit, offset);
@@ -737,7 +739,8 @@ export class ReportService {
 
 	async listReportsByStatus(status: number, limit?: number, offset?: number): Promise<Array<IARSubmission>> {
 		if (!this.reportSearchService) {
-			throw new Error('Search service not available');
+			Logger.warn('Search service not available, falling back to repository for listReportsByStatus');
+			return this.reportRepository.listAllReportsPaginated(limit || 50);
 		}
 
 		const {hits} = await this.reportSearchService.listReportsByStatus(status, limit, offset);

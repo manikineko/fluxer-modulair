@@ -53,7 +53,7 @@ export async function getPartners(
 ): Promise<ApiResult<{partners: Array<Partner>}>> {
 	const client = new ApiClient(config, session);
 	const query = showInactive ? '?show_inactive=true' : '';
-	return client.get<{partners: Array<Partner>}>(`/api/partners${query}`);
+	return client.get<{partners: Array<Partner>}>(`/partners${query}`);
 }
 
 export async function getPartner(
@@ -62,7 +62,7 @@ export async function getPartner(
 	partnerId: string,
 ): Promise<ApiResult<{partner: Partner}>> {
 	const client = new ApiClient(config, session);
-	return client.get<{partner: Partner}>(`/api/partners/${partnerId}`);
+	return client.get<{partner: Partner}>(`/partners/${partnerId}`);
 }
 
 export interface CreatePartnerInput {
@@ -86,7 +86,7 @@ export async function createPartner(
 	data: CreatePartnerInput,
 ): Promise<ApiResult<{partner: Partner}>> {
 	const client = new ApiClient(config, session);
-	return client.post<{partner: Partner}>('/api/partners', data as JsonObject);
+	return client.post<{partner: Partner}>('/partners', data as JsonObject);
 }
 
 export interface UpdatePartnerInput {
@@ -112,7 +112,7 @@ export async function updatePartner(
 	data: UpdatePartnerInput,
 ): Promise<ApiResult<{partner: Partner}>> {
 	const client = new ApiClient(config, session);
-	return client.patch<{partner: Partner}>(`/api/partners/${partnerId}`, data as JsonObject);
+	return client.patch<{partner: Partner}>(`/partners/${partnerId}`, data as JsonObject);
 }
 
 export async function deletePartner(
@@ -121,7 +121,7 @@ export async function deletePartner(
 	partnerId: string,
 ): Promise<ApiResult<{success: boolean}>> {
 	const client = new ApiClient(config, session);
-	return client.delete<{success: boolean}>(`/api/partners/${partnerId}`);
+	return client.delete<{success: boolean}>(`/partners/${partnerId}`);
 }
 
 export async function addBadgeToPartner(
@@ -131,7 +131,7 @@ export async function addBadgeToPartner(
 	badgeId: string,
 ): Promise<ApiResult<{success: boolean}>> {
 	const client = new ApiClient(config, session);
-	return client.post<{success: boolean}>(`/api/partners/${partnerId}/badges/${badgeId}`, {});
+	return client.post<{success: boolean}>(`/partners/${partnerId}/badges/${badgeId}`, {});
 }
 
 export async function removeBadgeFromPartner(
@@ -141,5 +141,5 @@ export async function removeBadgeFromPartner(
 	badgeId: string,
 ): Promise<ApiResult<{success: boolean}>> {
 	const client = new ApiClient(config, session);
-	return client.delete<{success: boolean}>(`/api/partners/${partnerId}/badges/${badgeId}`);
+	return client.delete<{success: boolean}>(`/partners/${partnerId}/badges/${badgeId}`);
 }

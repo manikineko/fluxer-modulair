@@ -44,6 +44,7 @@ import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {UnauthorizedError} from '@fluxer/errors/src/domains/core/UnauthorizedError';
 import {AccountSuspiciousActivityError} from '@fluxer/errors/src/domains/user/AccountSuspiciousActivityError';
+import {BadgeRepository} from '@fluxer/api/src/badges/repositories/BadgeRepository';
 import type {ConnectionResponse} from '@fluxer/schema/src/domains/connection/ConnectionSchemas';
 import type {UserUpdateWithVerificationRequest} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 import type {UserPrivateResponse, UserProfileFullResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
@@ -67,6 +68,8 @@ interface UserProfileParams {
 }
 
 export class UserAccountRequestService {
+	private readonly badgeRepo = new BadgeRepository();
+
 	constructor(
 		private readonly authService: AuthService,
 		private readonly authMfaService: AuthMfaService,
@@ -259,6 +262,18 @@ export class UserAccountRequestService {
 
 		const connectedAccounts = profile.connections ? this.mapConnectionsToResponse(profile.connections) : undefined;
 
+		// Fetch user badges
+		const userBadges = await this.badgeRepo.findUserBadges(profileUser.id);
+		const badgeDetails = await Promise.all(
+			userBadges
+				.filter(ub => ub.is_active)
+				.map(async ub => {
+					const badge = await this.badgeRepo.findById(ub.badge_id);
+					if (!badge) return null;
+					return {...badge, granted_at: ub.granted_at, metadata: ub.metadata};
+				})
+		);
+
 		return {
 			user: await mapUserToPartialResponseWithCache({
 				user: profileUser,
@@ -274,6 +289,18 @@ export class UserAccountRequestService {
 			mutual_friends: mutualFriends,
 			mutual_guilds: profile.mutualGuilds,
 			connected_accounts: connectedAccounts,
+			badges: badgeDetails.filter((b): b is NonNullable<typeof b> => b !== null).map(badge => ({
+				id: badge.badge_id.toString(),
+				name: badge.name,
+				description: badge.description,
+				icon_hash: badge.icon_hash,
+				icon_color: badge.icon_color,
+				badge_type: badge.badge_type,
+				is_visible: badge.is_visible,
+				priority: badge.priority,
+				granted_at: badge.granted_at.toISOString(),
+				metadata: badge.metadata,
+			})),
 		};
 	}
 

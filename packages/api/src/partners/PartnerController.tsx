@@ -13,10 +13,48 @@ import type {Hono} from 'hono';
 import {PartnerRepository} from './repositories/PartnerRepository';
 import type {PartnerRow} from '../database/types/PartnerBadgeTypes';
 import {z} from 'zod';
-import {requireAdminACL} from '../middleware/AdminMiddleware';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import type {User} from '../models/User';
 import type {UserID} from '../BrandedTypes';
+import {createMiddleware} from 'hono/factory';
+import {UnauthorizedError} from '@fluxer/errors/src/domains/core/UnauthorizedError';
+import {MissingACLError} from '@fluxer/errors/src/domains/core/MissingACLError';
+import type {HonoEnv} from '@fluxer/api/src/types/HonoEnv';
+
+// Custom middleware that does NOT allow wildcard to bypass
+function requireAdminACLNoWildcard(requiredACL: string) {
+	return createMiddleware<HonoEnv>(async (ctx, next) => {
+		const adminUser = ctx.get('user');
+		if (!adminUser) throw new UnauthorizedError();
+
+		const tokenType = ctx.get('authTokenType');
+		if (tokenType !== 'bearer' && tokenType !== 'session' && tokenType !== 'admin_api_key')
+			throw new UnauthorizedError();
+
+		if (tokenType === 'bearer') {
+			const oauthScopes = ctx.get('oauthBearerScopes');
+			if (!oauthScopes || !oauthScopes.has('admin')) {
+				throw new UnauthorizedError();
+			}
+		}
+
+		const userAcls: Set<string> =
+			tokenType === 'admin_api_key' ? (ctx.get('adminApiKeyAcls') ?? new Set()) : adminUser.acls;
+
+		if (!adminUser.acls.has(AdminACLs.AUTHENTICATE)) {
+			throw new UnauthorizedError();
+		}
+
+		// Explicitly check for the required ACL - wildcard does NOT bypass this
+		if (!userAcls.has(requiredACL)) {
+			throw new MissingACLError(requiredACL);
+		}
+
+		ctx.set('adminUserId', adminUser.id);
+		ctx.set('adminUserAcls', userAcls);
+		await next();
+	});
+}
 
 const partnerRepo = new PartnerRepository();
 
@@ -52,30 +90,30 @@ const updatePartnerSchema = z.object({
 
 export function registerPartnerRoutes(app: Hono) {
 	// Get all partners (public)
-	app.get('/api/partners', async (c) => {
+	app.get('/partners', async (c) => {
 		const showInactive = c.req.query('show_inactive') === 'true';
-		const partners = showInactive 
+		const partners = showInactive
 			? await partnerRepo.findAll()
 			: await partnerRepo.findActive();
 		return c.json({partners});
 	});
 
 	// Get partner by ID (public)
-	app.get('/api/partners/:partnerId', async (c) => {
+	app.get('/partners/:partnerId', async (c) => {
 		const partnerId = c.req.param('partnerId');
 		const partner = await partnerRepo.findById(partnerId);
-		
+
 		if (!partner) {
 			return c.json({error: 'Partner not found'}, 404);
 		}
-		
+
 		return c.json({partner});
 	});
 
 	// Create partner (global staff only)
 	app.post(
-		'/api/partners',
-		requireAdminACL(AdminACLs.PARTNER_CREATE),
+		'/partners',
+		requireAdminACLNoWildcard(AdminACLs.PARTNER_CREATE),
 		async (c) => {
 			const user = c.get('user') as User;
 			const body = await c.req.json();
@@ -116,8 +154,8 @@ export function registerPartnerRoutes(app: Hono) {
 
 	// Update partner (global staff only)
 	app.patch(
-		'/api/partners/:partnerId',
-		requireAdminACL(AdminACLs.PARTNER_UPDATE),
+		'/partners/:partnerId',
+		requireAdminACLNoWildcard(AdminACLs.PARTNER_UPDATE),
 		async (c) => {
 			const partnerId = c.req.param('partnerId');
 			const existing = await partnerRepo.findById(partnerId);
@@ -158,8 +196,8 @@ export function registerPartnerRoutes(app: Hono) {
 
 	// Delete partner (global staff only)
 	app.delete(
-		'/api/partners/:partnerId',
-		requireAdminACL(AdminACLs.PARTNER_DELETE),
+		'/partners/:partnerId',
+		requireAdminACLNoWildcard(AdminACLs.PARTNER_DELETE),
 		async (c) => {
 			const partnerId = c.req.param('partnerId');
 			await partnerRepo.delete(partnerId);
@@ -169,8 +207,8 @@ export function registerPartnerRoutes(app: Hono) {
 
 	// Add badge to partner (global staff only)
 	app.post(
-		'/api/partners/:partnerId/badges/:badgeId',
-		requireAdminACL(AdminACLs.BADGE_GRANT),
+		'/partners/:partnerId/badges/:badgeId',
+		requireAdminACLNoWildcard(AdminACLs.BADGE_GRANT),
 		async (c) => {
 			const partnerId = c.req.param('partnerId');
 			const badgeId = c.req.param('badgeId');
@@ -182,8 +220,8 @@ export function registerPartnerRoutes(app: Hono) {
 
 	// Remove badge from partner (global staff only)
 	app.delete(
-		'/api/partners/:partnerId/badges/:badgeId',
-		requireAdminACL(AdminACLs.BADGE_REVOKE),
+		'/partners/:partnerId/badges/:badgeId',
+		requireAdminACLNoWildcard(AdminACLs.BADGE_REVOKE),
 		async (c) => {
 			const partnerId = c.req.param('partnerId');
 			const badgeId = c.req.param('badgeId');

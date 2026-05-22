@@ -57,7 +57,7 @@ export async function getBadges(
 ): Promise<ApiResult<{badges: Array<Badge>}>> {
 	const client = new ApiClient(config, session);
 	const query = showInactive ? '?show_inactive=true' : '';
-	return client.get<{badges: Array<Badge>}>(`/api/badges${query}`);
+	return client.get<{badges: Array<Badge>}>(`/badges${query}`);
 }
 
 export async function getBadge(
@@ -66,7 +66,7 @@ export async function getBadge(
 	badgeId: string,
 ): Promise<ApiResult<{badge: Badge}>> {
 	const client = new ApiClient(config, session);
-	return client.get<{badge: Badge}>(`/api/badges/${badgeId}`);
+	return client.get<{badge: Badge}>(`/badges/${badgeId}`);
 }
 
 export async function getUserBadges(
@@ -95,7 +95,7 @@ export async function createBadge(
 	data: CreateBadgeInput,
 ): Promise<ApiResult<{badge: Badge}>> {
 	const client = new ApiClient(config, session);
-	return client.post<{badge: Badge}>('/api/badges', data as JsonObject);
+	return client.post<{badge: Badge}>('/badges', data as JsonObject);
 }
 
 export interface UpdateBadgeInput {
@@ -117,7 +117,7 @@ export async function updateBadge(
 	data: UpdateBadgeInput,
 ): Promise<ApiResult<{badge: Badge}>> {
 	const client = new ApiClient(config, session);
-	return client.patch<{badge: Badge}>(`/api/badges/${badgeId}`, data as JsonObject);
+	return client.patch<{badge: Badge}>(`/badges/${badgeId}`, data as JsonObject);
 }
 
 export async function deleteBadge(
@@ -126,7 +126,7 @@ export async function deleteBadge(
 	badgeId: string,
 ): Promise<ApiResult<{success: boolean}>> {
 	const client = new ApiClient(config, session);
-	return client.delete<{success: boolean}>(`/api/badges/${badgeId}`);
+	return client.delete<{success: boolean}>(`/badges/${badgeId}`);
 }
 
 export interface GrantBadgeInput {
@@ -143,7 +143,7 @@ export async function grantBadge(
 	data: GrantBadgeInput,
 ): Promise<ApiResult<{success: boolean}>> {
 	const client = new ApiClient(config, session);
-	return client.post<{success: boolean}>('/api/badges/grant', data as JsonObject);
+	return client.post<{success: boolean}>('/badges/grant', data as JsonObject);
 }
 
 export interface RevokeBadgeInput {
@@ -158,5 +158,5 @@ export async function revokeBadge(
 	data: RevokeBadgeInput,
 ): Promise<ApiResult<{success: boolean}>> {
 	const client = new ApiClient(config, session);
-	return client.post<{success: boolean}>('/api/badges/revoke', data as JsonObject);
+	return client.post<{success: boolean}>('/badges/revoke', data as JsonObject);
 }

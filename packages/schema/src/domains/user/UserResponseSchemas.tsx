@@ -473,6 +473,31 @@ export const MutualGuildResponse = z.object({
 });
 export type MutualGuildResponse = z.infer<typeof MutualGuildResponse>;
 
+const BadgeTypeEnum = createNamedStringLiteralUnion(
+	[
+		['system', 'system', 'System badge'],
+		['partner', 'partner', 'Partner badge'],
+		['achievement', 'achievement', 'Achievement badge'],
+		['event', 'event', 'Event badge'],
+		['custom', 'custom', 'Custom badge'],
+	],
+	'Type of badge',
+);
+
+export const UserBadgeResponse = z.object({
+	id: SnowflakeStringType.describe('The ID of the badge'),
+	name: z.string().describe('The name of the badge'),
+	description: z.string().describe('The description of the badge'),
+	icon_hash: z.string().describe('The icon hash for the badge'),
+	icon_color: z.number().nullable().describe('The icon color for the badge'),
+	badge_type: BadgeTypeEnum.describe('The type of badge'),
+	is_visible: z.boolean().describe('Whether the badge is visible'),
+	priority: z.number().nullable().describe('The priority of the badge'),
+	granted_at: z.string().describe('ISO8601 timestamp when the badge was granted'),
+	metadata: z.string().nullable().describe('Additional metadata for the badge'),
+});
+export type UserBadgeResponse = z.infer<typeof UserBadgeResponse>;
+
 export const UserProfileFullResponse = z.object({
 	user: UserPartialResponse.describe('The user object'),
 	user_profile: UserProfileDataResponse.describe('The user profile data'),
@@ -487,6 +512,7 @@ export const UserProfileFullResponse = z.object({
 	mutual_friends: z.array(UserPartialResponse).optional().describe('Array of mutual friends'),
 	mutual_guilds: z.array(MutualGuildResponse).optional().describe('Array of mutual guilds'),
 	connected_accounts: z.array(ConnectionResponse).optional().describe('Array of verified external connections'),
+	badges: z.array(UserBadgeResponse).optional().describe('Array of user badges'),
 });
 export type UserProfileFullResponse = z.infer<typeof UserProfileFullResponse>;
 

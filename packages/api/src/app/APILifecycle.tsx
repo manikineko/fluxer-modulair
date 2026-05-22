@@ -35,6 +35,7 @@ import {ReportRepository} from '@fluxer/api/src/report/ReportRepository';
 import {NatsApiRpcListener} from '@fluxer/api/src/rpc/NatsApiRpcListener';
 import {initializeSearch, shutdownSearch} from '@fluxer/api/src/SearchFactory';
 import {warmupAdminSearchIndexes} from '@fluxer/api/src/search/SearchWarmup';
+import {BadgeInitializer} from '@fluxer/api/src/badges/BadgeInitializer';
 import {VisionarySlotInitializer} from '@fluxer/api/src/stripe/VisionarySlotInitializer';
 import {UserRepository} from '@fluxer/api/src/user/repositories/UserRepository';
 import {VoiceDataInitializer} from '@fluxer/api/src/voice/VoiceDataInitializer';
@@ -133,6 +134,10 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 			await ensureVoiceResourcesInitialized();
 			logger.info('Voice data initialized');
 		}
+
+		const badgeInitializer = new BadgeInitializer();
+		await badgeInitializer.initialize();
+		logger.info('Default badges initialized');
 
 		if (config.dev.testModeEnabled && config.stripe.enabled) {
 			const visionarySlotInitializer = new VisionarySlotInitializer();

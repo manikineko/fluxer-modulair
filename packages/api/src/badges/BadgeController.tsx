@@ -13,10 +13,48 @@ import type {Hono} from 'hono';
 import {BadgeRepository} from './repositories/BadgeRepository';
 import type {BadgeRow, UserBadgeRow} from '../database/types/PartnerBadgeTypes';
 import {z} from 'zod';
-import {requireAdminACL} from '../middleware/AdminMiddleware';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import type {User} from '../models/User';
 import type {UserID} from '../BrandedTypes';
+import {createMiddleware} from 'hono/factory';
+import {UnauthorizedError} from '@fluxer/errors/src/domains/core/UnauthorizedError';
+import {MissingACLError} from '@fluxer/errors/src/domains/core/MissingACLError';
+import type {HonoEnv} from '@fluxer/api/src/types/HonoEnv';
+
+// Custom middleware that does NOT allow wildcard to bypass
+function requireAdminACLNoWildcard(requiredACL: string) {
+	return createMiddleware<HonoEnv>(async (ctx, next) => {
+		const adminUser = ctx.get('user');
+		if (!adminUser) throw new UnauthorizedError();
+
+		const tokenType = ctx.get('authTokenType');
+		if (tokenType !== 'bearer' && tokenType !== 'session' && tokenType !== 'admin_api_key')
+			throw new UnauthorizedError();
+
+		if (tokenType === 'bearer') {
+			const oauthScopes = ctx.get('oauthBearerScopes');
+			if (!oauthScopes || !oauthScopes.has('admin')) {
+				throw new UnauthorizedError();
+			}
+		}
+
+		const userAcls: Set<string> =
+			tokenType === 'admin_api_key' ? (ctx.get('adminApiKeyAcls') ?? new Set()) : adminUser.acls;
+
+		if (!adminUser.acls.has(AdminACLs.AUTHENTICATE)) {
+			throw new UnauthorizedError();
+		}
+
+		// Explicitly check for the required ACL - wildcard does NOT bypass this
+		if (!userAcls.has(requiredACL)) {
+			throw new MissingACLError(requiredACL);
+		}
+
+		ctx.set('adminUserId', adminUser.id);
+		ctx.set('adminUserAcls', userAcls);
+		await next();
+	});
+}
 
 const badgeRepo = new BadgeRepository();
 
@@ -51,31 +89,31 @@ const grantBadgeSchema = z.object({
 
 export function registerBadgeRoutes(app: Hono) {
 	// Get all badges (public)
-	app.get('/api/badges', async (c) => {
+	app.get('/badges', async (c) => {
 		const showInactive = c.req.query('show_inactive') === 'true';
-		const badges = showInactive 
+		const badges = showInactive
 			? await badgeRepo.findAll()
 			: await badgeRepo.findActive();
 		return c.json({badges});
 	});
 
 	// Get badge by ID (public)
-	app.get('/api/badges/:badgeId', async (c) => {
+	app.get('/badges/:badgeId', async (c) => {
 		const badgeId = c.req.param('badgeId');
 		const badge = await badgeRepo.findById(badgeId);
-		
+
 		if (!badge) {
 			return c.json({error: 'Badge not found'}, 404);
 		}
-		
+
 		return c.json({badge});
 	});
 
 	// Get user's badges (public)
-	app.get('/api/users/:userId/badges', async (c) => {
-		const userId = BigInt(c.req.param('userId')) as UserID;
+	app.get('/users/:user_id/badges', async (c) => {
+		const userId = BigInt(c.req.param('user_id')) as UserID;
 		const userBadges = await badgeRepo.findUserBadges(userId);
-		
+
 		// Fetch full badge details for each
 		const badgeDetails = await Promise.all(
 			userBadges
@@ -85,14 +123,14 @@ export function registerBadgeRoutes(app: Hono) {
 					return badge ? {...badge, granted_at: ub.granted_at, metadata: ub.metadata} : null;
 				})
 		);
-		
+
 		return c.json({badges: badgeDetails.filter(Boolean)});
 	});
 
 	// Create badge (global staff only)
 	app.post(
-		'/api/badges',
-		requireAdminACL(AdminACLs.BADGE_CREATE),
+		'/badges',
+		requireAdminACLNoWildcard(AdminACLs.BADGE_CREATE),
 		async (c) => {
 			const body = await c.req.json();
 			const result = createBadgeSchema.safeParse(body);
@@ -126,8 +164,8 @@ export function registerBadgeRoutes(app: Hono) {
 
 	// Update badge (global staff only)
 	app.patch(
-		'/api/badges/:badgeId',
-		requireAdminACL(AdminACLs.BADGE_UPDATE),
+		'/badges/:badgeId',
+		requireAdminACLNoWildcard(AdminACLs.BADGE_UPDATE),
 		async (c) => {
 			const badgeId = c.req.param('badgeId');
 			const existing = await badgeRepo.findById(badgeId);
@@ -164,8 +202,8 @@ export function registerBadgeRoutes(app: Hono) {
 
 	// Delete badge (global staff only)
 	app.delete(
-		'/api/badges/:badgeId',
-		requireAdminACL(AdminACLs.BADGE_DELETE),
+		'/badges/:badgeId',
+		requireAdminACLNoWildcard(AdminACLs.BADGE_DELETE),
 		async (c) => {
 			const badgeId = c.req.param('badgeId');
 			await badgeRepo.delete(badgeId);
@@ -175,8 +213,8 @@ export function registerBadgeRoutes(app: Hono) {
 
 	// Grant badge to user (global staff only)
 	app.post(
-		'/api/badges/grant',
-		requireAdminACL(AdminACLs.BADGE_GRANT),
+		'/badges/grant',
+		requireAdminACLNoWildcard(AdminACLs.BADGE_GRANT),
 		async (c) => {
 			const user = c.get('user') as User;
 			const body = await c.req.json();
@@ -211,8 +249,8 @@ export function registerBadgeRoutes(app: Hono) {
 
 	// Revoke badge from user (global staff only)
 	app.post(
-		'/api/badges/revoke',
-		requireAdminACL(AdminACLs.BADGE_REVOKE),
+		'/badges/revoke',
+		requireAdminACLNoWildcard(AdminACLs.BADGE_REVOKE),
 		async (c) => {
 			const body = await c.req.json();
 			const {user_id, badge_id} = body;
