@@ -1,0 +1,11 @@
+server {
+    listen 80;
+    server_name maneki-neko.nl www.maneki-neko.nl;
+
+    root /var/www/maneki-neko;
+    index index.html index.htm;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
