@@ -22,6 +22,8 @@ NGINX_CONF_DIR="/etc/nginx"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="${SCRIPT_DIR}"
 ENV_FILE="${REPO_ROOT}/.env"
+COMPOSE_FILE="${REPO_ROOT}/docker-compose.simple.yaml"
+COMPOSE_FILE_ALT="${REPO_ROOT}/compose.yaml"
 
 # User-specified ports (can be overridden via command line)
 USER_FLUXER_PUBLIC_PORT=""
@@ -82,6 +84,51 @@ is_port_in_use() {
     fi
     
     return 1  # Port is free
+}
+
+# Read ports from docker-compose file
+read_ports_from_compose() {
+    local compose_file=""
+    
+    # Check which compose file exists
+    if [ -f "$COMPOSE_FILE" ]; then
+        compose_file="$COMPOSE_FILE"
+    elif [ -f "$COMPOSE_FILE_ALT" ]; then
+        compose_file="$COMPOSE_FILE_ALT"
+    else
+        print_info "No docker-compose file found"
+        return 1
+    fi
+    
+    print_info "Reading ports from $compose_file..."
+    
+    # Try to extract port mappings from compose file
+    # Look for fluxer_app and fluxer_admin port mappings
+    local fluxer_public_port=""
+    local fluxer_admin_port=""
+    
+    # Parse fluxer_app port (host:container format like "49319:8080")
+    fluxer_public_port=$(grep -A 10 "fluxer_app:" "$compose_file" | grep -E "^\s+-\s+['\"]?[0-9]+:" | head -1 | sed -E "s/^\s+-\s+['\"]?([0-9]+):.*/\1/")
+    
+    # Parse fluxer_admin port
+    fluxer_admin_port=$(grep -A 10 "fluxer_admin:" "$compose_file" | grep -E "^\s+-\s+['\"]?[0-9]+:" | head -1 | sed -E "s/^\s+-\s+['\"]?([0-9]+):.*/\1/")
+    
+    # If ports are environment variables, fall back to .env
+    if [[ "$fluxer_public_port" == *'$'* ]] || [[ "$fluxer_public_port" == *'${'* ]]; then
+        print_info "Ports in compose file use environment variables, reading from .env..."
+        if [ -f "$ENV_FILE" ]; then
+            source "$ENV_FILE"
+            fluxer_public_port="${FLUXER_PUBLIC_PORT:-}"
+            fluxer_admin_port="${FLUXER_ADMIN_PORT:-}"
+        fi
+    fi
+    
+    if [ -n "$fluxer_public_port" ] && [ -n "$fluxer_admin_port" ]; then
+        echo "$fluxer_public_port $fluxer_admin_port"
+        return 0
+    fi
+    
+    return 1
 }
 
 # Find next available free port in a range
@@ -438,7 +485,12 @@ main() {
     
     print_info "Checking for .env file at: $ENV_FILE"
     
-    if [ -f "$ENV_FILE" ]; then
+    # First try to read from docker-compose file
+    if ports=$(read_ports_from_compose); then
+        fluxer_public_port=$(echo "$ports" | awk '{print $1}')
+        fluxer_admin_port=$(echo "$ports" | awk '{print $2}')
+        print_success "Ports loaded from docker-compose file"
+    elif [ -f "$ENV_FILE" ]; then
         print_info "Reading ports from .env file..."
         source "$ENV_FILE"
         fluxer_public_port="${FLUXER_PUBLIC_PORT:-}"
