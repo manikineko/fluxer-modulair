@@ -529,6 +529,7 @@ generate_ssl_certificate() {
 generate_nginx_config() {
     local subdomain=$1
     local domain=$2
+    local backend_port=$3
     local full_domain="${subdomain}.${domain}"
     local ssl_path="${SSL_DIR}/${full_domain}"
     
@@ -549,7 +550,7 @@ generate_nginx_config() {
 
 # Upstream configuration
 upstream ${full_domain}_backend {
-    server 127.0.0.1:8080;
+    server 127.0.0.1:${backend_port};
     # Add more servers here if needed
 }
 
@@ -852,13 +853,7 @@ setup_subdomain() {
     fi
     
     generate_ssl_certificate "$subdomain" "$domain"
-    generate_nginx_config "$subdomain" "$domain"
-    
-    # Update backend port if specified
-    if [ -n "$backend_port" ]; then
-        local config_file="${NGINX_CONF_DIR}/sites-available/${full_domain}.conf"
-        sed -i "s/server 127.0.0.1:8080;/server 127.0.0.1:${backend_port};/" "$config_file"
-    fi
+    generate_nginx_config "$subdomain" "$domain" "$backend_port"
     
     enable_nginx_site "$subdomain" "$domain"
     
@@ -1113,6 +1108,7 @@ main() {
     # Setup subdomains
     if [ "$MULTI_MODE" = true ]; then
         # Setup standard subdomains
+        # app and api both use fluxer_public_port (same backend container)
         if [ "$USE_TUNNEL" = true ]; then
             add_tunnel_route "$TUNNEL_NAME" "app" "$domain" "$FLUXER_PUBLIC_PORT"
             add_tunnel_route "$TUNNEL_NAME" "static" "$domain" "8082"

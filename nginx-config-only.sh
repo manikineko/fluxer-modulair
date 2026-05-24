@@ -169,6 +169,7 @@ parse_arguments() {
 generate_nginx_config() {
     local subdomain=$1
     local domain=$2
+    local backend_port=$3
     local full_domain="${subdomain}.${domain}"
     local config_file="${NGINX_CONF_DIR}/sites-available/${full_domain}.conf"
     
@@ -224,7 +225,7 @@ server {
     
     # Proxy to backend
     location / {
-        proxy_pass http://127.0.0.1:8080;
+        proxy_pass http://127.0.0.1:${backend_port};
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -250,7 +251,7 @@ server {
     
     # Static files with proper MIME types
     location ~* \.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
-        proxy_pass http://127.0.0.1:8080;
+        proxy_pass http://127.0.0.1:${backend_port};
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -327,7 +328,7 @@ setup_subdomain() {
     
     print_info "Setting up $full_domain..."
     
-    generate_nginx_config "$subdomain" "$domain"
+    generate_nginx_config "$subdomain" "$domain" "$backend_port"
     update_nginx_backend_port "$subdomain" "$domain" "$backend_port"
     enable_nginx_site "$subdomain" "$domain"
     
@@ -461,6 +462,7 @@ main() {
     # Setup subdomains
     if [ "$MULTI_MODE" = true ]; then
         # Setup standard subdomains
+        # app and api both use fluxer_public_port (same backend container)
         setup_subdomain "app" "$domain" "$fluxer_public_port"
         setup_subdomain "static" "$domain" "8082"
         setup_subdomain "cdn" "$domain" "8082"
