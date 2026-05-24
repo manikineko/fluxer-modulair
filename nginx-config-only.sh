@@ -186,7 +186,8 @@ server {
 }
 
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     server_name $full_domain;
     
     # SSL Configuration (placeholder - use your own certificates)
@@ -204,10 +205,6 @@ server {
     # Logging
     access_log /var/log/nginx/${full_domain}_access.log;
     error_log /var/log/nginx/${full_domain}_error.log;
-    
-    # Rate limiting
-    limit_req_zone \$binary_remote_addr zone=${subdomain}_limit:10m rate=10r/s;
-    limit_req zone=${subdomain}_limit burst=20 nodelay;
     
     # Proxy to backend
     location / {
