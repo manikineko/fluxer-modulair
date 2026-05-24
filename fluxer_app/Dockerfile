@@ -13,6 +13,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY patches/ ./patches/
 COPY packages/ ./packages/
 COPY fluxer_app/ ./fluxer_app/
+COPY fluxer_app/pkgs/ ./fluxer_app/pkgs/
 
 RUN pnpm install --ignore-scripts --config.trust-policy=loose
 RUN cd fluxer_app && pnpm generate:colors && pnpm generate:css-types && pnpm lingui:compile
