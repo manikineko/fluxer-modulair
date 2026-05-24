@@ -28,6 +28,7 @@ COMPOSE_FILE_ALT="${REPO_ROOT}/compose.yaml"
 # User-specified ports (can be overridden via command line)
 USER_FLUXER_PUBLIC_PORT=""
 USER_FLUXER_ADMIN_PORT=""
+USER_FLUXER_APP_PORT=""
 
 # Multi-subdomain mode
 MULTI_MODE=false
@@ -428,6 +429,10 @@ main() {
                 USER_FLUXER_ADMIN_PORT="$2"
                 shift 2
                 ;;
+            --fluxer-app-port)
+                USER_FLUXER_APP_PORT="$2"
+                shift 2
+                ;;
             -h|--help)
                 echo "Usage: $0 <subdomain> <domain> [OPTIONS]"
                 echo "       $0 <domain> [OPTIONS]"
@@ -438,6 +443,7 @@ main() {
                 echo "Options:"
                 echo "  --multi                       Setup all standard subdomains (app, static, cdn, api, admin)"
                 echo "  --fluxer-public-port PORT    Specify FLUXER_PUBLIC_PORT (40000-50000)"
+                echo "  --fluxer-app-port PORT       Specify FLUXER_APP_PORT (for app subdomain)"
                 echo "  --fluxer-admin-port PORT     Specify FLUXER_ADMIN_PORT (40000-50000)"
                 echo "  -h, --help                    Show this help message"
                 echo ""
@@ -540,8 +546,10 @@ main() {
     # Setup subdomains
     if [ "$MULTI_MODE" = true ]; then
         # Setup standard subdomains
-        # app, api, static, and cdn all use fluxer_public_port (same backend container)
-        setup_subdomain "app" "$domain" "$fluxer_public_port"
+        # app uses fluxer_app_port if specified, otherwise fluxer_public_port
+        # api, static, and cdn use fluxer_public_port (fluxer_server)
+        local app_port="${USER_FLUXER_APP_PORT:-$fluxer_public_port}"
+        setup_subdomain "app" "$domain" "$app_port"
         setup_subdomain "static" "$domain" "$fluxer_public_port"
         setup_subdomain "cdn" "$domain" "$fluxer_public_port"
         setup_subdomain "api" "$domain" "$fluxer_public_port"
