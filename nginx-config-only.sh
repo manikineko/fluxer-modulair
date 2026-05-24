@@ -459,8 +459,25 @@ main() {
     # Parse command-line arguments first
     parse_arguments "$@"
     
+    # Get remaining positional arguments after option parsing
+    local remaining_args=()
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --*)
+                shift
+                if [[ "$1" != --* ]] && [[ $# -gt 0 ]]; then
+                    shift  # Skip option value
+                fi
+                ;;
+            *)
+                remaining_args+=("$1")
+                shift
+                ;;
+        esac
+    done
+    
     # Check for positional arguments
-    if [ $# -lt 1 ]; then
+    if [ ${#remaining_args[@]} -lt 1 ]; then
         print_error "Usage: $0 <domain> [OPTIONS]"
         print_error "       $0 <subdomain> <domain> [OPTIONS]"
         echo "Example: $0 example.com"
@@ -470,14 +487,14 @@ main() {
     fi
     
     # If only 1 argument provided, treat as domain and enable multi-mode
-    if [ $# -eq 1 ]; then
-        local domain=$1
+    if [ ${#remaining_args[@]} -eq 1 ]; then
+        local domain="${remaining_args[0]}"
         local subdomain="www"
         MULTI_MODE=true
         print_info "Single domain provided, enabling multi-subdomain mode for $domain..."
     else
-        local subdomain=$1
-        local domain=$2
+        local subdomain="${remaining_args[0]}"
+        local domain="${remaining_args[1]}"
     fi
     
     if [ "$MULTI_MODE" = true ]; then
