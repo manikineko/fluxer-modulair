@@ -33,6 +33,70 @@ print_error() {
     echo -e "${RED}✗ $1${NC}"
 }
 
+# Load existing configuration if available
+load_existing_config() {
+    local env_file="$PROJECT_ROOT/.env"
+    local config_file="$PROJECT_ROOT/config/config.json"
+    local admin_config_file="$PROJECT_ROOT/config/admin-config.json"
+
+    # Load from .env if it exists
+    if [[ -f "$env_file" ]]; then
+        print_success "Found existing .env, loading values..."
+        source "$env_file" 2>/dev/null || true
+    fi
+
+    # Load from config.json if it exists
+    if [[ -f "$config_file" ]]; then
+        print_success "Found existing config.json, loading values..."
+        # Extract values using grep/sed for simple parsing
+        if command -v jq &> /dev/null; then
+            BASE_DOMAIN=$(jq -r '.domain.base_domain' "$config_file" 2>/dev/null || echo "localhost")
+            PUBLIC_PORT=$(jq -r '.domain.public_port' "$config_file" 2>/dev/null || echo "48763")
+            SERVER_PORT=$(jq -r '.services.server.port' "$config_file" 2>/dev/null || echo "")
+            GATEWAY_PORT=$(jq -r '.services.gateway.port' "$config_file" 2>/dev/null || echo "")
+            MARKETING_PORT=$(jq -r '.services.marketing.port' "$config_file" 2>/dev/null || echo "")
+            STATIC_CDN_PORT=$(jq -r '.domain.static_cdn_domain' "$config_file" 2>/dev/null | cut -d: -f2 || echo "8082")
+        else
+            # Fallback to grep if jq not available
+            BASE_DOMAIN=$(grep -oP '"base_domain":\s*"\K[^"]+' "$config_file" 2>/dev/null || echo "localhost")
+            PUBLIC_PORT=$(grep -oP '"public_port":\s*\K[0-9]+' "$config_file" 2>/dev/null || echo "48763")
+            SERVER_PORT=$(grep -oP '"port":\s*"\K[0-9]+' "$config_file" 2>/dev/null | head -1 || echo "")
+            GATEWAY_PORT=$(grep -oP '"port":\s*"\K[0-9]+' "$config_file" 2>/dev/null | sed -n '2p' || echo "")
+            MARKETING_PORT=$(grep -oP '"port":\s*"\K[0-9]+' "$config_file" 2>/dev/null | sed -n '3p' || echo "")
+        fi
+    fi
+
+    # Load from admin-config.json if it exists
+    if [[ -f "$admin_config_file" ]]; then
+        print_success "Found existing admin-config.json, loading values..."
+        if command -v jq &> /dev/null; then
+            FLUXER_ADMIN_PORT=$(jq -r '.endpoint_overrides.admin' "$admin_config_file" 2>/dev/null | cut -d: -f2 || echo "")
+        else
+            FLUXER_ADMIN_PORT=$(grep -oP '"admin":\s*"[^:]*:\K[0-9]+' "$admin_config_file" 2>/dev/null || echo "")
+        fi
+    fi
+
+    # Load from compose.yaml if it exists
+    if [[ -f "$PROJECT_ROOT/compose.yaml" ]]; then
+        print_success "Found existing compose.yaml, loading values..."
+        if command -v jq &> /dev/null; then
+            COMPOSE_ADMIN_PORT=$(grep -oP 'FLUXER_ADMIN_PORT=\$\{FLUXER_ADMIN_PORT:-\K[0-9]+' "$PROJECT_ROOT/compose.yaml" 2>/dev/null || echo "")
+            [[ -n "$COMPOSE_ADMIN_PORT" && -z "$FLUXER_ADMIN_PORT" ]] && FLUXER_ADMIN_PORT="$COMPOSE_ADMIN_PORT"
+        else
+            COMPOSE_ADMIN_PORT=$(grep -oP 'FLUXER_ADMIN_PORT=\$\{FLUXER_ADMIN_PORT:-\K[0-9]+' "$PROJECT_ROOT/compose.yaml" 2>/dev/null || echo "")
+            [[ -n "$COMPOSE_ADMIN_PORT" && -z "$FLUXER_ADMIN_PORT" ]] && FLUXER_ADMIN_PORT="$COMPOSE_ADMIN_PORT"
+        fi
+    fi
+
+    # Set defaults if not loaded
+    BASE_DOMAIN=${BASE_DOMAIN:-localhost}
+    PUBLIC_PORT=${PUBLIC_PORT:-48763}
+    STATIC_CDN_PORT=${STATIC_CDN_PORT:-8082}
+}
+
+# Load existing configuration
+load_existing_config
+
 # Prompt for environment type
 print_header "Fluxer Configuration Setup"
 echo ""
@@ -52,18 +116,18 @@ print_success "Environment: $ENV_TYPE"
 
 # Prompt for domain configuration
 echo ""
-read -p "Base domain (e.g., chat.example.com or localhost): " BASE_DOMAIN
-BASE_DOMAIN=${BASE_DOMAIN:-localhost}
+read -p "Base domain (e.g., chat.example.com or localhost) [$BASE_DOMAIN]: " BASE_DOMAIN_INPUT
+BASE_DOMAIN=${BASE_DOMAIN_INPUT:-$BASE_DOMAIN}
 
 if [[ "$ENV_TYPE" == "production" ]]; then
     read -p "Public scheme (http/https) [https]: " PUBLIC_SCHEME
     PUBLIC_SCHEME=${PUBLIC_SCHEME:-https}
-    read -p "Public port [443]: " PUBLIC_PORT
-    PUBLIC_PORT=${PUBLIC_PORT:-443}
+    read -p "Public port [$PUBLIC_PORT]: " PUBLIC_PORT_INPUT
+    PUBLIC_PORT=${PUBLIC_PORT_INPUT:-$PUBLIC_PORT}
 else
     PUBLIC_SCHEME="http"
-    read -p "Public port [48763]: " PUBLIC_PORT
-    PUBLIC_PORT=${PUBLIC_PORT:-48763}
+    read -p "Public port [$PUBLIC_PORT]: " PUBLIC_PORT_INPUT
+    PUBLIC_PORT=${PUBLIC_PORT_INPUT:-$PUBLIC_PORT}
 fi
 
 print_success "Domain: $PUBLIC_SCHEME://$BASE_DOMAIN:$PUBLIC_PORT"
@@ -76,9 +140,13 @@ echo "Press Enter to use default values"
 read -p "Fluxer public port [$PUBLIC_PORT]: " FLUXER_PUBLIC_PORT
 FLUXER_PUBLIC_PORT=${FLUXER_PUBLIC_PORT:-$PUBLIC_PORT}
 
-RANDOM_ADMIN_PORT=$((1990 + RANDOM % 1000))
-read -p "Fluxer admin port [$RANDOM_ADMIN_PORT]: " FLUXER_ADMIN_PORT
-FLUXER_ADMIN_PORT=${FLUXER_ADMIN_PORT:-$RANDOM_ADMIN_PORT}
+if [[ -z "$FLUXER_ADMIN_PORT" ]]; then
+    RANDOM_ADMIN_PORT=$((1990 + RANDOM % 1000))
+else
+    RANDOM_ADMIN_PORT=$FLUXER_ADMIN_PORT
+fi
+read -p "Fluxer admin port [$RANDOM_ADMIN_PORT]: " FLUXER_ADMIN_PORT_INPUT
+FLUXER_ADMIN_PORT=${FLUXER_ADMIN_PORT_INPUT:-$RANDOM_ADMIN_PORT}
 
 read -p "PostgreSQL port [5432]: " POSTGRES_PORT
 POSTGRES_PORT=${POSTGRES_PORT:-5432}
@@ -108,19 +176,30 @@ read -p "LiveKit port [7880]: " LIVEKIT_PORT
 LIVEKIT_PORT=${LIVEKIT_PORT:-7880}
 
 # Internal service ports (randomized by default)
-RANDOM_SERVER_PORT=$((40000 + RANDOM % 10000))
-RANDOM_GATEWAY_PORT=$((40000 + RANDOM % 10000))
-RANDOM_MARKETING_PORT=$((40000 + RANDOM % 10000))
-STATIC_CDN_PORT=8082
+if [[ -z "$SERVER_PORT" ]]; then
+    RANDOM_SERVER_PORT=$((40000 + RANDOM % 10000))
+else
+    RANDOM_SERVER_PORT=$SERVER_PORT
+fi
+if [[ -z "$GATEWAY_PORT" ]]; then
+    RANDOM_GATEWAY_PORT=$((40000 + RANDOM % 10000))
+else
+    RANDOM_GATEWAY_PORT=$GATEWAY_PORT
+fi
+if [[ -z "$MARKETING_PORT" ]]; then
+    RANDOM_MARKETING_PORT=$((40000 + RANDOM % 10000))
+else
+    RANDOM_MARKETING_PORT=$MARKETING_PORT
+fi
 
-read -p "Server port [$RANDOM_SERVER_PORT]: " SERVER_PORT
-SERVER_PORT=${SERVER_PORT:-$RANDOM_SERVER_PORT}
+read -p "Server port [$RANDOM_SERVER_PORT]: " SERVER_PORT_INPUT
+SERVER_PORT=${SERVER_PORT_INPUT:-$RANDOM_SERVER_PORT}
 
-read -p "Gateway port [$RANDOM_GATEWAY_PORT]: " GATEWAY_PORT
-GATEWAY_PORT=${GATEWAY_PORT:-$RANDOM_GATEWAY_PORT}
+read -p "Gateway port [$RANDOM_GATEWAY_PORT]: " GATEWAY_PORT_INPUT
+GATEWAY_PORT=${GATEWAY_PORT_INPUT:-$RANDOM_GATEWAY_PORT}
 
-read -p "Marketing port [$RANDOM_MARKETING_PORT]: " MARKETING_PORT
-MARKETING_PORT=${MARKETING_PORT:-$RANDOM_MARKETING_PORT}
+read -p "Marketing port [$RANDOM_MARKETING_PORT]: " MARKETING_PORT_INPUT
+MARKETING_PORT=${MARKETING_PORT_INPUT:-$RANDOM_MARKETING_PORT}
 
 read -p "Static CDN port [$STATIC_CDN_PORT]: " STATIC_CDN_PORT_INPUT
 STATIC_CDN_PORT=${STATIC_CDN_PORT_INPUT:-$STATIC_CDN_PORT}
