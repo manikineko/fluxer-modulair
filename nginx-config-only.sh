@@ -20,6 +20,11 @@ ENV_FILE="${REPO_ROOT}/.env"
 COMPOSE_FILE="${REPO_ROOT}/docker-compose.simple.yaml"
 COMPOSE_FILE_ALT="${REPO_ROOT}/compose.yaml"
 
+# Load .env file if it exists
+if [ -f "$ENV_FILE" ]; then
+    source "$ENV_FILE" 2>/dev/null || true
+fi
+
 # User-specified ports (can be overridden via command line)
 USER_FLUXER_PUBLIC_PORT=""
 USER_FLUXER_ADMIN_PORT=""

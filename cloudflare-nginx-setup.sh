@@ -30,6 +30,11 @@ COMPOSE_FILE="${REPO_ROOT}/compose.yaml"
 COMPOSE_SIMPLE_FILE="${REPO_ROOT}/docker-compose.simple.yaml"
 ENV_FILE="${REPO_ROOT}/.env"
 
+# Load .env file if it exists
+if [ -f "$ENV_FILE" ]; then
+    source "$ENV_FILE" 2>/dev/null || true
+fi
+
 # User-specified ports (can be overridden via command line)
 USER_FLUXER_PUBLIC_PORT=""
 USER_FLUXER_ADMIN_PORT=""
@@ -48,12 +53,12 @@ USE_TUNNEL=false
 TUNNEL_NAME="fluxer-tunnel"
 FORCE_DNS=false
 
-# SMTP configuration
-SMTP_HOST=""
-SMTP_PORT=""
-SMTP_USER=""
-SMTP_PASSWORD=""
-SMTP_FROM=""
+# SMTP configuration (use .env values if available)
+SMTP_HOST="${SMTP_HOST:-}"
+SMTP_PORT="${SMTP_PORT:-}"
+SMTP_USER="${SMTP_USER:-}"
+SMTP_PASSWORD="${SMTP_PASSWORD:-}"
+SMTP_FROM="${SMTP_FROM:-}"
 
 # Check if a port is in use
 is_port_in_use() {
