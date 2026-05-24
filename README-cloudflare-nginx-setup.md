@@ -110,6 +110,7 @@ The script supports specifying custom ports via command-line arguments. If ports
 - `--multi` - Setup all standard subdomains (app, static, cdn, api, admin)
 - `--skip-cloudflare` - Skip Cloudflare DNS management (manual DNS required)
 - `--tunnel` - Use Cloudflare Tunnel (cloudflared) instead of direct DNS
+- `--force-dns` - Force replace existing DNS records even if IP hasn't changed
 - `--fluxer-public-port PORT` - Specify FLUXER_PUBLIC_PORT (range: 40000-50000)
 - `--fluxer-admin-port PORT` - Specify FLUXER_ADMIN_PORT (range: 40000-50000)
 - `--postgres-port PORT` - Specify POSTGRES_PORT (range: 5400-6400)

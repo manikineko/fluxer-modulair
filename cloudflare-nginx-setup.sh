@@ -46,6 +46,7 @@ CONFIGURED_SUBDOMAINS=()
 SKIP_CLOUDFLARE=false
 USE_TUNNEL=false
 TUNNEL_NAME="fluxer-tunnel"
+FORCE_DNS=false
 
 # SMTP configuration
 SMTP_HOST=""
@@ -121,6 +122,10 @@ parse_arguments() {
                 USE_TUNNEL=true
                 shift
                 ;;
+            --force-dns)
+                FORCE_DNS=true
+                shift
+                ;;
             --fluxer-public-port)
                 USER_FLUXER_PUBLIC_PORT="$2"
                 shift 2
@@ -155,6 +160,7 @@ parse_arguments() {
                 echo "  --multi                       Setup all standard subdomains (app, static, cdn, api, admin)"
                 echo "  --skip-cloudflare             Skip Cloudflare DNS management (manual DNS required)"
                 echo "  --tunnel                      Use Cloudflare Tunnel (cloudflared) instead of direct DNS"
+                echo "  --force-dns                   Force replace existing DNS records even if IP hasn't changed"
                 echo "  --fluxer-public-port PORT    Specify FLUXER_PUBLIC_PORT (40000-50000)"
                 echo "  --fluxer-admin-port PORT     Specify FLUXER_ADMIN_PORT (40000-50000)"
                 echo "  --postgres-port PORT          Specify POSTGRES_PORT (5400-6400)"
@@ -389,8 +395,13 @@ manage_dns_record() {
         local existing_ip
         existing_ip=$(echo "$response" | jq -r '.result.content')
         
-        if [ "$existing_ip" != "$ip" ]; then
-            print_info "IP changed from $existing_ip to $ip, recreating DNS record..."
+        # Force replacement if flag is set or IP changed
+        if [ "$FORCE_DNS" = true ] || [ "$existing_ip" != "$ip" ]; then
+            if [ "$FORCE_DNS" = true ]; then
+                print_info "Force replacing DNS record..."
+            else
+                print_info "IP changed from $existing_ip to $ip, recreating DNS record..."
+            fi
             
             # Delete existing record
             response=$(curl -s -X DELETE "https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records/$existing_id" \
