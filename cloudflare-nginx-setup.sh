@@ -114,11 +114,11 @@ parse_arguments() {
                 shift
                 ;;
             --skip-cloudflare)
-            --tunnel)
-                USE_TUNNEL=true
+                SKIP_CLOUDFLARE=true
                 shift
                 ;;
-                SKIP_CLOUDFLARE=true
+            --tunnel)
+                USE_TUNNEL=true
                 shift
                 ;;
             --fluxer-public-port)
