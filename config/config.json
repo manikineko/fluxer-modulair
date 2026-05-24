@@ -2,10 +2,10 @@
   "$schema": "../packages/config/src/ConfigSchema.json",
   "env": "development",
   "domain": {
-    "base_domain": "81.169.237.72",
+    "base_domain": "localhost",
     "public_scheme": "http",
     "public_port": 49320,
-    "static_cdn_domain": "81.169.237.72:8082"
+    "static_cdn_domain": "localhost:8082"
   },
   "endpoint_overrides": {
     "api": "https://api.proxcord.cc/api",
@@ -34,7 +34,7 @@
   "s3": {
     "access_key_id": "",
     "secret_access_key": "",
-    "endpoint": "http://81.169.237.72:9000",
+    "endpoint": "http://localhost:9000",
     "region": "us-east-1",
     "buckets": {
       "cdn": "fluxer-cdn",
@@ -73,7 +73,7 @@
     "gateway": {
       "port": 49107,
       "admin_reload_secret": "",
-      "media_proxy_endpoint": "http://81.169.237.72:49320/media",
+      "media_proxy_endpoint": "http://localhost:49320/media",
       "logger_level": "debug"
     },
     "nats": {
@@ -131,8 +131,8 @@
       "enabled": true,
       "api_key": "",
       "api_secret": "",
-      "url": "ws://81.169.237.72:7880",
-      "webhook_url": "http://81.169.237.72:49320/api/webhooks/livekit",
+      "url": "ws://localhost:7880",
+      "webhook_url": "http://localhost:49320/api/webhooks/livekit",
       "default_region": {
         "id": "default",
         "name": "Default",
@@ -149,7 +149,7 @@
     "email": {
       "enabled": true,
       "provider": "smtp",
-      "from_email": "noreply@81.169.237.72",
+      "from_email": "noreply@localhost",
       "smtp": {
         "host": "mail.newtontide.com",
         "port": 465,
