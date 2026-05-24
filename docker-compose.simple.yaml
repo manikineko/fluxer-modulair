@@ -95,7 +95,7 @@ services:
       - FLUXER_CONFIG=/usr/src/app/config/config.json
       - NODE_ENV=production
       - FLUXER_PUBLIC_PORT=${FLUXER_PUBLIC_PORT}
-      - FLUXER_STATIC_CDN=http://172.17.0.1:8082
+      - FLUXER_STATIC_CDN=${FLUXER_STATIC_CDN:-https://static.${DOMAIN:-localhost}}
     ports:
       - '${FLUXER_PUBLIC_PORT}:8080'
     volumes:
@@ -120,8 +120,8 @@ services:
       - LOG_LEVEL=debug
       - FLUXER_ADMIN_PORT=${FLUXER_ADMIN_PORT}
       - FLUXER_CONFIG__INTERNAL__KV=redis://valkey:6379/0
-      - FLUXER_ADMIN_REDIRECT_URL=http://localhost:8081
-      - FLUXER_STATIC_CDN=http://172.17.0.1:8082
+      - FLUXER_ADMIN_REDIRECT_URL=${FLUXER_ADMIN_REDIRECT_URL:-https://admin.${DOMAIN:-localhost}}
+      - FLUXER_STATIC_CDN=${FLUXER_STATIC_CDN:-https://static.${DOMAIN:-localhost}}
       - OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID}
       - OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET}
       - OAUTH_REDIRECT_URI=${OAUTH_REDIRECT_URI}

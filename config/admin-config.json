@@ -8,15 +8,15 @@
 		"static_cdn_domain": "localhost:8082"
 	},
 	"endpoint_overrides": {
-		"api": "http://fluxer_server:49319/api",
-		"api_client": "http://fluxer_server:49319/api",
-		"gateway": "http://fluxer_server:49107",
-		"media": "http://172.17.0.1:49319/media",
-		"static_cdn": "http://localhost:8082",
-		"marketing": "http://localhost:49531",
-		"admin": "http://localhost:8081",
-		"invite": "http://localhost:48763/invite",
-		"gift": "http://localhost:48763/gift"
+		"api": "${FLUXER_API_URL:-http://fluxer_server:49319/api}",
+		"api_client": "${FLUXER_API_CLIENT_URL:-http://fluxer_server:49319/api}",
+		"gateway": "${FLUXER_GATEWAY_URL:-http://fluxer_server:49107}",
+		"media": "${FLUXER_MEDIA_URL:-http://fluxer_server:49319/media}",
+		"static_cdn": "${FLUXER_STATIC_CDN:-http://localhost:8082}",
+		"marketing": "${FLUXER_MARKETING_URL:-http://localhost:49531}",
+		"admin": "${FLUXER_ADMIN_URL:-http://localhost:8081}",
+		"invite": "${FLUXER_INVITE_URL:-http://localhost:48763/invite}",
+		"gift": "${FLUXER_GIFT_URL:-http://localhost:48763/gift}"
 	},
 	"database": {
 		"backend": "sqlite",

@@ -79,7 +79,7 @@ services:
       - FLUXER_CONFIG=/usr/src/app/config/config.json
       - NODE_ENV=production
       - FLUXER_PUBLIC_PORT=${FLUXER_PUBLIC_PORT}
-      - FLUXER_STATIC_CDN=http://172.17.0.1:8082
+      - FLUXER_STATIC_CDN=${FLUXER_STATIC_CDN:-https://static.${DOMAIN:-localhost}}
     ports:
       - '${FLUXER_PUBLIC_PORT}:8080'
     volumes:
