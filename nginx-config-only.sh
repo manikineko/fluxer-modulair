@@ -21,6 +21,7 @@ NC='\033[0m' # No Color
 NGINX_CONF_DIR="/etc/nginx"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="${SCRIPT_DIR}"
+ENV_FILE="${REPO_ROOT}/.env"
 
 # User-specified ports (can be overridden via command line)
 USER_FLUXER_PUBLIC_PORT=""
@@ -374,10 +375,27 @@ main() {
     fi
     echo ""
     
-    # Scan for available ports
-    print_info "Scanning for available ports..."
-    local fluxer_public_port=$(find_free_port 40000 50000 "$USER_FLUXER_PUBLIC_PORT" "")
-    local fluxer_admin_port=$(find_free_port 40000 50000 "$USER_FLUXER_ADMIN_PORT" "$fluxer_public_port")
+    # Check if .env file exists and read ports from it
+    if [ -f "$ENV_FILE" ]; then
+        print_info "Reading ports from .env file..."
+        source "$ENV_FILE"
+        fluxer_public_port="${FLUXER_PUBLIC_PORT:-}"
+        fluxer_admin_port="${FLUXER_ADMIN_PORT:-}"
+        
+        if [ -z "$fluxer_public_port" ] || [ -z "$fluxer_admin_port" ]; then
+            print_error "FLUXER_PUBLIC_PORT or FLUXER_ADMIN_PORT not found in .env file"
+            print_info "Scanning for available ports instead..."
+            fluxer_public_port=$(find_free_port 40000 50000 "$USER_FLUXER_PUBLIC_PORT" "")
+            fluxer_admin_port=$(find_free_port 40000 50000 "$USER_FLUXER_ADMIN_PORT" "$fluxer_public_port")
+        else
+            print_success "Ports loaded from .env file"
+        fi
+    else
+        # Scan for available ports
+        print_info "No .env file found, scanning for available ports..."
+        local fluxer_public_port=$(find_free_port 40000 50000 "$USER_FLUXER_PUBLIC_PORT" "")
+        local fluxer_admin_port=$(find_free_port 40000 50000 "$USER_FLUXER_ADMIN_PORT" "$fluxer_public_port")
+    fi
     
     print_success "Ports selected:"
     print_info "  FLUXER_PUBLIC_PORT: $fluxer_public_port"
