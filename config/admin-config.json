@@ -3,15 +3,15 @@
 	"env": "development",
 	"domain": {
 		"base_domain": "localhost",
-		"public_port": 49319,
+		"public_port": 49320,
 		"public_scheme": "http",
 		"static_cdn_domain": "localhost:8082"
 	},
 	"endpoint_overrides": {
-		"api": "http://fluxer_server:49319/api",
-		"api_client": "http://fluxer_server:49319/api",
+		"api": "http://fluxer_server:49320/api",
+		"api_client": "http://fluxer_server:49320/api",
 		"gateway": "http://fluxer_server:49107",
-		"media": "http://fluxer_server:49319/media",
+		"media": "http://fluxer_server:49320/media",
 		"static_cdn": "http://localhost:8082",
 		"marketing": "http://localhost:49531",
 		"admin": "http://localhost:8081",
@@ -45,7 +45,7 @@
 	},
 	"services": {
 		"server": {
-			"port": 49319,
+			"port": 49320,
 			"host": "0.0.0.0"
 		},
 		"media_proxy": {
@@ -66,7 +66,7 @@
 		"gateway": {
 			"port": 49107,
 			"admin_reload_secret": "",
-			"media_proxy_endpoint": "http://host.docker.internal:49319/media",
+			"media_proxy_endpoint": "http://host.docker.internal:49320/media",
 			"logger_level": "debug"
 		},
 		"nats": {
@@ -122,7 +122,7 @@
 			"api_key": "",
 			"api_secret": "",
 			"url": "ws://host.docker.internal:7880",
-			"webhook_url": "http://host.docker.internal:49319/api/webhooks/livekit",
+			"webhook_url": "http://host.docker.internal:49320/api/webhooks/livekit",
 			"default_region": {
 				"id": "default",
 				"name": "Default",

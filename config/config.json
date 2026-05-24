@@ -4,20 +4,20 @@
   "domain": {
     "base_domain": "81.169.237.72",
     "public_scheme": "http",
-    "public_port": 49319,
+    "public_port": 49320,
     "static_cdn_domain": "81.169.237.72:8082"
   },
   "endpoint_overrides": {
-    "api": "http://fluxer_server:49319/api",
-    "api_client": "http://fluxer_server:49319/api",
+    "api": "https://api.proxcord.cc/api",
+    "api_client": "https://api.proxcord.cc/api",
     "gateway": "http://fluxer_server:49107",
-    "media": "http://fluxer_server:49319/media",
+    "media": "http://fluxer_server:49320/media",
     "static_cdn": "http://localhost:8082",
     "marketing": "http://localhost:49531",
     "admin": "http://localhost:8081",
-    "app": "http://fluxer_app:8080",
-    "invite": "http://localhost:49319/invite",
-    "gift": "http://localhost:49319/gift"
+    "app": "https://app.proxcord.cc",
+    "invite": "http://localhost:49320/invite",
+    "gift": "http://localhost:49320/gift"
   },
   "database": {
     "backend": "sqlite",
@@ -47,7 +47,7 @@
   },
   "services": {
     "server": {
-      "port": 49319,
+      "port": 49320,
       "host": "0.0.0.0"
     },
     "s3": {
@@ -73,7 +73,7 @@
     "gateway": {
       "port": 49107,
       "admin_reload_secret": "f584a1de1648ce528cfe0707aba1f44a2cc57a5a8f3e7268e9624416adf599b9",
-      "media_proxy_endpoint": "http://81.169.237.72:49319/media",
+      "media_proxy_endpoint": "http://81.169.237.72:49320/media",
       "logger_level": "debug"
     },
     "nats": {
@@ -132,7 +132,7 @@
       "api_key": "",
       "api_secret": "",
       "url": "ws://81.169.237.72:7880",
-      "webhook_url": "http://81.169.237.72:49319/api/webhooks/livekit",
+      "webhook_url": "http://81.169.237.72:49320/api/webhooks/livekit",
       "default_region": {
         "id": "default",
         "name": "Default",
