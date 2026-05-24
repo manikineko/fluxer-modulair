@@ -240,6 +240,11 @@ enable_nginx_site() {
     
     print_info "Enabling nginx site for $full_domain..."
     
+    # Remove old symlink without .conf extension if it exists
+    if [ -L "${NGINX_CONF_DIR}/sites-enabled/${full_domain}" ]; then
+        rm "${NGINX_CONF_DIR}/sites-enabled/${full_domain}"
+    fi
+    
     # Create symbolic link to sites-enabled
     ln -sf "${NGINX_CONF_DIR}/sites-available/${full_domain}.conf" "${NGINX_CONF_DIR}/sites-enabled/${full_domain}.conf"
     
