@@ -510,33 +510,47 @@ main() {
     
     print_info "Checking for .env file at: $ENV_FILE"
     
-    # First try to read from docker-compose file
-    if ports=$(read_ports_from_compose); then
-        fluxer_public_port=$(echo "$ports" | awk '{print $1}')
-        fluxer_admin_port=$(echo "$ports" | awk '{print $2}')
-        print_success "Ports loaded from docker-compose file"
-    elif [ -f "$ENV_FILE" ]; then
-        print_info "Reading ports from .env file..."
-        source "$ENV_FILE"
-        fluxer_public_port="${FLUXER_PUBLIC_PORT:-}"
-        fluxer_admin_port="${FLUXER_ADMIN_PORT:-}"
-        
-        print_info "Found FLUXER_PUBLIC_PORT: $fluxer_public_port"
-        print_info "Found FLUXER_ADMIN_PORT: $fluxer_admin_port"
-        
-        if [ -z "$fluxer_public_port" ] || [ -z "$fluxer_admin_port" ]; then
-            print_error "FLUXER_PUBLIC_PORT or FLUXER_ADMIN_PORT not found in .env file"
-            print_info "Scanning for available ports instead..."
-            fluxer_public_port=$(find_free_port 40000 50000 "$USER_FLUXER_PUBLIC_PORT" "")
-            fluxer_admin_port=$(find_free_port 40000 50000 "$USER_FLUXER_ADMIN_PORT" "$fluxer_public_port")
+    # Command-line arguments take precedence
+    if [ -n "$USER_FLUXER_PUBLIC_PORT" ]; then
+        fluxer_public_port="$USER_FLUXER_PUBLIC_PORT"
+        print_info "Using command-line FLUXER_PUBLIC_PORT: $fluxer_public_port"
+    fi
+    
+    if [ -n "$USER_FLUXER_ADMIN_PORT" ]; then
+        fluxer_admin_port="$USER_FLUXER_ADMIN_PORT"
+        print_info "Using command-line FLUXER_ADMIN_PORT: $fluxer_admin_port"
+    fi
+    
+    # If command-line ports not specified, read from docker-compose or .env
+    if [ -z "$fluxer_public_port" ] || [ -z "$fluxer_admin_port" ]; then
+        # First try to read from docker-compose file
+        if ports=$(read_ports_from_compose); then
+            fluxer_public_port=$(echo "$ports" | awk '{print $1}')
+            fluxer_admin_port=$(echo "$ports" | awk '{print $2}')
+            print_success "Ports loaded from docker-compose file"
+        elif [ -f "$ENV_FILE" ]; then
+            print_info "Reading ports from .env file..."
+            source "$ENV_FILE"
+            fluxer_public_port="${FLUXER_PUBLIC_PORT:-}"
+            fluxer_admin_port="${FLUXER_ADMIN_PORT:-}"
+            
+            print_info "Found FLUXER_PUBLIC_PORT: $fluxer_public_port"
+            print_info "Found FLUXER_ADMIN_PORT: $fluxer_admin_port"
+            
+            if [ -z "$fluxer_public_port" ] || [ -z "$fluxer_admin_port" ]; then
+                print_error "FLUXER_PUBLIC_PORT or FLUXER_ADMIN_PORT not found in .env file"
+                print_info "Scanning for available ports instead..."
+                fluxer_public_port=$(find_free_port 40000 50000 "" "")
+                fluxer_admin_port=$(find_free_port 40000 50000 "" "$fluxer_public_port")
+            else
+                print_success "Ports loaded from .env file"
+            fi
         else
-            print_success "Ports loaded from .env file"
+            # Scan for available ports
+            print_info "No .env file found, scanning for available ports..."
+            fluxer_public_port=$(find_free_port 40000 50000 "" "")
+            fluxer_admin_port=$(find_free_port 40000 50000 "" "$fluxer_public_port")
         fi
-    else
-        # Scan for available ports
-        print_info "No .env file found, scanning for available ports..."
-        fluxer_public_port=$(find_free_port 40000 50000 "$USER_FLUXER_PUBLIC_PORT" "")
-        fluxer_admin_port=$(find_free_port 40000 50000 "$USER_FLUXER_ADMIN_PORT" "$fluxer_public_port")
     fi
     
     print_success "Ports selected:"
