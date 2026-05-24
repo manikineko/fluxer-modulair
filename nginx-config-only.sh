@@ -226,6 +226,14 @@ server {
         proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_cache_bypass \$http_upgrade;
         proxy_read_timeout 86400;
+        
+        # Rewrite local IPs to domain in response body
+        proxy_sub http://172.17.0.1:8082 https://\$host;
+        proxy_sub http://127.0.0.1:8082 https://\$host;
+        proxy_sub http://localhost:8082 https://\$host;
+        proxy_sub http://172.17.0.1:8080 https://\$host;
+        proxy_sub http://127.0.0.1:8080 https://\$host;
+        proxy_sub http://localhost:8080 https://\$host;
     }
     
     # Static files with proper MIME types
@@ -240,6 +248,14 @@ server {
         proxy_read_timeout 86400;
         expires 1y;
         add_header Cache-Control "public, immutable";
+        
+        # Rewrite local IPs to domain in response body
+        proxy_sub http://172.17.0.1:8082 https://\$host;
+        proxy_sub http://127.0.0.1:8082 https://\$host;
+        proxy_sub http://localhost:8082 https://\$host;
+        proxy_sub http://172.17.0.1:8080 https://\$host;
+        proxy_sub http://127.0.0.1:8080 https://\$host;
+        proxy_sub http://localhost:8080 https://\$host;
     }
     
     # Health check endpoint

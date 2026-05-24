@@ -631,6 +631,14 @@ server {
         proxy_buffers 8 4k;
         proxy_busy_buffers_size 8k;
         
+        # Rewrite local IPs to domain in response body
+        proxy_sub http://172.17.0.1:8082 https://\$host;
+        proxy_sub http://127.0.0.1:8082 https://\$host;
+        proxy_sub http://localhost:8082 https://\$host;
+        proxy_sub http://172.17.0.1:8080 https://\$host;
+        proxy_sub http://127.0.0.1:8080 https://\$host;
+        proxy_sub http://localhost:8080 https://\$host;
+        
         # Cache configuration (optional)
         # proxy_cache ${full_domain}_cache;
         # proxy_cache_valid 200 60m;
