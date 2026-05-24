@@ -185,6 +185,10 @@ server {
     include /etc/nginx/mime.types;
     default_type application/octet-stream;
     
+    # Substitution filter configuration
+    sub_filter_types text/html text/css application/javascript application/json;
+    sub_filter_last_modified off;
+    
     # Redirect to HTTPS
     return 301 https://\$host\$request_uri;
 }
@@ -202,6 +206,10 @@ server {
     # MIME types
     include /etc/nginx/mime.types;
     default_type application/octet-stream;
+    
+    # Substitution filter configuration
+    sub_filter_types text/html text/css application/javascript application/json;
+    sub_filter_last_modified off;
     
     # Security Headers
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
@@ -227,6 +235,9 @@ server {
         proxy_cache_bypass \$http_upgrade;
         proxy_read_timeout 86400;
         
+        # Disable compression from backend so sub_filter works
+        proxy_set_header Accept-Encoding "";
+        
         # Rewrite local IPs to domain in response body
         sub_filter http://172.17.0.1:8082 https://\$host;
         sub_filter http://127.0.0.1:8082 https://\$host;
@@ -249,6 +260,9 @@ server {
         proxy_read_timeout 86400;
         expires 1y;
         add_header Cache-Control "public, immutable";
+        
+        # Disable compression from backend so sub_filter works
+        proxy_set_header Accept-Encoding "";
         
         # Rewrite local IPs to domain in response body
         sub_filter http://172.17.0.1:8082 https://\$host;

@@ -588,6 +588,10 @@ server {
     include /etc/nginx/mime.types;
     default_type application/octet-stream;
     
+    # Substitution filter configuration
+    sub_filter_types text/html text/css application/javascript application/json;
+    sub_filter_last_modified off;
+    
     # Security headers
     add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
     add_header X-Frame-Options "SAMEORIGIN" always;
@@ -630,6 +634,9 @@ server {
         proxy_buffer_size 4k;
         proxy_buffers 8 4k;
         proxy_busy_buffers_size 8k;
+        
+        # Disable compression from backend so sub_filter works
+        proxy_set_header Accept-Encoding "";
         
         # Rewrite local IPs to domain in response body
         sub_filter http://172.17.0.1:8082 https://\$host;
