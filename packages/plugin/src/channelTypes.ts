@@ -64,10 +64,10 @@ export interface ChannelTypePlugin {
 	validateChannel?: (data: Record<string, unknown>) => boolean;
 	
 	// Permissions required for this channel type
-	requiredPermissions?: string[];
+	requiredPermissions?: Array<string>;
 	
 	// Bot-specific permissions
-	botPermissions?: string[];
+	botPermissions?: Array<string>;
 	
 	// SSR configuration (if this is an SSR channel)
 	ssrConfig?: SSRConfig;
@@ -105,7 +105,7 @@ export interface SSRConfig {
 	// Sandbox configuration
 	sandbox: {
 		// Allowed origins for iframes
-		allowedOrigins: string[];
+		allowedOrigins: Array<string>;
 		
 		// Whether to allow localStorage access
 		allowLocalStorage: boolean;
@@ -138,7 +138,7 @@ export interface LexiconSupport {
 	enabled: boolean;
 	
 	// Supported lexicon namespaces
-	supportedLexicons: string[];
+	supportedLexicons: Array<string>;
 	
 	// Handler for lexicon records
 	handleLexiconRecord?: (lexicon: string, record: Record<string, unknown>) => void;
@@ -197,15 +197,15 @@ class CustomMessageTypeRegistry {
 		return this.types.get(id);
 	}
 	
-	getAll(): CustomMessageType[] {
+	getAll(): Array<CustomMessageType> {
 		return Array.from(this.types.values());
 	}
 	
-	getUserAccessible(): CustomMessageType[] {
+	getUserAccessible(): Array<CustomMessageType> {
 		return Array.from(this.types.values()).filter(t => t.userAccessible);
 	}
 	
-	getBotAccessible(): CustomMessageType[] {
+	getBotAccessible(): Array<CustomMessageType> {
 		return Array.from(this.types.values()).filter(t => t.botAccessible);
 	}
 }
@@ -228,13 +228,123 @@ class ChannelTypeRegistry {
 		return this.plugins.get(id);
 	}
 	
-	getAll(): ChannelTypePlugin[] {
+	getAll(): Array<ChannelTypePlugin> {
 		return Array.from(this.plugins.values());
 	}
 	
-	getByCategory(category: ChannelTypePlugin['category']): ChannelTypePlugin[] {
+	getByCategory(category: ChannelTypePlugin['category']): Array<ChannelTypePlugin> {
 		return Array.from(this.plugins.values()).filter(p => p.category === category);
 	}
 }
 
 export const channelTypeRegistry = new ChannelTypeRegistry();
+
+// Server Type Plugin System
+// Allows plugins to register custom server types for cross-instance and platform integration
+
+export interface ServerTypePlugin {
+	// Unique identifier for this server type
+	id: string;
+	
+	// Display name
+	name: string;
+	
+	// Description of this server type
+	description: string;
+	
+	// Icon for the server type (emoji, icon name, or SVG path)
+	icon: string;
+	
+	// Icon type: 'emoji', 'lucide', 'custom-svg', 'image-url'
+	iconType: 'emoji' | 'lucide' | 'custom-svg' | 'image-url';
+	
+	// Category of server type
+	category: 'fluxer' | 'discord' | 'matrix' | 'xmpp' | 'bluesky' | 'mastodon' | 'custom';
+	
+	// Whether this server type supports federation
+	supportsFederation: boolean;
+	
+	// Whether this server type supports real-time communication
+	supportsRealtime: boolean;
+	
+	// Whether this server type supports message history
+	supportsHistory: boolean;
+	
+	// Whether this server type supports voice/video
+	supportsVoice: boolean;
+	
+	// Whether this server type supports file sharing
+	supportsFiles: boolean;
+	
+	// Configuration schema for this server type
+	configSchema?: Record<string, unknown>;
+	
+	// Validation function for server configuration
+	validateConfig?: (config: Record<string, unknown>) => boolean;
+	
+	// Handler for connecting to this server type
+	handleConnect?: (config: Record<string, unknown>) => Promise<void>;
+	
+	// Handler for disconnecting from this server type
+	handleDisconnect?: () => Promise<void>;
+	
+	// Handler for syncing data from this server type
+	handleSync?: () => Promise<void>;
+	
+	// Custom settings panel for this server type
+	renderSettings?: (props: ServerSettingsProps) => React.ReactNode;
+	
+	// Permissions required for this server type
+	requiredPermissions?: Array<string>;
+	
+	// API endpoints provided by this server type
+	apiEndpoints?: Array<{
+		method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+		path: string;
+		handler: string;
+	}>;
+}
+
+export interface ServerSettingsProps {
+	serverId: string;
+	serverData: Record<string, unknown>;
+	onUpdate: (data: Record<string, unknown>) => void;
+	onConnect: () => Promise<void>;
+	onDisconnect: () => Promise<void>;
+	onSync: () => Promise<void>;
+}
+
+// Registry for server type plugins
+class ServerTypeRegistry {
+	private plugins = new Map<string, ServerTypePlugin>();
+	
+	register(plugin: ServerTypePlugin): void {
+		this.plugins.set(plugin.id, plugin);
+	}
+	
+	unregister(id: string): void {
+		this.plugins.delete(id);
+	}
+	
+	get(id: string): ServerTypePlugin | undefined {
+		return this.plugins.get(id);
+	}
+	
+	getAll(): Array<ServerTypePlugin> {
+		return Array.from(this.plugins.values());
+	}
+	
+	getByCategory(category: ServerTypePlugin['category']): Array<ServerTypePlugin> {
+		return Array.from(this.plugins.values()).filter(p => p.category === category);
+	}
+	
+	getFederated(): Array<ServerTypePlugin> {
+		return Array.from(this.plugins.values()).filter(p => p.supportsFederation);
+	}
+	
+	getRealtime(): Array<ServerTypePlugin> {
+		return Array.from(this.plugins.values()).filter(p => p.supportsRealtime);
+	}
+}
+
+export const serverTypeRegistry = new ServerTypeRegistry();

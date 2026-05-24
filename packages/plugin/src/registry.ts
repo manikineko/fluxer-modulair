@@ -18,6 +18,7 @@
  */
 
 import type {PluginManifest, PluginState, UIComponentDescriptor} from './types';
+import {customMessageTypeRegistry, type CustomMessageType, channelTypeRegistry, type ChannelTypePlugin, serverTypeRegistry, type ServerTypePlugin} from './channelTypes';
 
 export class PluginRegistry {
 	private plugins: Map<string, PluginState> = new Map();
@@ -35,9 +36,54 @@ export class PluginRegistry {
 			manifest,
 			context: undefined,
 		});
+
+		// Register custom message types from manifest
+		if (manifest.messageTypes) {
+			for (const messageType of manifest.messageTypes) {
+				customMessageTypeRegistry.register(messageType as CustomMessageType);
+			}
+		}
+
+		// Register server types from manifest
+		if (manifest.serverTypes) {
+			for (const serverType of manifest.serverTypes) {
+				serverTypeRegistry.register(serverType as ServerTypePlugin);
+			}
+		}
+
+		// Register channel types from manifest
+		if (manifest.channelTypes) {
+			for (const channelType of manifest.channelTypes) {
+				channelTypeRegistry.register(channelType as ChannelTypePlugin);
+			}
+		}
 	}
 
 	unregister(pluginId: string): void {
+		const plugin = this.plugins.get(pluginId);
+		if (plugin) {
+			// Unregister custom message types
+			if (plugin.manifest.messageTypes) {
+				for (const messageType of plugin.manifest.messageTypes) {
+					customMessageTypeRegistry.unregister(messageType.id);
+				}
+			}
+
+			// Unregister server types
+			if (plugin.manifest.serverTypes) {
+				for (const serverType of plugin.manifest.serverTypes) {
+					serverTypeRegistry.unregister(serverType.id);
+				}
+			}
+
+			// Unregister channel types
+			if (plugin.manifest.channelTypes) {
+				for (const channelType of plugin.manifest.channelTypes) {
+					channelTypeRegistry.unregister(channelType.id);
+				}
+			}
+		}
+
 		this.plugins.delete(pluginId);
 		this.uiComponents.delete(pluginId);
 	}

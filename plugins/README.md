@@ -55,7 +55,48 @@ If using MIT license, plugin source files should include:
     "onLoad": "functionName",
     "onEnable": "functionName",
     "onDisable": "functionName"
-  }
+  },
+  "messageTypes": [
+    {
+      "id": "custom-message-type",
+      "name": "Custom Message Type",
+      "icon": "📝",
+      "userAccessible": true,
+      "botAccessible": true,
+      "recordSchema": {
+        "namespace": "app.example.record",
+        "name": "record",
+        "schema": {}
+      }
+    }
+  ],
+  "serverTypes": [
+    {
+      "id": "custom-server-type",
+      "name": "Custom Server Type",
+      "description": "Description of server type",
+      "icon": "🌐",
+      "iconType": "emoji" | "lucide" | "custom-svg" | "image-url",
+      "category": "fluxer" | "discord" | "matrix" | "xmpp" | "bluesky" | "mastodon" | "custom",
+      "supportsFederation": true,
+      "supportsRealtime": true,
+      "supportsHistory": true,
+      "supportsVoice": true,
+      "supportsFiles": true
+    }
+  ],
+  "channelTypes": [
+    {
+      "id": "custom-channel-type",
+      "name": "Custom Channel Type",
+      "icon": "#",
+      "category": "text" | "voice" | "feed" | "ssr" | "custom",
+      "supportsMessages": true,
+      "supportsVoice": false,
+      "botAccessible": true,
+      "userAccessible": true
+    }
+  ]
 }
 ```
 

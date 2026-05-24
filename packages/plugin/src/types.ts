@@ -45,35 +45,35 @@ export interface PluginPermissions {
 	// Network permissions
 	network?: {
 		request?: boolean;
-		requestDomains?: string[];
+		requestDomains?: Array<string>;
 	};
 	
 	// File system permissions
 	fileSystem?: {
 		read?: boolean;
 		write?: boolean;
-		paths?: string[];
+		paths?: Array<string>;
 	};
 	
 	// Database permissions
 	database?: {
 		read?: boolean;
 		write?: boolean;
-		tables?: string[];
+		tables?: Array<string>;
 	};
 	
 	// API permissions
 	api?: {
 		internal?: boolean;
 		external?: boolean;
-		endpoints?: string[];
+		endpoints?: Array<string>;
 	};
 	
 	// User data permissions
 	userData?: {
 		read?: boolean;
 		write?: boolean;
-		fields?: string[];
+		fields?: Array<string>;
 	};
 	
 	// Admin permissions
@@ -84,9 +84,9 @@ export interface PluginPermissions {
 }
 
 export interface PluginAssets {
-	icons?: string[];
-	stylesheets?: string[];
-	scripts?: string[];
+	icons?: Array<string>;
+	stylesheets?: Array<string>;
+	scripts?: Array<string>;
 }
 
 export interface PluginContext {
@@ -191,6 +191,47 @@ export interface PluginManifest {
 	
 	// Declarative UI components
 	uiComponents?: Array<UIComponentDescriptor>;
+	
+	// Custom message types provided by this plugin
+	messageTypes?: Array<{
+		id: string;
+		name: string;
+		icon: string;
+		userAccessible: boolean;
+		botAccessible: boolean;
+		recordSchema?: {
+			namespace: string;
+			name: string;
+			schema: Record<string, unknown>;
+		};
+	}>;
+	
+	// Server types provided by this plugin
+	serverTypes?: Array<{
+		id: string;
+		name: string;
+		description: string;
+		icon: string;
+		iconType: 'emoji' | 'lucide' | 'custom-svg' | 'image-url';
+		category: 'fluxer' | 'discord' | 'matrix' | 'xmpp' | 'bluesky' | 'mastodon' | 'custom';
+		supportsFederation: boolean;
+		supportsRealtime: boolean;
+		supportsHistory: boolean;
+		supportsVoice: boolean;
+		supportsFiles: boolean;
+	}>;
+	
+	// Channel types provided by this plugin
+	channelTypes?: Array<{
+		id: string;
+		name: string;
+		icon: string;
+		category: 'text' | 'voice' | 'feed' | 'ssr' | 'custom';
+		supportsMessages: boolean;
+		supportsVoice: boolean;
+		botAccessible: boolean;
+		userAccessible: boolean;
+	}>;
 }
 
 export interface PluginState {

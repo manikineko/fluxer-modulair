@@ -1,0 +1,39 @@
+{
+  "id": "fluxer-server-type",
+  "name": "Fluxer Server Type",
+  "version": "1.0.0",
+  "description": "Server type plugin for Fluxer cross-instance federation",
+  "author": "Fluxer Contributors",
+  "license": "MIT",
+  "main": "index.ts",
+  "target": "both",
+  "permissions": {
+    "network": {
+      "request": true
+    },
+    "api": {
+      "internal": true,
+      "external": true
+    }
+  },
+  "hooks": {
+    "onLoad": "onLoad",
+    "onEnable": "onEnable",
+    "onDisable": "onDisable"
+  },
+  "serverTypes": [
+    {
+      "id": "fluxer-instance",
+      "name": "Fluxer Instance",
+      "description": "A federated Fluxer instance for cross-instance communication",
+      "icon": "🌐",
+      "iconType": "emoji",
+      "category": "fluxer",
+      "supportsFederation": true,
+      "supportsRealtime": true,
+      "supportsHistory": true,
+      "supportsVoice": true,
+      "supportsFiles": true
+    }
+  ]
+}

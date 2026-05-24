@@ -40,6 +40,41 @@ export const PluginManifestSchema = object({
 	peerDependencies: optional(record(string(), string())),
 	config: optional(record(string(), string())),
 	uiComponents: optional(array(unknown())),
+	messageTypes: optional(array(object({
+		id: string(),
+		name: string(),
+		icon: string(),
+		userAccessible: boolean(),
+		botAccessible: boolean(),
+		recordSchema: optional(object({
+			namespace: string(),
+			name: string(),
+			schema: unknown(),
+		})),
+	}))),
+	serverTypes: optional(array(object({
+		id: string(),
+		name: string(),
+		description: string(),
+		icon: string(),
+		iconType: union([string('emoji'), string('lucide'), string('custom-svg'), string('image-url')]),
+		category: union([string('fluxer'), string('discord'), string('matrix'), string('xmpp'), string('bluesky'), string('mastodon'), string('custom')]),
+		supportsFederation: boolean(),
+		supportsRealtime: boolean(),
+		supportsHistory: boolean(),
+		supportsVoice: boolean(),
+		supportsFiles: boolean(),
+	}))),
+	channelTypes: optional(array(object({
+		id: string(),
+		name: string(),
+		icon: string(),
+		category: union([string('text'), string('voice'), string('feed'), string('ssr'), string('custom')]),
+		supportsMessages: boolean(),
+		supportsVoice: boolean(),
+		botAccessible: boolean(),
+		userAccessible: boolean(),
+	}))),
 });
 
 export function validateManifest(manifest: unknown): PluginManifest {

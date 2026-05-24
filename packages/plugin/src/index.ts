@@ -47,4 +47,4 @@ export const PluginSystem = {
 	hooks: pluginHooks,
 };
 
-export {channelTypeRegistry, type ChannelTypePlugin, type ChannelViewProps, type MessageRenderProps, type ChannelSettingsProps, type SSRConfig, type LexiconSupport, customMessageTypeRegistry, type CustomMessageType} from './channelTypes';
+export {channelTypeRegistry, type ChannelTypePlugin, type ChannelViewProps, type MessageRenderProps, type ChannelSettingsProps, type SSRConfig, type LexiconSupport, customMessageTypeRegistry, type CustomMessageType, serverTypeRegistry, type ServerTypePlugin, type ServerSettingsProps} from './channelTypes';

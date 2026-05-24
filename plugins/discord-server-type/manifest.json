@@ -1,0 +1,39 @@
+{
+  "id": "discord-server-type",
+  "name": "Discord Server Type",
+  "version": "1.0.0",
+  "description": "Server type plugin for Discord integration and bridging",
+  "author": "Fluxer Contributors",
+  "license": "MIT",
+  "main": "index.ts",
+  "target": "both",
+  "permissions": {
+    "network": {
+      "request": true
+    },
+    "api": {
+      "internal": true,
+      "external": true
+    }
+  },
+  "hooks": {
+    "onLoad": "onLoad",
+    "onEnable": "onEnable",
+    "onDisable": "onDisable"
+  },
+  "serverTypes": [
+    {
+      "id": "discord-guild",
+      "name": "Discord Guild",
+      "description": "A Discord server/guild for integration and bridging",
+      "icon": "🎮",
+      "iconType": "emoji",
+      "category": "discord",
+      "supportsFederation": false,
+      "supportsRealtime": true,
+      "supportsHistory": true,
+      "supportsVoice": true,
+      "supportsFiles": true
+    }
+  ]
+}

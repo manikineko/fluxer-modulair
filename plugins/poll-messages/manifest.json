@@ -1,0 +1,64 @@
+{
+  "id": "poll-messages",
+  "name": "Poll Messages",
+  "version": "1.0.0",
+  "description": "Custom message type for creating and displaying polls with voting functionality",
+  "author": "Fluxer Contributors",
+  "license": "MIT",
+  "main": "index.ts",
+  "target": "client",
+  "permissions": {
+    "api": {
+      "internal": true
+    }
+  },
+  "hooks": {
+    "onLoad": "onLoad",
+    "onEnable": "onEnable",
+    "onDisable": "onDisable"
+  },
+  "messageTypes": [
+    {
+      "id": "poll",
+      "name": "Poll",
+      "icon": "📊",
+      "userAccessible": true,
+      "botAccessible": true,
+      "recordSchema": {
+        "namespace": "app.fluxer.poll",
+        "name": "poll",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "question": {
+              "type": "string"
+            },
+            "options": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "votes": {
+                    "type": "number"
+                  }
+                }
+              }
+            },
+            "allowMultiple": {
+              "type": "boolean"
+            },
+            "expiresAt": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  ]
+}
