@@ -70,29 +70,8 @@ devenv.local.nix
 **/.devserver-cache.json
 /.fluxer/
 /config/config.json
-/fluxer_app/src/assets/emoji-sprites/
-/fluxer_app/src/components/uikit/AvatarStatusGeometry.ts
-/fluxer_app/src/components/uikit/SVGMasks.tsx
-/fluxer_app/src/locales/*/messages.js
-/fluxer_app/src/locales/*/messages.mjs
-/fluxer_app/src/locales/*/messages.ts
-/fluxer_admin/public/static/app.css
-/fluxer_gateway/config/sys.config
-/fluxer_gateway/config/vm.args
-/fluxer_marketing/public/static/app.css
-/fluxer_server/data/
-/packages/admin/public/static/app.css
-/packages/marketing/public/static/app.css
-/packages/config/src/ConfigSchema.json
-/packages/config/src/MasterZodSchema.generated.tsx
-AGENTS.md
-CLAUDE.md
-fluxer.yaml
-GEMINI.md
+fluxer_server/data/
 geoip_data
-next-env.d.ts
-.github/agents
-.github/prompts
 
 # Bot daemon source clones — upstream code with local patches, each is
 # its own git repo. The deployment manifest (Dockerfiles, compose,
