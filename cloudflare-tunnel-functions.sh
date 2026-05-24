@@ -10,18 +10,18 @@ install_cloudflared() {
     if [ -f /etc/debian_version ]; then
         # Debian/Ubuntu
         wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
-        sudo dpkg -i cloudflared-linux-amd64.deb
+        dpkg -i cloudflared-linux-amd64.deb
         rm cloudflared-linux-amd64.deb
     elif [ -f /etc/redhat-release ]; then
         # RHEL/CentOS
         wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-x86_64.rpm
-        sudo rpm -i cloudflared-linux-x86_64.rpm
+        rpm -i cloudflared-linux-x86_64.rpm
         rm cloudflared-linux-x86_64.rpm
     else
         # Generic
         wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
-        sudo mv cloudflared-linux-amd64 /usr/local/bin/cloudflared
-        sudo chmod +x /usr/local/bin/cloudflared
+        mv cloudflared-linux-amd64 /usr/local/bin/cloudflared
+        chmod +x /usr/local/bin/cloudflared
     fi
     
     print_success "cloudflared installed"
@@ -50,14 +50,14 @@ create_tunnel() {
     
     # Save tunnel config
     local tunnel_config_dir="/etc/cloudflared"
-    sudo mkdir -p "$tunnel_config_dir"
+    mkdir -p "$tunnel_config_dir"
     
     cat > /tmp/tunnel-config.yml <<EOF
 tunnel: $tunnel_id
 credentials-file: $tunnel_config_dir/$tunnel_id.json
 EOF
     
-    sudo mv /tmp/tunnel-config.yml "$tunnel_config_dir/config.yml"
+    mv /tmp/tunnel-config.yml "$tunnel_config_dir/config.yml"
     
     echo "$tunnel_id"
 }
@@ -76,7 +76,7 @@ add_tunnel_route() {
     
     # Add ingress rule to config
     local tunnel_config="/etc/cloudflared/config.yml"
-    sudo sed -i '/ingest:/a\  - hostname: '"$full_domain"'\n    service: http://localhost:'"$backend_port" "$tunnel_config"
+    sed -i '/ingest:/a\  - hostname: '"$full_domain"'\n    service: http://localhost:'"$backend_port" "$tunnel_config"
 }
 
 # Create systemd service for cloudflared
@@ -85,7 +85,7 @@ create_cloudflared_service() {
     
     print_info "Creating systemd service for cloudflared..."
     
-    sudo tee /etc/systemd/system/cloudflared-fluxer.service > /dev/null <<EOF
+    tee /etc/systemd/system/cloudflared-fluxer.service > /dev/null <<EOF
 [Unit]
 Description=cloudflared Tunnel Service (Fluxer)
 After=network.target
@@ -101,8 +101,8 @@ RestartSec=5s
 WantedBy=multi-user.target
 EOF
     
-    sudo systemctl daemon-reload
-    sudo systemctl enable cloudflared-fluxer
+    systemctl daemon-reload
+    systemctl enable cloudflared-fluxer
     print_success "cloudflared service created and enabled"
 }
 
@@ -110,9 +110,9 @@ EOF
 start_cloudflared() {
     print_info "Starting cloudflared service..."
     
-    sudo systemctl start cloudflared-fluxer
+    systemctl start cloudflared-fluxer
     
-    if sudo systemctl is-active --quiet cloudflared-fluxer; then
+    if systemctl is-active --quiet cloudflared-fluxer; then
         print_success "cloudflared service started"
     else
         print_error "Failed to start cloudflared service"
