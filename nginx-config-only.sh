@@ -433,6 +433,9 @@ main() {
     echo ""
     
     # Check if .env file exists and read ports from it
+    local fluxer_public_port
+    local fluxer_admin_port
+    
     if [ -f "$ENV_FILE" ]; then
         print_info "Reading ports from .env file..."
         source "$ENV_FILE"
@@ -450,8 +453,8 @@ main() {
     else
         # Scan for available ports
         print_info "No .env file found, scanning for available ports..."
-        local fluxer_public_port=$(find_free_port 40000 50000 "$USER_FLUXER_PUBLIC_PORT" "")
-        local fluxer_admin_port=$(find_free_port 40000 50000 "$USER_FLUXER_ADMIN_PORT" "$fluxer_public_port")
+        fluxer_public_port=$(find_free_port 40000 50000 "$USER_FLUXER_PUBLIC_PORT" "")
+        fluxer_admin_port=$(find_free_port 40000 50000 "$USER_FLUXER_ADMIN_PORT" "$fluxer_public_port")
     fi
     
     print_success "Ports selected:"
