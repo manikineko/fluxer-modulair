@@ -1031,8 +1031,8 @@ main() {
     if [ "$SKIP_CLOUDFLARE" = false ] && [ "$USE_TUNNEL" = false ]; then
         zone_id=$(get_zone_id "$domain")
         server_ip=$(get_server_ip)
-    else
-        # Get server IP even when skipping Cloudflare for display purposes
+    elif [ "$SKIP_CLOUDFLARE" = true ]; then
+        # Get server IP for manual DNS instructions (not needed for tunnel mode)
         server_ip=$(get_server_ip)
     fi
     
