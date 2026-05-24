@@ -68,8 +68,14 @@ source ~/.bashrc
 ### Basic Usage
 
 ```bash
+# Single domain (auto multi-subdomain mode)
+./cloudflare-nginx-setup.sh <domain>
+
+# Single subdomain
 ./cloudflare-nginx-setup.sh <subdomain> <domain>
 ```
+
+**Note:** If only a domain is provided (e.g., `example.com`), the script automatically enables multi-subdomain mode and sets up all standard subdomains (app, static, cdn, api, admin).
 
 ### Command-Line Options
 
@@ -138,7 +144,10 @@ IMPORTANT: Create manual DNS A records pointing to your server IP:
 ### Examples
 
 ```bash
-# Setup www.example.com (auto-detects free ports)
+# Setup all subdomains for example.com (auto multi-subdomain mode)
+./cloudflare-nginx-setup.sh example.com
+
+# Setup www.example.com (single subdomain)
 ./cloudflare-nginx-setup.sh www example.com
 
 # Setup api.example.com with specific ports
@@ -147,11 +156,11 @@ IMPORTANT: Create manual DNS A records pointing to your server IP:
 # Setup staging.mysite.com with custom MinIO port
 ./cloudflare-nginx-setup.sh staging mysite.com --minio-port 9500
 
-# Setup all standard subdomains for example.com
+# Setup all standard subdomains for example.com (explicit multi)
 ./cloudflare-nginx-setup.sh www example.com --multi
 
 # Setup with Cloudflare Tunnel (more secure, no open ports)
-./cloudflare-nginx-setup.sh www example.com --tunnel
+./cloudflare-nginx-setup.sh example.com --tunnel
 
 # Setup with Cloudflare Tunnel and multi-subdomain
 ./cloudflare-nginx-setup.sh www example.com --multi --tunnel

@@ -146,12 +146,15 @@ parse_arguments() {
                 shift 2
                 ;;
             -h|--help)
-                echo "Usage: $0 <subdomain> <domain> [OPTIONS]"
+                echo "Usage: $0 <domain> [OPTIONS]"
+                echo "       $0 <subdomain> <domain> [OPTIONS]"
+                echo ""
+                echo "If only domain is provided, multi-subdomain mode is automatically enabled."
                 echo ""
                 echo "Options:"
                 echo "  --multi                       Setup all standard subdomains (app, static, cdn, api, admin)"
-                echo "  --skip-cloudflare             Skip Cloudflare DNS management (manual DNS required)
-            --tunnel                      Use Cloudflare Tunnel (cloudflared) instead of direct DNS"
+                echo "  --skip-cloudflare             Skip Cloudflare DNS management (manual DNS required)"
+                echo "  --tunnel                      Use Cloudflare Tunnel (cloudflared) instead of direct DNS"
                 echo "  --fluxer-public-port PORT    Specify FLUXER_PUBLIC_PORT (40000-50000)"
                 echo "  --fluxer-admin-port PORT     Specify FLUXER_ADMIN_PORT (40000-50000)"
                 echo "  --postgres-port PORT          Specify POSTGRES_PORT (5400-6400)"
@@ -161,9 +164,11 @@ parse_arguments() {
                 echo "  -h, --help                    Show this help message"
                 echo ""
                 echo "Examples:"
-                echo "  $0 www example.com"
-                echo "  $0 www example.com --multi"
+                echo "  $0 example.com                    # Auto multi-subdomain mode"
+                echo "  $0 www example.com                # Single subdomain"
+                echo "  $0 www example.com --multi        # Explicit multi-subdomain"
                 echo "  $0 app example.com --skip-cloudflare"
+                echo "  $0 example.com --tunnel          # Multi-subdomain with tunnel"
                 echo "  $0 app example.com --fluxer-public-port 45000"
                 echo ""
                 echo "If ports are not specified, the script will automatically find free ports."
@@ -965,15 +970,25 @@ main() {
     parse_arguments "$@"
     
     # Check for positional arguments
-    if [ $# -lt 2 ]; then
-        print_error "Usage: $0 <subdomain> <domain> [OPTIONS]"
-        echo "Example: $0 www example.com"
+    if [ $# -lt 1 ]; then
+        print_error "Usage: $0 <domain> [OPTIONS]"
+        print_error "       $0 <subdomain> <domain> [OPTIONS]"
+        echo "Example: $0 example.com"
+        echo "         $0 www example.com"
         echo "Use --help for more options"
         exit 1
     fi
     
-    local subdomain=$1
-    local domain=$2
+    # If only 1 argument provided, treat as domain and enable multi-mode
+    if [ $# -eq 1 ]; then
+        local domain=$1
+        local subdomain="www"
+        MULTI_MODE=true
+        print_info "Single domain provided, enabling multi-subdomain mode for $domain..."
+    else
+        local subdomain=$1
+        local domain=$2
+    fi
     
     if [ "$MULTI_MODE" = true ]; then
         print_info "Setting up multiple subdomains for $domain..."
