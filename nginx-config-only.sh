@@ -1,10 +1,5 @@
 #!/bin/bash
 
-# Auto-elevate to root if not running as root
-if [ "$EUID" -ne 0 ]; then
-    exec sudo "$0" "$@"
-fi
-
 # Nginx Config Only Script
 # Scans for ports and generates nginx configurations only
 # Does NOT touch Cloudflare, SSL, or Docker
@@ -453,6 +448,13 @@ main() {
                 echo "  $0 www example.com --multi        # Explicit multi-subdomain"
                 echo "  $0 app example.com --fluxer-public-port 45000"
                 exit 0
+                ;;
+            --*)
+                # Unknown option, skip and its value
+                shift
+                if [[ "$1" != --* ]] && [[ $# -gt 0 ]]; then
+                    shift
+                fi
                 ;;
             *)
                 positional_args+=("$1")
