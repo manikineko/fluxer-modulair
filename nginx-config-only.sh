@@ -228,6 +228,20 @@ server {
         proxy_read_timeout 86400;
     }
     
+    # Static files with proper MIME types
+    location ~* \.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
+        proxy_read_timeout 86400;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+    
     # Health check endpoint
     location /health {
         access_log off;
