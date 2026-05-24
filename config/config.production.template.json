@@ -2,7 +2,7 @@
 	"$schema": "../packages/config/src/ConfigSchema.json",
 	"env": "production",
 	"domain": {
-		"base_domain": "chat.example.com",
+		"base_domain": "${DOMAIN:-chat.example.com}",
 		"public_scheme": "https",
 		"public_port": 443
 	},
@@ -11,13 +11,13 @@
 		"sqlite_path": "./data/fluxer.db"
 	},
 	"internal": {
-		"kv": "redis://valkey:6379/0",
+		"kv": "${REDIS_URL:-redis://valkey:6379/0}",
 		"kv_mode": "standalone"
 	},
 	"s3": {
-		"access_key_id": "YOUR_S3_ACCESS_KEY",
-		"secret_access_key": "YOUR_S3_SECRET_KEY",
-		"endpoint": "http://127.0.0.1:8080/s3"
+		"access_key_id": "${S3_ACCESS_KEY_ID:-YOUR_S3_ACCESS_KEY}",
+		"secret_access_key": "${S3_SECRET_ACCESS_KEY:-YOUR_S3_SECRET_KEY}",
+		"endpoint": "${S3_ENDPOINT:-http://127.0.0.1:8080/s3}"
 	},
 	"services": {
 		"server": {
@@ -29,8 +29,8 @@
 		},
 		"admin": {
 			"secret_key_base": "GENERATE_A_64_CHAR_HEX_SECRET",
-			"oauth_client_id": "GENERATE_A_64_CHAR_HEX_SECRET",
-			"oauth_client_secret": "GENERATE_A_64_CHAR_HEX_SECRET"
+			"oauth_client_id": "${OAUTH_CLIENT_ID:-GENERATE_A_64_CHAR_HEX_SECRET}",
+			"oauth_client_secret": "${OAUTH_CLIENT_SECRET:-GENERATE_A_64_CHAR_HEX_SECRET}"
 		},
 		"marketing": {
 			"enabled": true,
@@ -39,11 +39,11 @@
 		"gateway": {
 			"port": 8082,
 			"admin_reload_secret": "GENERATE_A_64_CHAR_HEX_SECRET",
-			"media_proxy_endpoint": "http://127.0.0.1:8080/media"
+			"media_proxy_endpoint": "${FLUXER_MEDIA_URL:-http://127.0.0.1:8080/media}"
 		},
 		"nats": {
-			"core_url": "nats://nats:4222",
-			"jetstream_url": "nats://nats:4222",
+			"core_url": "${NATS_CORE_URL:-nats://nats:4222}",
+			"jetstream_url": "${NATS_JETSTREAM_URL:-nats://nats:4222}",
 			"auth_token": "GENERATE_A_NATS_AUTH_TOKEN"
 		}
 	},
@@ -59,7 +59,7 @@
 		"search": {
 			"engine": "meilisearch",
 			"url": "http://meilisearch:7700",
-			"api_key": "YOUR_MEILISEARCH_API_KEY"
+			"api_key": "${MEILI_MASTER_KEY:-YOUR_MEILISEARCH_API_KEY}"
 		}
 	}
 }

@@ -4,15 +4,15 @@
 		"self_hosted": false
 	},
 	"domain": {
-		"base_domain": "localhost"
+		"base_domain": "${DOMAIN:-localhost}"
 	},
 	"database": {
 		"backend": "sqlite",
 		"sqlite_path": "./data/test.db"
 	},
 	"s3": {
-		"access_key_id": "test-access-key",
-		"secret_access_key": "test-secret-key"
+		"access_key_id": "${S3_ACCESS_KEY_ID:-test-access-key}",
+		"secret_access_key": "${S3_SECRET_ACCESS_KEY:-test-secret-key}"
 	},
 	"services": {
 		"media_proxy": {
@@ -20,8 +20,8 @@
 		},
 		"admin": {
 			"secret_key_base": "test-admin-secret-key-base-minimum-32-chars",
-			"oauth_client_id": "1234567890123456789",
-			"oauth_client_secret": "test-oauth-client-secret"
+			"oauth_client_id": "${OAUTH_CLIENT_ID:-1234567890123456789}",
+			"oauth_client_secret": "${OAUTH_CLIENT_SECRET:-test-oauth-client-secret}"
 		},
 		"gateway": {
 			"admin_reload_secret": "test-gateway-admin-reload-secret-32-chars",

@@ -2,10 +2,10 @@
   "$schema": "../packages/config/src/ConfigSchema.json",
   "env": "development",
   "domain": {
-    "base_domain": "81.169.237.72",
+    "base_domain": "${DOMAIN:-81.169.237.72}",
     "public_scheme": "http",
-    "public_port": "49319",
-    "static_cdn_domain": "81.169.237.72:8082"
+    "public_port": "${FLUXER_PUBLIC_PORT:-49319}",
+    "static_cdn_domain": "${FLUXER_STATIC_CDN:-81.169.237.72:8082}"
   },
   "endpoint_overrides": {
     "api": "${FLUXER_API_URL:-http://fluxer_server:49319/api}",
@@ -28,13 +28,13 @@
     "domain": ""
   },
   "internal": {
-    "kv": "redis://valkey:6379/0",
+    "kv": "${REDIS_URL:-redis://valkey:6379/0}",
     "kv_mode": "standalone"
   },
   "s3": {
-    "access_key_id": "f820252663ae0f76f3e7f468046c11ab",
-    "secret_access_key": "11e3309891c1c45b2a8359137cfb2f8186c0d47e426fef85737d8e926023098d",
-    "endpoint": "http://81.169.237.72:9000",
+    "access_key_id": "${S3_ACCESS_KEY_ID:-f820252663ae0f76f3e7f468046c11ab}",
+    "secret_access_key": "${S3_SECRET_ACCESS_KEY:-11e3309891c1c45b2a8359137cfb2f8186c0d47e426fef85737d8e926023098d}",
+    "endpoint": "${S3_ENDPOINT:-http://81.169.237.72:9000}",
     "region": "us-east-1",
     "buckets": {
       "cdn": "fluxer-cdn",
@@ -47,12 +47,12 @@
   },
   "services": {
     "server": {
-      "port": "49319",
+      "port": "${FLUXER_PUBLIC_PORT:-49319}",
       "host": "0.0.0.0"
     },
     "s3": {
       "host": "localhost",
-      "port": "9000",
+      "port": "${MINIO_PORT:-9000}",
       "data_dir": "./data/s3"
     },
     "media_proxy": {
@@ -60,8 +60,8 @@
     },
     "admin": {
       "secret_key_base": "a2fb570edf418924b7b690fc5426e0d019770dbba615d068172d2240936a7f30",
-      "oauth_client_id": "e224253164caccea22e53f37d9d0580d",
-      "oauth_client_secret": "1932ff2ecfc8c95b67c84f6d15c155799936ee2fed767f951e351a6ee916a8a0",
+      "oauth_client_id": "${OAUTH_CLIENT_ID:-e224253164caccea22e53f37d9d0580d}",
+      "oauth_client_secret": "${OAUTH_CLIENT_SECRET:-1932ff2ecfc8c95b67c84f6d15c155799936ee2fed767f951e351a6ee916a8a0}",
       "base_path": ""
     },
     "marketing": {
@@ -73,12 +73,12 @@
     "gateway": {
       "port": "49107",
       "admin_reload_secret": "f584a1de1648ce528cfe0707aba1f44a2cc57a5a8f3e7268e9624416adf599b9",
-      "media_proxy_endpoint": "http://81.169.237.72:49319/media",
+      "media_proxy_endpoint": "${FLUXER_MEDIA_URL:-http://81.169.237.72:49319/media}",
       "logger_level": "debug"
     },
     "nats": {
-      "core_url": "nats://nats:4222",
-      "jetstream_url": "nats://nats:4222",
+      "core_url": "${NATS_CORE_URL:-nats://nats:4222}",
+      "jetstream_url": "${NATS_JETSTREAM_URL:-nats://nats:4222}",
       "auth_token": "null"
     }
   },
@@ -129,10 +129,10 @@
     },
     "voice": {
       "enabled": true,
-      "api_key": "guyujyhggyuhjguyfgtyFDt66532577856864775",
-      "api_secret": "jhbhjhgvbgvuygygfgfgfftftyftftyff",
+      "api_key": "${LIVEKIT_API_KEY:-}",
+      "api_secret": "${LIVEKIT_API_SECRET:-}",
       "url": "ws://81.169.237.72:7880",
-      "webhook_url": "http://81.169.237.72:49319/api/webhooks/livekit",
+      "webhook_url": "${FLUXER_MEDIA_URL:-http://81.169.237.72:49319}/api/webhooks/livekit",
       "default_region": {
         "id": "default",
         "name": "Default",
@@ -144,7 +144,7 @@
     "search": {
       "engine": "meilisearch",
       "url": "http://meilisearch:7700",
-      "api_key": "fluxer-dev-meili-master-key"
+      "api_key": "${MEILI_MASTER_KEY:-fluxer-dev-meili-master-key}"
     },
     "email": {
       "enabled": true,
