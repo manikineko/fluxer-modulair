@@ -100,6 +100,7 @@ find_free_port() {
     local start_port=$1
     local end_port=$2
     local preferred_port=$3
+    local skip_port=$4
     
     # If user specified a port, check if it's in range and free
     if [ -n "$preferred_port" ]; then
@@ -117,6 +118,10 @@ find_free_port() {
     
     # Find first available port in range
     for port in $(seq "$start_port" "$end_port"); do
+        # Skip if this is the port we want to avoid
+        if [ -n "$skip_port" ] && [ "$port" = "$skip_port" ]; then
+            continue
+        fi
         if ! is_port_in_use "$port"; then
             echo "$port"
             return
@@ -692,16 +697,16 @@ generate_all_secrets() {
     
     # Find available ports (scan for free ports, use user-specified if provided)
     print_info "Scanning for available ports..."
-    local fluxer_public_port=$(find_free_port 40000 50000 "$USER_FLUXER_PUBLIC_PORT")
-    local fluxer_admin_port=$(find_free_port 40000 50000 "$USER_FLUXER_ADMIN_PORT")
-    local postgres_port=$(find_free_port 5400 6400 "$USER_POSTGRES_PORT")
-    local minio_port=$(find_free_port 9000 10000 "$USER_MINIO_PORT")
+    local fluxer_public_port=$(find_free_port 40000 50000 "$USER_FLUXER_PUBLIC_PORT" "")
+    local fluxer_admin_port=$(find_free_port 40000 50000 "$USER_FLUXER_ADMIN_PORT" "$fluxer_public_port")
+    local postgres_port=$(find_free_port 5400 6400 "$USER_POSTGRES_PORT" "")
+    local minio_port=$(find_free_port 9000 10000 "$USER_MINIO_PORT" "")
     local minio_console_port=$((minio_port + 1))
-    local ipfs_swarm_port=$(find_free_port 4000 5000 "")
-    local ipfs_api_port=$(find_free_port 5000 6000 "$USER_IPFS_API_PORT")
-    local ipfs_gateway_port=$(find_free_port 8000 9000 "")
-    local meili_port=$(find_free_port 7700 8700 "$USER_MEILI_PORT")
-    local livekit_port=$(find_free_port 7800 8800 "")
+    local ipfs_swarm_port=$(find_free_port 4000 5000 "" "")
+    local ipfs_api_port=$(find_free_port 5000 6000 "$USER_IPFS_API_PORT" "")
+    local ipfs_gateway_port=$(find_free_port 8000 9000 "" "")
+    local meili_port=$(find_free_port 7700 8700 "$USER_MEILI_PORT" "")
+    local livekit_port=$(find_free_port 7800 8800 "" "")
     
     print_success "Ports selected:"
     print_info "  FLUXER_PUBLIC_PORT: $fluxer_public_port"
