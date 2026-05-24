@@ -77,6 +77,27 @@ source ~/.bashrc
 
 **Note:** If only a domain is provided (e.g., `example.com`), the script automatically enables multi-subdomain mode and sets up all standard subdomains (app, static, cdn, api, admin).
 
+### Starting and Stopping Services
+
+After running the setup script, you can easily start and stop services:
+
+```bash
+# Start all services
+./start.sh
+
+# Stop all services
+./stop.sh
+```
+
+**What start.sh does:**
+- Checks for .env file (required)
+- Starts Docker services using docker-compose.simple.yaml with minimal profile
+- Starts cloudflared tunnel if configured
+
+**What stop.sh does:**
+- Stops cloudflared tunnel if running
+- Stops Docker services
+
 ### Command-Line Options
 
 The script supports specifying custom ports via command-line arguments. If ports are not specified, the script automatically scans for available ports in the appropriate ranges.
