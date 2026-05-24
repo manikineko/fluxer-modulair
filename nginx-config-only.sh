@@ -1,0 +1,407 @@
+#!/bin/bash
+
+# Auto-elevate to root if not running as root
+if [ "$EUID" -ne 0 ]; then
+    exec sudo "$0" "$@"
+fi
+
+# Nginx Config Only Script
+# Scans for ports and generates nginx configurations only
+# Does NOT touch Cloudflare, SSL, or Docker
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Configuration
+NGINX_CONF_DIR="/etc/nginx"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="${SCRIPT_DIR}"
+
+# User-specified ports (can be overridden via command line)
+USER_FLUXER_PUBLIC_PORT=""
+USER_FLUXER_ADMIN_PORT=""
+
+# Multi-subdomain mode
+MULTI_MODE=false
+CONFIGURED_SUBDOMAINS=()
+
+# Print colored messages
+print_success() {
+    echo -e "${GREEN}✓ $1${NC}"
+}
+
+print_error() {
+    echo -e "${RED}✗ $1${NC}"
+}
+
+print_info() {
+    echo -e "${YELLOW}ℹ $1${NC}"
+}
+
+# Check if a port is in use
+is_port_in_use() {
+    local port=$1
+    
+    # Check if port is bound by Docker (including stopped containers)
+    if command -v docker &> /dev/null; then
+        # Check all containers (running and stopped) for port bindings
+        if docker ps -a --format "{{.Ports}}" 2>/dev/null | grep -q ":${port}->"; then
+            return 0  # Port is bound by Docker
+        fi
+    fi
+    
+    # Check if port is listening
+    if command -v ss &> /dev/null; then
+        if ss -tuln | grep -q ":${port} "; then
+            return 0  # Port is listening
+        fi
+    elif command -v netstat &> /dev/null; then
+        if netstat -tuln | grep -q ":${port} "; then
+            return 0  # Port is listening
+        fi
+    fi
+    
+    # Fallback: try to actually bind to the port to test availability
+    if command -v python3 &> /dev/null; then
+        python3 -c "import socket; s = socket.socket(); s.bind(('0.0.0.0', $port)); s.close()" 2>/dev/null
+        if [ $? -ne 0 ]; then
+            return 0  # Port is in use
+        fi
+    else
+        # Try to connect to the port
+        timeout 1 bash -c "cat < /dev/null > /dev/tcp/127.0.0.1/${port}" 2>/dev/null
+        if [ $? -eq 0 ]; then
+            return 0  # Port is in use
+        fi
+    fi
+    
+    return 1  # Port is free
+}
+
+# Find next available free port in a range
+find_free_port() {
+    local start_port=$1
+    local end_port=$2
+    local preferred_port=$3
+    local skip_port=$4
+    
+    # If user specified a port, check if it's in range and free
+    if [ -n "$preferred_port" ]; then
+        if [ "$preferred_port" -ge "$start_port" ] && [ "$preferred_port" -le "$end_port" ]; then
+            if ! is_port_in_use "$preferred_port"; then
+                echo "$preferred_port"
+                return
+            else
+                print_error "Port $preferred_port is already in use, finding alternative..."
+            fi
+        else
+            print_error "Port $preferred_port is out of range [$start_port-$end_port], finding alternative..."
+        fi
+    fi
+    
+    # Find first available port in range
+    for port in $(seq "$start_port" "$end_port"); do
+        # Skip if this is the port we want to avoid
+        if [ -n "$skip_port" ] && [ "$port" = "$skip_port" ]; then
+            continue
+        fi
+        if ! is_port_in_use "$port"; then
+            echo "$port"
+            return
+        fi
+    done
+    
+    print_error "No available ports in range $start_port-$end_port"
+    exit 1
+}
+
+# Parse command-line arguments
+parse_arguments() {
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --multi)
+                MULTI_MODE=true
+                shift
+                ;;
+            --fluxer-public-port)
+                USER_FLUXER_PUBLIC_PORT="$2"
+                shift 2
+                ;;
+            --fluxer-admin-port)
+                USER_FLUXER_ADMIN_PORT="$2"
+                shift 2
+                ;;
+            -h|--help)
+                echo "Usage: $0 <subdomain> <domain> [OPTIONS]"
+                echo "       $0 <domain> [OPTIONS]"
+                echo ""
+                echo "This script ONLY generates nginx configurations."
+                echo "It does NOT touch Cloudflare, SSL, or Docker."
+                echo ""
+                echo "Options:"
+                echo "  --multi                       Setup all standard subdomains (app, static, cdn, api, admin)"
+                echo "  --fluxer-public-port PORT    Specify FLUXER_PUBLIC_PORT (40000-50000)"
+                echo "  --fluxer-admin-port PORT     Specify FLUXER_ADMIN_PORT (40000-50000)"
+                echo "  -h, --help                    Show this help message"
+                echo ""
+                echo "Examples:"
+                echo "  $0 example.com                    # Auto multi-subdomain mode"
+                echo "  $0 www example.com                # Single subdomain"
+                echo "  $0 www example.com --multi        # Explicit multi-subdomain"
+                echo "  $0 app example.com --fluxer-public-port 45000"
+                exit 0
+                ;;
+            *)
+                # Not an option, must be positional arguments
+                break
+                ;;
+        esac
+    done
+}
+
+# Generate nginx configuration
+generate_nginx_config() {
+    local subdomain=$1
+    local domain=$2
+    local full_domain="${subdomain}.${domain}"
+    local config_file="${NGINX_CONF_DIR}/sites-available/${full_domain}.conf"
+    
+    print_info "Generating nginx config for $full_domain..."
+    
+    mkdir -p "${NGINX_CONF_DIR}/sites-available"
+    
+    cat > "$config_file" <<EOF
+server {
+    listen 80;
+    server_name $full_domain;
+    
+    # Redirect to HTTPS
+    return 301 https://\$host\$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name $full_domain;
+    
+    # SSL Configuration (placeholder - use your own certificates)
+    # ssl_certificate /etc/nginx/ssl/${full_domain}/cert.pem;
+    # ssl_certificate_key /etc/nginx/ssl/${full_domain}/key.pem;
+    # ssl_dhparam /etc/nginx/ssl/${full_domain}/dhparam.pem;
+    
+    # Security Headers
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    
+    # Logging
+    access_log /var/log/nginx/${full_domain}_access.log;
+    error_log /var/log/nginx/${full_domain}_error.log;
+    
+    # Rate limiting
+    limit_req_zone \$binary_remote_addr zone=${subdomain}_limit:10m rate=10r/s;
+    limit_req zone=${subdomain}_limit burst=20 nodelay;
+    
+    # Proxy to backend
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
+        proxy_read_timeout 86400;
+    }
+    
+    # Health check endpoint
+    location /health {
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
+    }
+}
+EOF
+    
+    print_success "Nginx configuration generated"
+}
+
+# Enable nginx site
+enable_nginx_site() {
+    local subdomain=$1
+    local domain=$2
+    local full_domain="${subdomain}.${domain}"
+    
+    print_info "Enabling nginx site for $full_domain..."
+    
+    # Create symbolic link to sites-enabled
+    ln -sf "${NGINX_CONF_DIR}/sites-available/${full_domain}.conf" "${NGINX_CONF_DIR}/sites-enabled/${full_domain}.conf"
+    
+    print_success "Nginx site enabled"
+}
+
+# Update nginx backend port
+update_nginx_backend_port() {
+    local subdomain=$1
+    local domain=$2
+    local backend_port=$3
+    local full_domain="${subdomain}.${domain}"
+    local config_file="${NGINX_CONF_DIR}/sites-available/${full_domain}.conf"
+    
+    if [ -n "$backend_port" ]; then
+        sed -i "s/proxy_pass http:\/\/127.0.0.1:8080;/proxy_pass http:\/\/127.0.0.1:${backend_port};/" "$config_file"
+    fi
+}
+
+# Setup a single subdomain
+setup_subdomain() {
+    local subdomain=$1
+    local domain=$2
+    local backend_port=$3
+    local full_domain="${subdomain}.${domain}"
+    
+    print_info "Setting up $full_domain..."
+    
+    generate_nginx_config "$subdomain" "$domain"
+    update_nginx_backend_port "$subdomain" "$domain" "$backend_port"
+    enable_nginx_site "$subdomain" "$domain"
+    
+    # Add to configured subdomains list
+    CONFIGURED_SUBDOMAINS+=("$full_domain")
+    
+    print_success "$full_domain configured"
+}
+
+# Test nginx configuration
+test_nginx_config() {
+    print_info "Testing nginx configuration..."
+    
+    if nginx -t 2>&1; then
+        print_success "Nginx configuration is valid"
+    else
+        print_error "Nginx configuration test failed"
+        exit 1
+    fi
+}
+
+# Reload nginx
+reload_nginx() {
+    print_info "Reloading nginx..."
+    
+    if systemctl reload nginx; then
+        print_success "Nginx reloaded successfully"
+    else
+        print_error "Failed to reload nginx"
+        exit 1
+    fi
+}
+
+# Display summary
+display_summary() {
+    local domain=$1
+    
+    echo ""
+    echo "=========================================="
+    print_success "Nginx configuration completed!"
+    echo "=========================================="
+    echo ""
+    
+    if [ "$MULTI_MODE" = true ]; then
+        print_info "Configured subdomains:"
+        for subdomain in "${CONFIGURED_SUBDOMAINS[@]}"; do
+            echo "  - $subdomain"
+        done
+    else
+        echo "Domain: ${CONFIGURED_SUBDOMAINS[0]}"
+    fi
+    
+    echo ""
+    print_info "Nginx configs:"
+    echo "  - Directory: ${NGINX_CONF_DIR}/sites-available/"
+    echo "  - Enabled: ${NGINX_CONF_DIR}/sites-enabled/"
+    echo ""
+    print_info "Next steps:"
+    echo "1. Add SSL certificates to /etc/nginx/ssl/<domain>/"
+    echo "2. Uncomment SSL configuration in nginx config files"
+    echo "3. Test nginx: nginx -t"
+    echo "4. Reload nginx: systemctl reload nginx"
+    echo ""
+}
+
+# Main function
+main() {
+    echo "=========================================="
+    echo "Nginx Config Only Script"
+    echo "=========================================="
+    echo ""
+    
+    # Parse command-line arguments first
+    parse_arguments "$@"
+    
+    # Check for positional arguments
+    if [ $# -lt 1 ]; then
+        print_error "Usage: $0 <domain> [OPTIONS]"
+        print_error "       $0 <subdomain> <domain> [OPTIONS]"
+        echo "Example: $0 example.com"
+        echo "         $0 www example.com"
+        echo "Use --help for more options"
+        exit 1
+    fi
+    
+    # If only 1 argument provided, treat as domain and enable multi-mode
+    if [ $# -eq 1 ]; then
+        local domain=$1
+        local subdomain="www"
+        MULTI_MODE=true
+        print_info "Single domain provided, enabling multi-subdomain mode for $domain..."
+    else
+        local subdomain=$1
+        local domain=$2
+    fi
+    
+    if [ "$MULTI_MODE" = true ]; then
+        print_info "Setting up multiple subdomains for $domain..."
+    else
+        print_info "Setting up ${subdomain}.${domain}..."
+    fi
+    echo ""
+    
+    # Scan for available ports
+    print_info "Scanning for available ports..."
+    local fluxer_public_port=$(find_free_port 40000 50000 "$USER_FLUXER_PUBLIC_PORT" "")
+    local fluxer_admin_port=$(find_free_port 40000 50000 "$USER_FLUXER_ADMIN_PORT" "$fluxer_public_port")
+    
+    print_success "Ports selected:"
+    print_info "  FLUXER_PUBLIC_PORT: $fluxer_public_port"
+    print_info "  FLUXER_ADMIN_PORT: $fluxer_admin_port"
+    echo ""
+    
+    # Setup subdomains
+    if [ "$MULTI_MODE" = true ]; then
+        # Setup standard subdomains
+        setup_subdomain "app" "$domain" "$fluxer_public_port"
+        setup_subdomain "static" "$domain" "8082"
+        setup_subdomain "cdn" "$domain" "8082"
+        setup_subdomain "api" "$domain" "$fluxer_public_port"
+        setup_subdomain "admin" "$domain" "$fluxer_admin_port"
+    else
+        # Setup single subdomain
+        setup_subdomain "$subdomain" "$domain" "$fluxer_public_port"
+    fi
+    
+    test_nginx_config
+    reload_nginx
+    
+    display_summary "$domain"
+}
+
+# Run main function
+main "$@"

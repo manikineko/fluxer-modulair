@@ -98,6 +98,31 @@ After running the setup script, you can easily start and stop services:
 - Stops cloudflared tunnel if running
 - Stops Docker services
 
+### Nginx Config Only
+
+If you only want to generate nginx configurations without touching Cloudflare, SSL, or Docker:
+
+```bash
+# Generate nginx configs for all subdomains
+./nginx-config-only.sh <domain>
+
+# Generate nginx config for single subdomain
+./nginx-config-only.sh <subdomain> <domain>
+```
+
+**What nginx-config-only.sh does:**
+- Scans for available ports (same as main script)
+- Generates nginx configurations for subdomains
+- Enables nginx sites
+- Tests and reloads nginx
+- Does NOT touch Cloudflare, SSL certificates, or Docker
+
+**Use cases:**
+- When you already have SSL certificates
+- When you don't use Cloudflare
+- When you want to manage DNS manually
+- When you only need nginx config changes
+
 ### Command-Line Options
 
 The script supports specifying custom ports via command-line arguments. If ports are not specified, the script automatically scans for available ports in the appropriate ranges.
