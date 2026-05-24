@@ -1108,17 +1108,17 @@ main() {
     # Setup subdomains
     if [ "$MULTI_MODE" = true ]; then
         # Setup standard subdomains
-        # app and api both use fluxer_public_port (same backend container)
+        # app, api, static, and cdn all use fluxer_public_port (same backend container)
         if [ "$USE_TUNNEL" = true ]; then
             add_tunnel_route "$TUNNEL_NAME" "app" "$domain" "$FLUXER_PUBLIC_PORT"
-            add_tunnel_route "$TUNNEL_NAME" "static" "$domain" "8082"
-            add_tunnel_route "$TUNNEL_NAME" "cdn" "$domain" "8082"
+            add_tunnel_route "$TUNNEL_NAME" "static" "$domain" "$FLUXER_PUBLIC_PORT"
+            add_tunnel_route "$TUNNEL_NAME" "cdn" "$domain" "$FLUXER_PUBLIC_PORT"
             add_tunnel_route "$TUNNEL_NAME" "api" "$domain" "$FLUXER_PUBLIC_PORT"
             add_tunnel_route "$TUNNEL_NAME" "admin" "$domain" "$FLUXER_ADMIN_PORT"
         fi
         setup_subdomain "app" "$domain" "$zone_id" "$server_ip" "$FLUXER_PUBLIC_PORT"
-        setup_subdomain "static" "$domain" "$zone_id" "$server_ip" "8082"
-        setup_subdomain "cdn" "$domain" "$zone_id" "$server_ip" "8082"
+        setup_subdomain "static" "$domain" "$zone_id" "$server_ip" "$FLUXER_PUBLIC_PORT"
+        setup_subdomain "cdn" "$domain" "$zone_id" "$server_ip" "$FLUXER_PUBLIC_PORT"
         setup_subdomain "api" "$domain" "$zone_id" "$server_ip" "$FLUXER_PUBLIC_PORT"
         setup_subdomain "admin" "$domain" "$zone_id" "$server_ip" "$FLUXER_ADMIN_PORT"
     else

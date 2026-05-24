@@ -462,10 +462,10 @@ main() {
     # Setup subdomains
     if [ "$MULTI_MODE" = true ]; then
         # Setup standard subdomains
-        # app and api both use fluxer_public_port (same backend container)
+        # app, api, static, and cdn all use fluxer_public_port (same backend container)
         setup_subdomain "app" "$domain" "$fluxer_public_port"
-        setup_subdomain "static" "$domain" "8082"
-        setup_subdomain "cdn" "$domain" "8082"
+        setup_subdomain "static" "$domain" "$fluxer_public_port"
+        setup_subdomain "cdn" "$domain" "$fluxer_public_port"
         setup_subdomain "api" "$domain" "$fluxer_public_port"
         setup_subdomain "admin" "$domain" "$fluxer_admin_port"
     else
