@@ -35,9 +35,9 @@ services:
     container_name: postgres
     restart: unless-stopped
     environment:
-      - POSTGRES_USER=fluxer
-      - POSTGRES_PASSWORD=fluxer
-      - POSTGRES_DB=fluxer
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -51,8 +51,8 @@ services:
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
     ports:
       - '${MINIO_PORT:-9000}:9000'
       - '${MINIO_CONSOLE_PORT:-9001}:9001'
@@ -94,10 +94,10 @@ services:
     environment:
       - FLUXER_CONFIG=/usr/src/app/config/config.json
       - NODE_ENV=production
-      - FLUXER_PUBLIC_PORT=${FLUXER_PUBLIC_PORT:-48763}
+      - FLUXER_PUBLIC_PORT=${FLUXER_PUBLIC_PORT}
       - FLUXER_STATIC_CDN=http://172.17.0.1:8082
     ports:
-      - '${FLUXER_PUBLIC_PORT:-48763}:8080'
+      - '${FLUXER_PUBLIC_PORT}:8080'
     volumes:
       - ./config:/usr/src/app/config:ro
       - ./plugins:/usr/src/app/plugins:ro
@@ -118,15 +118,15 @@ services:
       - FLUXER_CONFIG=/usr/src/app/config/admin-config.json
       - NODE_ENV=development
       - LOG_LEVEL=debug
-      - FLUXER_ADMIN_PORT=${FLUXER_ADMIN_PORT:-8081}
+      - FLUXER_ADMIN_PORT=${FLUXER_ADMIN_PORT}
       - FLUXER_CONFIG__INTERNAL__KV=redis://valkey:6379/0
       - FLUXER_ADMIN_REDIRECT_URL=http://localhost:8081
       - FLUXER_STATIC_CDN=http://172.17.0.1:8082
-      - OAUTH_CLIENT_ID=1234567890123456789
-      - OAUTH_CLIENT_SECRET=dev-oauth-client-secret
-      - OAUTH_REDIRECT_URI=http://localhost:8081/oauth2_callback
+      - OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID}
+      - OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET}
+      - OAUTH_REDIRECT_URI=${OAUTH_REDIRECT_URI}
     ports:
-      - '${FLUXER_ADMIN_PORT:-8081}:3001'
+      - '${FLUXER_ADMIN_PORT}:3001'
     volumes:
       - ./config:/usr/src/app/config:ro
       - ./fluxer_static:/usr/src/app/fluxer_static:ro
@@ -181,7 +181,7 @@ services:
     restart: unless-stopped
     environment:
       MEILI_ENV: production
-      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-dev-meilisearch-master-key}
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
       MEILI_DB_PATH: /meili_data
       MEILI_HTTP_ADDR: 0.0.0.0:7700
     ports:
