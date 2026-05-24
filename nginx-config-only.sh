@@ -176,50 +176,6 @@ find_free_port() {
     exit 1
 }
 
-# Parse command-line arguments
-parse_arguments() {
-    while [[ $# -gt 0 ]]; do
-        case $1 in
-            --multi)
-                MULTI_MODE=true
-                shift
-                ;;
-            --fluxer-public-port)
-                USER_FLUXER_PUBLIC_PORT="$2"
-                shift 2
-                ;;
-            --fluxer-admin-port)
-                USER_FLUXER_ADMIN_PORT="$2"
-                shift 2
-                ;;
-            -h|--help)
-                echo "Usage: $0 <subdomain> <domain> [OPTIONS]"
-                echo "       $0 <domain> [OPTIONS]"
-                echo ""
-                echo "This script ONLY generates nginx configurations."
-                echo "It does NOT touch Cloudflare, SSL, or Docker."
-                echo ""
-                echo "Options:"
-                echo "  --multi                       Setup all standard subdomains (app, static, cdn, api, admin)"
-                echo "  --fluxer-public-port PORT    Specify FLUXER_PUBLIC_PORT (40000-50000)"
-                echo "  --fluxer-admin-port PORT     Specify FLUXER_ADMIN_PORT (40000-50000)"
-                echo "  -h, --help                    Show this help message"
-                echo ""
-                echo "Examples:"
-                echo "  $0 example.com                    # Auto multi-subdomain mode"
-                echo "  $0 www example.com                # Single subdomain"
-                echo "  $0 www example.com --multi        # Explicit multi-subdomain"
-                echo "  $0 app example.com --fluxer-public-port 45000"
-                exit 0
-                ;;
-            *)
-                # Not an option, must be positional arguments
-                break
-                ;;
-        esac
-    done
-}
-
 # Generate nginx configuration
 generate_nginx_config() {
     local subdomain=$1
@@ -456,28 +412,51 @@ main() {
     echo "=========================================="
     echo ""
     
-    # Parse command-line arguments first
-    parse_arguments "$@"
-    
-    # Get remaining positional arguments after option parsing
-    local remaining_args=()
+    # Parse command-line arguments
+    local positional_args=()
     while [[ $# -gt 0 ]]; do
         case $1 in
-            --*)
+            --multi)
+                MULTI_MODE=true
                 shift
-                if [[ "$1" != --* ]] && [[ $# -gt 0 ]]; then
-                    shift  # Skip option value
-                fi
+                ;;
+            --fluxer-public-port)
+                USER_FLUXER_PUBLIC_PORT="$2"
+                shift 2
+                ;;
+            --fluxer-admin-port)
+                USER_FLUXER_ADMIN_PORT="$2"
+                shift 2
+                ;;
+            -h|--help)
+                echo "Usage: $0 <subdomain> <domain> [OPTIONS]"
+                echo "       $0 <domain> [OPTIONS]"
+                echo ""
+                echo "This script ONLY generates nginx configurations."
+                echo "It does NOT touch Cloudflare, SSL, or Docker."
+                echo ""
+                echo "Options:"
+                echo "  --multi                       Setup all standard subdomains (app, static, cdn, api, admin)"
+                echo "  --fluxer-public-port PORT    Specify FLUXER_PUBLIC_PORT (40000-50000)"
+                echo "  --fluxer-admin-port PORT     Specify FLUXER_ADMIN_PORT (40000-50000)"
+                echo "  -h, --help                    Show this help message"
+                echo ""
+                echo "Examples:"
+                echo "  $0 example.com                    # Auto multi-subdomain mode"
+                echo "  $0 www example.com                # Single subdomain"
+                echo "  $0 www example.com --multi        # Explicit multi-subdomain"
+                echo "  $0 app example.com --fluxer-public-port 45000"
+                exit 0
                 ;;
             *)
-                remaining_args+=("$1")
+                positional_args+=("$1")
                 shift
                 ;;
         esac
     done
     
     # Check for positional arguments
-    if [ ${#remaining_args[@]} -lt 1 ]; then
+    if [ ${#positional_args[@]} -lt 1 ]; then
         print_error "Usage: $0 <domain> [OPTIONS]"
         print_error "       $0 <subdomain> <domain> [OPTIONS]"
         echo "Example: $0 example.com"
@@ -487,14 +466,14 @@ main() {
     fi
     
     # If only 1 argument provided, treat as domain and enable multi-mode
-    if [ ${#remaining_args[@]} -eq 1 ]; then
-        local domain="${remaining_args[0]}"
+    if [ ${#positional_args[@]} -eq 1 ]; then
+        local domain="${positional_args[0]}"
         local subdomain="www"
         MULTI_MODE=true
         print_info "Single domain provided, enabling multi-subdomain mode for $domain..."
     else
-        local subdomain="${remaining_args[0]}"
-        local domain="${remaining_args[1]}"
+        local subdomain="${positional_args[0]}"
+        local domain="${positional_args[1]}"
     fi
     
     if [ "$MULTI_MODE" = true ]; then
