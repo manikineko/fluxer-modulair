@@ -436,11 +436,16 @@ main() {
     local fluxer_public_port
     local fluxer_admin_port
     
+    print_info "Checking for .env file at: $ENV_FILE"
+    
     if [ -f "$ENV_FILE" ]; then
         print_info "Reading ports from .env file..."
         source "$ENV_FILE"
         fluxer_public_port="${FLUXER_PUBLIC_PORT:-}"
         fluxer_admin_port="${FLUXER_ADMIN_PORT:-}"
+        
+        print_info "Found FLUXER_PUBLIC_PORT: $fluxer_public_port"
+        print_info "Found FLUXER_ADMIN_PORT: $fluxer_admin_port"
         
         if [ -z "$fluxer_public_port" ] || [ -z "$fluxer_admin_port" ]; then
             print_error "FLUXER_PUBLIC_PORT or FLUXER_ADMIN_PORT not found in .env file"
