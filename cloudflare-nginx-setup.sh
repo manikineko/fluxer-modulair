@@ -275,6 +275,17 @@ prompt_smtp_config() {
     echo ""
     print_info "SMTP Configuration (Optional)"
     echo "========================================"
+    
+    # Check if SMTP variables are already set in environment
+    if [ -n "$SMTP_HOST" ] && [ -n "$SMTP_PORT" ] && [ -n "$SMTP_USER" ] && [ -n "$SMTP_PASSWORD" ] && [ -n "$SMTP_FROM" ]; then
+        print_success "SMTP configuration found in environment variables"
+        print_info "  Host: $SMTP_HOST"
+        print_info "  Port: $SMTP_PORT"
+        print_info "  User: $SMTP_USER"
+        print_info "  From: $SMTP_FROM"
+        return
+    fi
+    
     echo "Enter your SMTP details for email functionality."
     echo "Press Enter to skip (SMTP will not be configured)."
     echo ""
