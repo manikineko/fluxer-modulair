@@ -32,8 +32,8 @@
     "kv_mode": "standalone"
   },
   "s3": {
-    "access_key_id": "f820252663ae0f76f3e7f468046c11ab",
-    "secret_access_key": "11e3309891c1c45b2a8359137cfb2f8186c0d47e426fef85737d8e926023098d",
+    "access_key_id": "",
+    "secret_access_key": "",
     "endpoint": "http://81.169.237.72:9000",
     "region": "us-east-1",
     "buckets": {
@@ -56,23 +56,23 @@
       "data_dir": "./data/s3"
     },
     "media_proxy": {
-      "secret_key": "9118bd2c878fc5166223e148b1f8f90d7e2859ef6e25b0307c281885ba7336e0"
+      "secret_key": ""
     },
     "admin": {
-      "secret_key_base": "a2fb570edf418924b7b690fc5426e0d019770dbba615d068172d2240936a7f30",
-      "oauth_client_id": "e224253164caccea22e53f37d9d0580d",
-      "oauth_client_secret": "1932ff2ecfc8c95b67c84f6d15c155799936ee2fed767f951e351a6ee916a8a0",
+      "secret_key_base": "",
+      "oauth_client_id": "",
+      "oauth_client_secret": "",
       "base_path": ""
     },
     "marketing": {
       "enabled": true,
       "port": 49531,
       "host": "0.0.0.0",
-      "secret_key_base": "4dac7310fb5ddc9b3c122f7aab7370b9ba8d1a21e5b44f02fd16b6e65bbd8607"
+      "secret_key_base": ""
     },
     "gateway": {
       "port": 49107,
-      "admin_reload_secret": "f584a1de1648ce528cfe0707aba1f44a2cc57a5a8f3e7268e9624416adf599b9",
+      "admin_reload_secret": "",
       "media_proxy_endpoint": "http://81.169.237.72:49320/media",
       "logger_level": "debug"
     },
@@ -83,8 +83,8 @@
     }
   },
   "auth": {
-    "sudo_mode_secret": "6ff8791017a502d6161f6793abdb9a9ce534b7346ca154eae684c8d9cea0184b",
-    "connection_initiation_secret": "063aa8a788452c29acfcd929a9ce6ebad348b5a0cb9cda3df8f64acb150e83ed",
+    "sudo_mode_secret": "",
+    "connection_initiation_secret": "",
     "vapid": {
       "public_key": "",
       "private_key": ""
@@ -154,7 +154,7 @@
         "host": "mail.newtontide.com",
         "port": 465,
         "username": "app@proxcord.cc",
-        "password": "a943254cf1988af70e75d366a86f18674ba4d2d4a065f6053921832da473a7c9",
+        "password": "",
         "secure": true
       }
     }

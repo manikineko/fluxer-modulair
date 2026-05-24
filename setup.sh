@@ -50,19 +50,60 @@ setup_config() {
     # Create config directory if it doesn't exist
     mkdir -p "$REPO_ROOT/config"
     
+    # Generate random keys
+    info "Generating random keys and secrets..."
+    S3_ACCESS_KEY=$(openssl rand -hex 16 2>/dev/null || tr -dc 'a-f0-9' < /dev/urandom | head -c 32)
+    S3_SECRET_KEY=$(openssl rand -hex 32 2>/dev/null || tr -dc 'a-f0-9' < /dev/urandom | head -c 64)
+    MEDIA_PROXY_SECRET=$(openssl rand -hex 32 2>/dev/null || tr -dc 'a-f0-9' < /dev/urandom | head -c 64)
+    ADMIN_SECRET_KEY_BASE=$(openssl rand -hex 32 2>/dev/null || tr -dc 'a-f0-9' < /dev/urandom | head -c 64)
+    ADMIN_OAUTH_CLIENT_ID=$(openssl rand -hex 16 2>/dev/null || tr -dc 'a-f0-9' < /dev/urandom | head -c 32)
+    ADMIN_OAUTH_CLIENT_SECRET=$(openssl rand -hex 32 2>/dev/null || tr -dc 'a-f0-9' < /dev/urandom | head -c 64)
+    MARKETING_SECRET_KEY_BASE=$(openssl rand -hex 32 2>/dev/null || tr -dc 'a-f0-9' < /dev/urandom | head -c 64)
+    GATEWAY_ADMIN_RELOAD_SECRET=$(openssl rand -hex 32 2>/dev/null || tr -dc 'a-f0-9' < /dev/urandom | head -c 64)
+    SUDO_MODE_SECRET=$(openssl rand -hex 32 2>/dev/null || tr -dc 'a-f0-9' < /dev/urandom | head -c 64)
+    CONNECTION_INITIATION_SECRET=$(openssl rand -hex 32 2>/dev/null || tr -dc 'a-f0-9' < /dev/urandom | head -c 64)
+    MEILI_MASTER_KEY=$(openssl rand -hex 32 2>/dev/null || tr -dc 'a-f0-9' < /dev/urandom | head -c 64)
+    
     # Check if config files exist
     if [ ! -f "$REPO_ROOT/config/config.json" ]; then
         if [ -f "$REPO_ROOT/config/config.dev.template.json" ]; then
             info "Creating config.json from template..."
             cp "$REPO_ROOT/config/config.dev.template.json" "$REPO_ROOT/config/config.json"
+            # Update template with generated keys
+            if command -v jq &> /dev/null; then
+                jq --arg s3_access_key "$S3_ACCESS_KEY" \
+                   --arg s3_secret_key "$S3_SECRET_KEY" \
+                   --arg media_proxy_secret "$MEDIA_PROXY_SECRET" \
+                   --arg admin_secret_base "$ADMIN_SECRET_KEY_BASE" \
+                   --arg oauth_client_id "$ADMIN_OAUTH_CLIENT_ID" \
+                   --arg oauth_client_secret "$ADMIN_OAUTH_CLIENT_SECRET" \
+                   --arg marketing_secret_base "$MARKETING_SECRET_KEY_BASE" \
+                   --arg gateway_secret "$GATEWAY_ADMIN_RELOAD_SECRET" \
+                   --arg sudo_secret "$SUDO_MODE_SECRET" \
+                   --arg connection_secret "$CONNECTION_INITIATION_SECRET" \
+                   --arg meili_key "$MEILI_MASTER_KEY" \
+                   '
+                   .s3.access_key_id = $s3_access_key |
+                   .s3.secret_access_key = $s3_secret_key |
+                   .services.media_proxy.secret_key = $media_proxy_secret |
+                   .services.admin.secret_key_base = $admin_secret_base |
+                   .services.admin.oauth_client_id = $oauth_client_id |
+                   .services.admin.oauth_client_secret = $oauth_client_secret |
+                   .services.marketing.secret_key_base = $marketing_secret_base |
+                   .services.gateway.admin_reload_secret = $gateway_secret |
+                   .auth.sudo_mode_secret = $sudo_secret |
+                   .auth.connection_initiation_secret = $connection_secret |
+                   .integrations.search.api_key = $meili_key
+                   ' "$REPO_ROOT/config/config.json" > "${REPO_ROOT}/config/config.json.tmp" && mv "${REPO_ROOT}/config/config.json.tmp" "$REPO_ROOT/config/config.json"
+            fi
         else
             warn "No config template found, using minimal config"
-            cat > "$REPO_ROOT/config/config.json" <<'EOF'
+            cat > "$REPO_ROOT/config/config.json" <<EOF
 {
   "env": "development",
   "domain": {
     "base_domain": "localhost",
-    "public_port": 49319,
+    "public_port": 49320,
     "public_scheme": "http"
   },
   "database": {
@@ -71,6 +112,46 @@ setup_config() {
   },
   "internal": {
     "kv": "redis://valkey:6379/0"
+  },
+  "s3": {
+    "access_key_id": "$S3_ACCESS_KEY",
+    "secret_access_key": "$S3_SECRET_KEY",
+    "endpoint": "http://localhost:9000"
+  },
+  "services": {
+    "server": {
+      "port": 49320,
+      "host": "0.0.0.0"
+    },
+    "media_proxy": {
+      "secret_key": "$MEDIA_PROXY_SECRET"
+    },
+    "admin": {
+      "secret_key_base": "$ADMIN_SECRET_KEY_BASE",
+      "oauth_client_id": "$ADMIN_OAUTH_CLIENT_ID",
+      "oauth_client_secret": "$ADMIN_OAUTH_CLIENT_SECRET"
+    },
+    "marketing": {
+      "enabled": true,
+      "port": 49531,
+      "host": "0.0.0.0",
+      "secret_key_base": "$MARKETING_SECRET_KEY_BASE"
+    },
+    "gateway": {
+      "port": 49107,
+      "admin_reload_secret": "$GATEWAY_ADMIN_RELOAD_SECRET"
+    }
+  },
+  "auth": {
+    "sudo_mode_secret": "$SUDO_MODE_SECRET",
+    "connection_initiation_secret": "$CONNECTION_INITIATION_SECRET"
+  },
+  "integrations": {
+    "search": {
+      "engine": "meilisearch",
+      "url": "http://meilisearch:7700",
+      "api_key": "$MEILI_MASTER_KEY"
+    }
   }
 }
 EOF
@@ -79,12 +160,12 @@ EOF
     
     if [ ! -f "$REPO_ROOT/config/admin-config.json" ]; then
         info "Creating admin-config.json..."
-        cat > "$REPO_ROOT/config/admin-config.json" <<'EOF'
+        cat > "$REPO_ROOT/config/admin-config.json" <<EOF
 {
   "env": "development",
   "domain": {
     "base_domain": "localhost",
-    "public_port": 49319,
+    "public_port": 49320,
     "public_scheme": "http"
   },
   "database": {
@@ -93,6 +174,46 @@ EOF
   },
   "internal": {
     "kv": "redis://valkey:6379/0"
+  },
+  "s3": {
+    "access_key_id": "$S3_ACCESS_KEY",
+    "secret_access_key": "$S3_SECRET_KEY",
+    "endpoint": "http://host.docker.internal:9000"
+  },
+  "services": {
+    "server": {
+      "port": 49320,
+      "host": "0.0.0.0"
+    },
+    "media_proxy": {
+      "secret_key": "$MEDIA_PROXY_SECRET"
+    },
+    "admin": {
+      "secret_key_base": "$ADMIN_SECRET_KEY_BASE",
+      "oauth_client_id": "$ADMIN_OAUTH_CLIENT_ID",
+      "oauth_client_secret": "$ADMIN_OAUTH_CLIENT_SECRET"
+    },
+    "marketing": {
+      "enabled": true,
+      "port": 49531,
+      "host": "0.0.0.0",
+      "secret_key_base": "$MARKETING_SECRET_KEY_BASE"
+    },
+    "gateway": {
+      "port": 49107,
+      "admin_reload_secret": "$GATEWAY_ADMIN_RELOAD_SECRET"
+    }
+  },
+  "auth": {
+    "sudo_mode_secret": "$SUDO_MODE_SECRET",
+    "connection_initiation_secret": "$CONNECTION_INITIATION_SECRET"
+  },
+  "integrations": {
+    "search": {
+      "engine": "meilisearch",
+      "url": "http://meilisearch:7700",
+      "api_key": "$MEILI_MASTER_KEY"
+    }
   }
 }
 EOF
