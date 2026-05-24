@@ -1,0 +1,15 @@
+{
+  "name": "libfluxcore",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "libfluxcore_bg.wasm",
+    "libfluxcore.js",
+    "libfluxcore.d.ts"
+  ],
+  "main": "libfluxcore.js",
+  "types": "libfluxcore.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
