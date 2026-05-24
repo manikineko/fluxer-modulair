@@ -584,6 +584,10 @@ server {
     ssl_session_cache shared:SSL:50m;
     ssl_session_tickets off;
     
+    # MIME types
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+    
     # Security headers
     add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
     add_header X-Frame-Options "SAMEORIGIN" always;

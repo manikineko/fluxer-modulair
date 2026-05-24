@@ -195,6 +195,10 @@ server {
     # ssl_certificate_key /etc/nginx/ssl/${full_domain}/key.pem;
     # ssl_dhparam /etc/nginx/ssl/${full_domain}/dhparam.pem;
     
+    # MIME types
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+    
     # Security Headers
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
     add_header X-Frame-Options "SAMEORIGIN" always;
