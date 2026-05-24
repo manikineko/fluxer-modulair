@@ -76,8 +76,9 @@ echo "Press Enter to use default values"
 read -p "Fluxer public port [$PUBLIC_PORT]: " FLUXER_PUBLIC_PORT
 FLUXER_PUBLIC_PORT=${FLUXER_PUBLIC_PORT:-$PUBLIC_PORT}
 
-read -p "Fluxer admin port [8081]: " FLUXER_ADMIN_PORT
-FLUXER_ADMIN_PORT=${FLUXER_ADMIN_PORT:-8081}
+RANDOM_ADMIN_PORT=$((1990 + RANDOM % 1000))
+read -p "Fluxer admin port [$RANDOM_ADMIN_PORT]: " FLUXER_ADMIN_PORT
+FLUXER_ADMIN_PORT=${FLUXER_ADMIN_PORT:-$RANDOM_ADMIN_PORT}
 
 read -p "PostgreSQL port [5432]: " POSTGRES_PORT
 POSTGRES_PORT=${POSTGRES_PORT:-5432}
@@ -578,7 +579,7 @@ cat >> "$PROJECT_ROOT/config/config.json" << EOF
       "enabled": $([ -n "$LIVEKIT_API_KEY" ] && echo "true" || echo "false"),
       "api_key": "$LIVEKIT_API_KEY",
       "api_secret": "$LIVEKIT_API_SECRET",
-      "url": "ws://localhost:$LIVEKIT_PORT",
+      "url": "ws://$BASE_DOMAIN:$LIVEKIT_PORT",
       "webhook_url": "$PUBLIC_SCHEME://$BASE_DOMAIN:$SERVER_PORT/api/webhooks/livekit",
       "default_region": {
         "id": "default",
@@ -625,6 +626,181 @@ cat >> "$PROJECT_ROOT/config/config.json" << EOF
 EOF
 
 print_success "Generated config.json"
+
+# Generate admin-config.json
+echo ""
+print_header "Generating admin-config.json"
+
+cat > "$PROJECT_ROOT/config/admin-config.json" << EOF
+{
+	"\$schema": "../packages/config/src/ConfigSchema.json",
+	"env": "development",
+	"domain": {
+		"base_domain": "$BASE_DOMAIN",
+		"public_port": "$SERVER_PORT",
+		"public_scheme": "$PUBLIC_SCHEME",
+		"static_cdn_domain": "$BASE_DOMAIN:$STATIC_CDN_PORT"
+	},
+	"endpoint_overrides": {
+		"api": "http://fluxer_server:$SERVER_PORT/api",
+		"api_client": "http://fluxer_server:$SERVER_PORT/api",
+		"gateway": "http://fluxer_server:$GATEWAY_PORT",
+		"media": "http://$BASE_DOMAIN:$SERVER_PORT/media",
+		"static_cdn": "http://$BASE_DOMAIN:$STATIC_CDN_PORT",
+		"marketing": "http://$BASE_DOMAIN:$MARKETING_PORT",
+		"admin": "http://$BASE_DOMAIN:$FLUXER_ADMIN_PORT",
+		"invite": "http://$BASE_DOMAIN:$FLUXER_PUBLIC_PORT/invite",
+		"gift": "http://$BASE_DOMAIN:$FLUXER_PUBLIC_PORT/gift"
+	},
+	"database": {
+		"backend": "sqlite",
+		"sqlite_path": "./data/dev.db"
+	},
+	"cookie": {
+		"secure": $([ "$ENV_TYPE" == "production" ] && echo '"true"' || echo '"false"'),
+		"domain": $([ "$ENV_TYPE" == "production" ] && echo "\".$BASE_DOMAIN\"" || echo '""')
+	},
+	"internal": {
+		"kv": "redis://valkey:6379/0",
+		"kv_mode": "standalone"
+	},
+	"s3": {
+		"access_key_id": "$MINIO_ROOT_USER",
+		"secret_access_key": "$MINIO_ROOT_PASSWORD",
+		"endpoint": "http://host.docker.internal:$MINIO_PORT",
+		"buckets": {
+			"cdn": "fluxer",
+			"uploads": "fluxer-uploads",
+			"downloads": "fluxer-downloads",
+			"reports": "fluxer-reports",
+			"harvests": "fluxer-harvests",
+			"static": "fluxer-static"
+		}
+	},
+	"services": {
+		"server": {
+			"port": "$SERVER_PORT",
+			"host": "0.0.0.0"
+		},
+		"media_proxy": {
+			"secret_key": "$MEDIA_PROXY_SECRET"
+		},
+		"admin": {
+			"secret_key_base": "$ADMIN_SECRET_KEY_BASE",
+			"oauth_client_id": "$ADMIN_OAUTH_CLIENT_ID",
+			"oauth_client_secret": "$ADMIN_OAUTH_CLIENT_SECRET",
+			"base_path": ""
+		},
+		"marketing": {
+			"enabled": true,
+			"port": "$MARKETING_PORT",
+			"host": "0.0.0.0",
+			"secret_key_base": "$MARKETING_SECRET_KEY_BASE"
+		},
+		"gateway": {
+			"port": "$GATEWAY_PORT",
+			"admin_reload_secret": "$GATEWAY_ADMIN_RELOAD_SECRET",
+			"media_proxy_endpoint": "http://host.docker.internal:$SERVER_PORT/media",
+			"logger_level": "debug"
+		},
+		"nats": {
+			"core_url": "nats://host.docker.internal:4222",
+			"jetstream_url": "nats://host.docker.internal:4222"
+		}
+	},
+	"auth": {
+		"sudo_mode_secret": "$SUDO_MODE_SECRET",
+		"connection_initiation_secret": "$CONNECTION_INITIATION_SECRET",
+		"vapid": {
+			"public_key": "$VAPID_PUBLIC_KEY",
+			"private_key": "$VAPID_PRIVATE_KEY"
+		},
+		"bluesky": {
+			"enabled": false,
+			"keys": []
+		}
+	},
+	"discovery": {
+		"min_member_count": 1
+	},
+	"dev": {
+		"disable_rate_limits": true
+	},
+	"integrations": {
+		"stripe": {
+			"enabled": true,
+			"secret_key": "",
+			"webhook_secret": "",
+			"prices": {
+				"monthly_usd": "",
+				"monthly_eur": "",
+				"yearly_usd": "",
+				"yearly_eur": "",
+				"gift_1_month_usd": "",
+				"gift_1_month_eur": "",
+				"gift_1_year_usd": "",
+				"gift_1_year_eur": ""
+			}
+		},
+		"gif": {
+			"provider": "klipy"
+		},
+		"klipy": {
+			"api_key": "$KLIPY_API_KEY"
+		},
+		"tenor": {
+			"api_key": "$TENOR_API_KEY"
+		},
+		"voice": {
+			"enabled": $([ -n "$LIVEKIT_API_KEY" ] && echo "true" || echo "false"),
+			"api_key": "$LIVEKIT_API_KEY",
+			"api_secret": "$LIVEKIT_API_SECRET",
+			"url": "ws://$BASE_DOMAIN:$LIVEKIT_PORT",
+			"webhook_url": "http://host.docker.internal:$SERVER_PORT/api/webhooks/livekit",
+			"default_region": {
+				"id": "default",
+				"name": "Default",
+				"emoji": "🌐",
+				"latitude": 0.0,
+				"longitude": 0.0
+			}
+		},
+		"search": {
+			"engine": "meilisearch",
+			"url": "http://meilisearch:$MEILI_PORT",
+			"api_key": "$MEILI_MASTER_KEY"
+		}
+	},
+	"instance": {
+		"private_key_path": ""
+	},
+	"federation": {
+		"enabled": false
+	}
+}
+EOF
+
+print_success "Generated admin-config.json"
+
+# Update compose.yaml and docker-compose.simple.yaml with admin port
+echo ""
+print_header "Updating Docker Compose files"
+
+# Update compose.yaml
+sed -i "s/FLUXER_ADMIN_PORT=\${FLUXER_ADMIN_PORT:-8081}/FLUXER_ADMIN_PORT=\${FLUXER_ADMIN_PORT:-$FLUXER_ADMIN_PORT}/" "$PROJECT_ROOT/compose.yaml"
+sed -i "s/'\${FLUXER_ADMIN_PORT:-8081}:3001'/'\${FLUXER_ADMIN_PORT:-$FLUXER_ADMIN_PORT}:3001'/" "$PROJECT_ROOT/compose.yaml"
+sed -i "s/FLUXER_ADMIN_REDIRECT_URL=http:\/\/localhost:8081/FLUXER_ADMIN_REDIRECT_URL=http:\/\/$BASE_DOMAIN:$FLUXER_ADMIN_PORT/" "$PROJECT_ROOT/compose.yaml"
+sed -i "s/OAUTH_REDIRECT_URI=\${OAUTH_REDIRECT_URI:-http:\/\/localhost:8081\/oauth2_callback}/OAUTH_REDIRECT_URI=\${OAUTH_REDIRECT_URI:-http:\/\/$BASE_DOMAIN:$FLUXER_ADMIN_PORT\/oauth2_callback}/" "$PROJECT_ROOT/compose.yaml"
+
+print_success "Updated compose.yaml"
+
+# Update docker-compose.simple.yaml
+sed -i "s/FLUXER_ADMIN_PORT=\${FLUXER_ADMIN_PORT:-8081}/FLUXER_ADMIN_PORT=\${FLUXER_ADMIN_PORT:-$FLUXER_ADMIN_PORT}/" "$PROJECT_ROOT/docker-compose.simple.yaml"
+sed -i "s/'\${FLUXER_ADMIN_PORT:-8081}:3001'/'\${FLUXER_ADMIN_PORT:-$FLUXER_ADMIN_PORT}:3001'/" "$PROJECT_ROOT/docker-compose.simple.yaml"
+sed -i "s/FLUXER_ADMIN_REDIRECT_URL=http:\/\/localhost:8081/FLUXER_ADMIN_REDIRECT_URL=http:\/\/$BASE_DOMAIN:$FLUXER_ADMIN_PORT/" "$PROJECT_ROOT/docker-compose.simple.yaml"
+sed -i "s/OAUTH_REDIRECT_URI=http:\/\/localhost:8081\/oauth2_callback/OAUTH_REDIRECT_URI=http:\/\/$BASE_DOMAIN:$FLUXER_ADMIN_PORT\/oauth2_callback/" "$PROJECT_ROOT/docker-compose.simple.yaml"
+
+print_success "Updated docker-compose.simple.yaml"
 
 # Generate nginx.conf
 echo ""
@@ -910,6 +1086,9 @@ echo ""
 echo "Files created/updated:"
 echo "  - .env"
 echo "  - config/config.json"
+echo "  - config/admin-config.json"
+echo "  - compose.yaml"
+echo "  - docker-compose.simple.yaml"
 echo "  - fluxer_devops/nginx/nginx.conf (SNI router for /etc/nginx/nginx.conf)"
 echo "  - fluxer_devops/nginx/sites/$BASE_DOMAIN.conf (copy to /etc/nginx/sites-available/)"
 echo ""
