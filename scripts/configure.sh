@@ -419,7 +419,7 @@ cat > "$PROJECT_ROOT/config/config.json" << EOF
   "domain": {
     "base_domain": "$BASE_DOMAIN",
     "public_scheme": "$PUBLIC_SCHEME",
-    "public_port": $PUBLIC_PORT,
+    "public_port": "$PUBLIC_PORT",
     "static_cdn_domain": "$BASE_DOMAIN:$STATIC_CDN_PORT"
   },
   "endpoint_overrides": {
@@ -441,7 +441,7 @@ EOF
 if [[ "$DB_BACKEND" == "postgres" ]]; then
     cat >> "$PROJECT_ROOT/config/config.json" << EOF
     "host": "$POSTGRES_HOST",
-    "port": $POSTGRES_PORT,
+    "port": "$POSTGRES_PORT",
     "user": "$POSTGRES_USER",
     "password": "$POSTGRES_PASSWORD",
     "database": "$POSTGRES_DB"
@@ -455,8 +455,8 @@ fi
 cat >> "$PROJECT_ROOT/config/config.json" << EOF
   },
   "cookie": {
-    "secure": $([ "$ENV_TYPE" == "production" ] && echo "true" || echo "false"),
-    "domain": "$([ "$ENV_TYPE" == "production" ] && echo ".$BASE_DOMAIN" || echo "")
+    "secure": $([ "$ENV_TYPE" == "production" ] && echo '"true"' || echo '"false"'),
+    "domain": $([ "$ENV_TYPE" == "production" ] && echo "\".$BASE_DOMAIN\"" || echo '""')
   },
   "internal": {
     "kv": "$REDIS_URL",
@@ -478,12 +478,12 @@ cat >> "$PROJECT_ROOT/config/config.json" << EOF
   },
   "services": {
     "server": {
-      "port": $SERVER_PORT,
+      "port": "$SERVER_PORT",
       "host": "0.0.0.0"
     },
     "s3": {
       "host": "localhost",
-      "port": $MINIO_PORT,
+      "port": "$MINIO_PORT",
       "data_dir": "./data/s3"
     },
     "media_proxy": {
@@ -497,12 +497,12 @@ cat >> "$PROJECT_ROOT/config/config.json" << EOF
     },
     "marketing": {
       "enabled": true,
-      "port": $MARKETING_PORT,
+      "port": "$MARKETING_PORT",
       "host": "0.0.0.0",
       "secret_key_base": "$MARKETING_SECRET_KEY_BASE"
     },
     "gateway": {
-      "port": $GATEWAY_PORT,
+      "port": "$GATEWAY_PORT",
       "admin_reload_secret": "$GATEWAY_ADMIN_RELOAD_SECRET",
       "media_proxy_endpoint": "$PUBLIC_SCHEME://$BASE_DOMAIN:$SERVER_PORT/media",
       "logger_level": "$([ "$ENV_TYPE" == "production" ] && echo "info" || echo "debug")"
@@ -604,10 +604,10 @@ if [[ -n "$SMTP_HOST" ]]; then
       "from_email": "noreply@$BASE_DOMAIN",
       "smtp": {
         "host": "$SMTP_HOST",
-        "port": $SMTP_PORT,
+        "port": "$SMTP_PORT",
         "username": "$SMTP_USER",
         "password": "$SMTP_PASSWORD",
-        "secure": $([ "$SMTP_PORT" == "465" ] && echo "true" || echo "false")
+        "secure": $([ "$SMTP_PORT" == "465" ] && echo '"true"' || echo '"false"')
       }
     }
 EOF
