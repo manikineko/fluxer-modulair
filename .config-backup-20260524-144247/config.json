@@ -1,0 +1,154 @@
+{
+  "$schema": "../packages/config/src/ConfigSchema.json",
+  "env": "development",
+  "domain": {
+    "base_domain": "81.169.237.72",
+    "public_scheme": "http",
+    "public_port": "49319",
+    "static_cdn_domain": "81.169.237.72:8082"
+  },
+  "endpoint_overrides": {
+    "api": "http://81.169.237.72:49319/api",
+    "api_client": "http://81.169.237.72:49319/api",
+    "gateway": "http://81.169.237.72:49107",
+    "media": "http://81.169.237.72:49319/media",
+    "static_cdn": "http://81.169.237.72:8082",
+    "marketing": "http://81.169.237.72:49531",
+    "admin": "http://81.169.237.72:6566",
+    "app": "http://81.169.237.72:49319",
+    "invite": "http://81.169.237.72:49319/invite",
+    "gift": "http://81.169.237.72:49319/gift"
+  },
+  "database": {
+    "backend": "sqlite",
+    "sqlite_path": "./data/dev.db"
+  },
+  "cookie": {
+    "secure": "false",
+    "domain": ""
+  },
+  "internal": {
+    "kv": "redis://valkey:6379/0",
+    "kv_mode": "standalone"
+  },
+  "s3": {
+    "access_key_id": "27432972c467faa25b8c0515bac0cf41",
+    "secret_access_key": "f7c452852970674b29bf651501385cff72fbf1971fb5dbb990bdbb6d4aa498c2",
+    "endpoint": "http://127.0.0.1:9000",
+    "region": "us-east-1",
+    "buckets": {
+      "cdn": "fluxer-cdn",
+      "uploads": "fluxer-uploads",
+      "downloads": "fluxer-downloads",
+      "reports": "fluxer-reports",
+      "harvests": "fluxer-harvests",
+      "static": "fluxer-static"
+    }
+  },
+  "services": {
+    "server": {
+      "port": "49319",
+      "host": "0.0.0.0"
+    },
+    "s3": {
+      "host": "localhost",
+      "port": "9000",
+      "data_dir": "./data/s3"
+    },
+    "media_proxy": {
+      "secret_key": "699d18a48a5ee053d86921b99f7d08a0e6c5dccb3dad603bf8d1ead0512c8d1b"
+    },
+    "admin": {
+      "secret_key_base": "37920b86ebb8e56b21eb7f13ef2faed096c559b0580cdcafd0b586fb1bdfce7a",
+      "oauth_client_id": "bac9edbcaa0abfd7b7cc8e65856a748b",
+      "oauth_client_secret": "4247b632ae20942c2455b2a1632047a03efae240ba706a91959da71c172cd921",
+      "base_path": ""
+    },
+    "marketing": {
+      "enabled": true,
+      "port": "49531",
+      "host": "0.0.0.0",
+      "secret_key_base": "4b52e72e4ecdf9757759729b3ce0dfebc0482d8693dbf5d10f9de6a722159159"
+    },
+    "gateway": {
+      "port": "49107",
+      "admin_reload_secret": "274771f4c86eb2490f137d33ec933f4a571be449860fdcbd928a9c0caa7fe04f",
+      "media_proxy_endpoint": "http://81.169.237.72:49319/media",
+      "logger_level": "debug"
+    },
+    "nats": {
+      "core_url": "nats://nats:4222",
+      "jetstream_url": "nats://nats:4222",
+      "auth_token": "null"
+    }
+  },
+  "auth": {
+    "sudo_mode_secret": "0ca6098db13cb1ef014d876aa592262abc2f35bd9b23e7276bf0ca7ccf19ed72",
+    "connection_initiation_secret": "60d12b3aef4482d52ad1ac8a9ac17f4e48cf519a1677de98d901fc3059fcd413",
+    "vapid": {
+      "public_key": "",
+      "private_key": ""
+    },
+    "bluesky": {
+      "enabled": false,
+      "keys": []
+    }
+  },
+  "discovery": {
+    "min_member_count": 1
+  },
+  "dev": {
+    "disable_rate_limits": true,
+    "attachment_decay_enabled": false,
+    "test_mode_enabled": false
+  },
+  "integrations": {
+    "gif": {
+      "provider": "klipy"
+    },
+    "klipy": {
+      "api_key": ""
+    },
+    "tenor": {
+      "api_key": ""
+    },
+    "voice": {
+      "enabled": false,
+      "api_key": "",
+      "api_secret": "",
+      "url": "ws://81.169.237.72:7880",
+      "webhook_url": "http://81.169.237.72:49319/api/webhooks/livekit",
+      "default_region": {
+        "id": "default",
+        "name": "Default",
+        "emoji": "🌐",
+        "latitude": 0.0,
+        "longitude": 0.0
+      }
+    },
+    "search": {
+      "engine": "meilisearch",
+      "url": "http://meilisearch:7700",
+      "api_key": "fluxer-dev-meili-master-key"
+    }
+    ,
+    "email": {
+      "enabled": true,
+      "provider": "smtp",
+      "from_email": "noreply@81.169.237.72",
+      "smtp": {
+        "host": "null",
+        "port": "null",
+        "username": "null",
+        "password": "",
+        "secure": "false"
+      }
+    }
+  },
+  "instance": {
+    "private_key_path": ""
+  },
+  "federation": {
+    "enabled": false
+  }
+}

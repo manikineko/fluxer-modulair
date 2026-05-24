@@ -1,0 +1,169 @@
+{
+  "$schema": "../packages/config/src/ConfigSchema.json",
+  "env": "development",
+  "domain": {
+    "base_domain": "81.169.237.72",
+    "public_scheme": "http",
+    "public_port": "49319",
+    "static_cdn_domain": "81.169.237.72:8082"
+  },
+  "endpoint_overrides": {
+    "api": "http://81.169.237.72:49319/api",
+    "api_client": "http://81.169.237.72:49319/api",
+    "gateway": "http://81.169.237.72:49107",
+    "media": "http://81.169.237.72:49319/media",
+    "static_cdn": "http://81.169.237.72:8082",
+    "marketing": "http://81.169.237.72:49531",
+    "admin": "http://81.169.237.72://81.169.237.72",
+    "app": "http://81.169.237.72:49319",
+    "invite": "http://81.169.237.72:49319/invite",
+    "gift": "http://81.169.237.72:49319/gift"
+  },
+  "database": {
+    "backend": "sqlite",
+    "sqlite_path": "./data/dev.db"
+  },
+  "cookie": {
+    "secure": "false",
+    "domain": ""
+  },
+  "internal": {
+    "kv": "redis://valkey:6379/0",
+    "kv_mode": "standalone"
+  },
+  "s3": {
+    "access_key_id": "27432972c467faa25b8c0515bac0cf41",
+    "secret_access_key": "f7c452852970674b29bf651501385cff72fbf1971fb5dbb990bdbb6d4aa498c2",
+    "endpoint": "http://127.0.0.1:9000",
+    "region": "us-east-1",
+    "buckets": {
+      "cdn": "fluxer-cdn",
+      "uploads": "fluxer-uploads",
+      "downloads": "fluxer-downloads",
+      "reports": "fluxer-reports",
+      "harvests": "fluxer-harvests",
+      "static": "fluxer-static"
+    }
+  },
+  "services": {
+    "server": {
+      "port": "49319",
+      "host": "0.0.0.0"
+    },
+    "s3": {
+      "host": "localhost",
+      "port": "9000",
+      "data_dir": "./data/s3"
+    },
+    "media_proxy": {
+      "secret_key": "0ca1da8bf33c360903908214425dcae4eb57c53a758e7d649ba79057dc5574fb"
+    },
+    "admin": {
+      "secret_key_base": "0cd82427de134f5d2f834c4265ddaa7ca7eb8f8446970b7242ea5dbd6c899b56",
+      "oauth_client_id": "49e57b350403f985a28b3f1a1eb8fb81",
+      "oauth_client_secret": "d45dfba217aec96620ea3230a6863a9da8031e7935f70858bdbe2823d3b9024a",
+      "base_path": ""
+    },
+    "marketing": {
+      "enabled": true,
+      "port": "49531",
+      "host": "0.0.0.0",
+      "secret_key_base": "612489cbb02ed7d99677ede3ec4f4753b8867007310035a86896e6d4e76b050c"
+    },
+    "gateway": {
+      "port": "49107",
+      "admin_reload_secret": "0dffd7c34251f6e69dcabdc272aac3f6d341243747aa31144fa3d07d0d020ccf",
+      "media_proxy_endpoint": "http://81.169.237.72:49319/media",
+      "logger_level": "debug"
+    },
+    "nats": {
+      "core_url": "nats://nats:4222",
+      "jetstream_url": "nats://nats:4222",
+      "auth_token": "null"
+    }
+  },
+  "auth": {
+    "sudo_mode_secret": "1a9ae572a9c2641d3f02f1f1aeb23f5f7c3c493ed4a6256984854057df3ad17d",
+    "connection_initiation_secret": "87b44d08c134aaac4e3d5f64eaeafa7b45fd779fa260f4da612f9a559f59da28",
+    "vapid": {
+      "public_key": "",
+      "private_key": ""
+    },
+    "bluesky": {
+      "enabled": false,
+      "keys": []
+    }
+  },
+  "discovery": {
+    "min_member_count": 1
+  },
+  "dev": {
+    "disable_rate_limits": true,
+    "attachment_decay_enabled": false,
+    "test_mode_enabled": false
+  },
+  "integrations": {
+    "stripe": {
+      "enabled": true,
+      "secret_key": "null",
+      "webhook_secret": "null",
+      "prices": {
+        "monthly_usd": "",
+        "monthly_eur": "",
+        "yearly_usd": "",
+        "yearly_eur": "",
+        "gift_1_month_usd": "",
+        "gift_1_month_eur": "",
+        "gift_1_year_usd": "",
+        "gift_1_year_eur": ""
+      }
+    },
+    "gif": {
+      "provider": "klipy"
+    },
+    "klipy": {
+      "api_key": ""
+    },
+    "tenor": {
+      "api_key": ""
+    },
+    "voice": {
+      "enabled": false,
+      "api_key": "",
+      "api_secret": "",
+      "url": "ws://81.169.237.72:7880",
+      "webhook_url": "http://81.169.237.72:49319/api/webhooks/livekit",
+      "default_region": {
+        "id": "default",
+        "name": "Default",
+        "emoji": "🌐",
+        "latitude": 0.0,
+        "longitude": 0.0
+      }
+    },
+    "search": {
+      "engine": "meilisearch",
+      "url": "http://meilisearch:7700",
+      "api_key": "fluxer-dev-meili-master-key"
+    }
+    ,
+    "email": {
+      "enabled": true,
+      "provider": "smtp",
+      "from_email": "noreply@81.169.237.72",
+      "smtp": {
+        "host": "null",
+        "port": "null",
+        "username": "null",
+        "password": "",
+        "secure": "false"
+      }
+    }
+  },
+  "instance": {
+    "private_key_path": ""
+  },
+  "federation": {
+    "enabled": false
+  }
+}
