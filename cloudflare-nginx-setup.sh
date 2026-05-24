@@ -58,6 +58,15 @@ SMTP_FROM=""
 # Check if a port is in use
 is_port_in_use() {
     local port=$1
+    
+    # Check if port is bound by Docker
+    if command -v docker &> /dev/null; then
+        if docker ps --format "{{.Ports}}" 2>/dev/null | grep -q ":${port}->"; then
+            return 0  # Port is bound by Docker
+        fi
+    fi
+    
+    # Check if port is listening
     if command -v ss &> /dev/null; then
         ss -tuln | grep -q ":${port} "
         return $?
