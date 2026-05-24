@@ -1,0 +1,168 @@
+{
+  "$schema": "../packages/config/src/ConfigSchema.json",
+  "env": "development",
+  "domain": {
+    "base_domain": "81.169.237.72",
+    "public_scheme": "http",
+    "public_port": "49319",
+    "static_cdn_domain": "81.169.237.72:8082"
+  },
+  "endpoint_overrides": {
+    "api": "${FLUXER_API_URL:-http://fluxer_server:49319/api}",
+    "api_client": "${FLUXER_API_CLIENT_URL:-http://fluxer_server:49319/api}",
+    "gateway": "${FLUXER_GATEWAY_URL:-http://fluxer_server:49107}",
+    "media": "${FLUXER_MEDIA_URL:-http://fluxer_server:49319/media}",
+    "static_cdn": "${FLUXER_STATIC_CDN:-http://localhost:8082}",
+    "marketing": "${FLUXER_MARKETING_URL:-http://localhost:49531}",
+    "admin": "${FLUXER_ADMIN_URL:-http://localhost:8081}",
+    "app": "http://fluxer_app:8080",
+    "invite": "${FLUXER_INVITE_URL:-http://localhost:49319/invite}",
+    "gift": "${FLUXER_GIFT_URL:-http://localhost:49319/gift}"
+  },
+  "database": {
+    "backend": "sqlite",
+    "sqlite_path": "./data/dev.db"
+  },
+  "cookie": {
+    "secure": "false",
+    "domain": ""
+  },
+  "internal": {
+    "kv": "redis://valkey:6379/0",
+    "kv_mode": "standalone"
+  },
+  "s3": {
+    "access_key_id": "f820252663ae0f76f3e7f468046c11ab",
+    "secret_access_key": "11e3309891c1c45b2a8359137cfb2f8186c0d47e426fef85737d8e926023098d",
+    "endpoint": "http://81.169.237.72:9000",
+    "region": "us-east-1",
+    "buckets": {
+      "cdn": "fluxer-cdn",
+      "uploads": "fluxer-uploads",
+      "downloads": "fluxer-downloads",
+      "reports": "fluxer-reports",
+      "harvests": "fluxer-harvests",
+      "static": "fluxer-static"
+    }
+  },
+  "services": {
+    "server": {
+      "port": "49319",
+      "host": "0.0.0.0"
+    },
+    "s3": {
+      "host": "localhost",
+      "port": "9000",
+      "data_dir": "./data/s3"
+    },
+    "media_proxy": {
+      "secret_key": "9118bd2c878fc5166223e148b1f8f90d7e2859ef6e25b0307c281885ba7336e0"
+    },
+    "admin": {
+      "secret_key_base": "a2fb570edf418924b7b690fc5426e0d019770dbba615d068172d2240936a7f30",
+      "oauth_client_id": "e224253164caccea22e53f37d9d0580d",
+      "oauth_client_secret": "1932ff2ecfc8c95b67c84f6d15c155799936ee2fed767f951e351a6ee916a8a0",
+      "base_path": ""
+    },
+    "marketing": {
+      "enabled": true,
+      "port": "49531",
+      "host": "0.0.0.0",
+      "secret_key_base": "4dac7310fb5ddc9b3c122f7aab7370b9ba8d1a21e5b44f02fd16b6e65bbd8607"
+    },
+    "gateway": {
+      "port": "49107",
+      "admin_reload_secret": "f584a1de1648ce528cfe0707aba1f44a2cc57a5a8f3e7268e9624416adf599b9",
+      "media_proxy_endpoint": "http://81.169.237.72:49319/media",
+      "logger_level": "debug"
+    },
+    "nats": {
+      "core_url": "nats://nats:4222",
+      "jetstream_url": "nats://nats:4222",
+      "auth_token": "null"
+    }
+  },
+  "auth": {
+    "sudo_mode_secret": "6ff8791017a502d6161f6793abdb9a9ce534b7346ca154eae684c8d9cea0184b",
+    "connection_initiation_secret": "063aa8a788452c29acfcd929a9ce6ebad348b5a0cb9cda3df8f64acb150e83ed",
+    "vapid": {
+      "public_key": "",
+      "private_key": ""
+    },
+    "bluesky": {
+      "enabled": false,
+      "keys": []
+    }
+  },
+  "discovery": {
+    "min_member_count": 1
+  },
+  "dev": {
+    "disable_rate_limits": true,
+    "attachment_decay_enabled": false,
+    "test_mode_enabled": false
+  },
+  "integrations": {
+    "stripe": {
+      "enabled": true,
+      "secret_key": "null",
+      "webhook_secret": "null",
+      "prices": {
+        "monthly_usd": "",
+        "monthly_eur": "",
+        "yearly_usd": "",
+        "yearly_eur": "",
+        "gift_1_month_usd": "",
+        "gift_1_month_eur": "",
+        "gift_1_year_usd": "",
+        "gift_1_year_eur": ""
+      }
+    },
+    "gif": {
+      "provider": "klipy"
+    },
+    "klipy": {
+      "api_key": ""
+    },
+    "tenor": {
+      "api_key": ""
+    },
+    "voice": {
+      "enabled": true,
+      "api_key": "guyujyhggyuhjguyfgtyFDt66532577856864775",
+      "api_secret": "jhbhjhgvbgvuygygfgfgfftftyftftyff",
+      "url": "ws://81.169.237.72:7880",
+      "webhook_url": "http://81.169.237.72:49319/api/webhooks/livekit",
+      "default_region": {
+        "id": "default",
+        "name": "Default",
+        "emoji": "🌐",
+        "latitude": 0.0,
+        "longitude": 0.0
+      }
+    },
+    "search": {
+      "engine": "meilisearch",
+      "url": "http://meilisearch:7700",
+      "api_key": "fluxer-dev-meili-master-key"
+    },
+    "email": {
+      "enabled": true,
+      "provider": "smtp",
+      "from_email": "noreply@81.169.237.72",
+      "smtp": {
+        "host": "mail.newtontide.com",
+        "port": "465",
+        "username": "app@proxcord.cc",
+        "password": "a943254cf1988af70e75d366a86f18674ba4d2d4a065f6053921832da473a7c9",
+        "secure": "true"
+      }
+    }
+  },
+  "instance": {
+    "private_key_path": ""
+  },
+  "federation": {
+    "enabled": false
+  }
+}

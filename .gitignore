@@ -69,7 +69,6 @@ devenv.local.nix
 /.devserver-cache.json
 **/.devserver-cache.json
 /.fluxer/
-/config/config.json
 fluxer_server/data/
 geoip_data
 
