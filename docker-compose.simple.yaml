@@ -159,6 +159,9 @@ services:
       - FLUXER_CONFIG=/usr/src/app/config/config.json
       - FLUXER_PLUGIN_DIR=/usr/src/app/plugins
       - FLUXER_PLUGIN_AUTOLOAD=true
+      - REDIS_URL=${REDIS_URL:-redis://valkey:6379/0}
+      - NATS_CORE_URL=${NATS_CORE_URL:-nats://nats:4222}
+      - NATS_JETSTREAM_URL=${NATS_JETSTREAM_URL:-nats://nats:4222}
     ports:
       - '49319:49319'
       - '49107:49107'
