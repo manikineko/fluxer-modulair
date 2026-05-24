@@ -102,26 +102,34 @@ read_ports_from_compose() {
     
     print_info "Reading ports from $compose_file..."
     
-    # Try to extract port mappings from compose file
-    # Look for fluxer_app and fluxer_admin port mappings
-    local fluxer_public_port=""
-    local fluxer_admin_port=""
+    # Check if compose file uses environment variables for ports
+    local app_port_line=$(grep -A 10 "fluxer_app:" "$compose_file" | grep -E "^\s+-\s+['\"]?[0-9\$]+" | head -1)
+    local admin_port_line=$(grep -A 10 "fluxer_admin:" "$compose_file" | grep -E "^\s+-\s+['\"]?[0-9\$]+" | head -1)
     
-    # Parse fluxer_app port (host:container format like "49319:8080")
-    fluxer_public_port=$(grep -A 10 "fluxer_app:" "$compose_file" | grep -E "^\s+-\s+['\"]?[0-9]+:" | head -1 | sed -E "s/^\s+-\s+['\"]?([0-9]+):.*/\1/")
-    
-    # Parse fluxer_admin port
-    fluxer_admin_port=$(grep -A 10 "fluxer_admin:" "$compose_file" | grep -E "^\s+-\s+['\"]?[0-9]+:" | head -1 | sed -E "s/^\s+-\s+['\"]?([0-9]+):.*/\1/")
-    
-    # If ports are environment variables, fall back to .env
-    if [[ "$fluxer_public_port" == *'$'* ]] || [[ "$fluxer_public_port" == *'${'* ]]; then
-        print_info "Ports in compose file use environment variables, reading from .env..."
+    # If compose file uses env variables, read from .env
+    if [[ "$app_port_line" == *'$'* ]] || [[ "$admin_port_line" == *'$'* ]]; then
+        print_info "Compose file uses environment variables, reading from .env..."
         if [ -f "$ENV_FILE" ]; then
             source "$ENV_FILE"
-            fluxer_public_port="${FLUXER_PUBLIC_PORT:-}"
-            fluxer_admin_port="${FLUXER_ADMIN_PORT:-}"
+            local fluxer_public_port="${FLUXER_PUBLIC_PORT:-}"
+            local fluxer_admin_port="${FLUXER_ADMIN_PORT:-}"
+            
+            print_info "Found FLUXER_PUBLIC_PORT: $fluxer_public_port"
+            print_info "Found FLUXER_ADMIN_PORT: $fluxer_admin_port"
+            
+            if [ -n "$fluxer_public_port" ] && [ -n "$fluxer_admin_port" ]; then
+                echo "$fluxer_public_port $fluxer_admin_port"
+                return 0
+            fi
         fi
+        return 1
     fi
+    
+    # Otherwise, parse hardcoded ports from compose file
+    local fluxer_public_port=$(echo "$app_port_line" | sed -E "s/^\s+-\s+['\"]?([0-9]+):.*/\1/")
+    local fluxer_admin_port=$(echo "$admin_port_line" | sed -E "s/^\s+-\s+['\"]?([0-9]+):.*/\1/")
+    
+    print_info "Parsed ports from compose: public=$fluxer_public_port admin=$fluxer_admin_port"
     
     if [ -n "$fluxer_public_port" ] && [ -n "$fluxer_admin_port" ]; then
         echo "$fluxer_public_port $fluxer_admin_port"
