@@ -181,6 +181,10 @@ server {
     listen 80;
     server_name $full_domain;
     
+    # MIME types
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+    
     # Redirect to HTTPS
     return 301 https://\$host\$request_uri;
 }
