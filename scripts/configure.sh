@@ -48,7 +48,6 @@ load_existing_config() {
     # Load from config.json if it exists
     if [[ -f "$config_file" ]]; then
         print_success "Found existing config.json, loading values..."
-        # Extract values using grep/sed for simple parsing
         if command -v jq &> /dev/null; then
             BASE_DOMAIN=$(jq -r '.domain.base_domain' "$config_file" 2>/dev/null || echo "localhost")
             PUBLIC_PORT=$(jq -r '.domain.public_port' "$config_file" 2>/dev/null || echo "48763")
@@ -56,6 +55,26 @@ load_existing_config() {
             GATEWAY_PORT=$(jq -r '.services.gateway.port' "$config_file" 2>/dev/null || echo "")
             MARKETING_PORT=$(jq -r '.services.marketing.port' "$config_file" 2>/dev/null || echo "")
             STATIC_CDN_PORT=$(jq -r '.domain.static_cdn_domain' "$config_file" 2>/dev/null | cut -d: -f2 || echo "8082")
+            DB_BACKEND=$(jq -r '.database.backend' "$config_file" 2>/dev/null || echo "sqlite")
+            SQLITE_PATH=$(jq -r '.database.sqlite_path' "$config_file" 2>/dev/null || echo "./data/fluxer.db")
+            MINIO_ROOT_USER=$(jq -r '.s3.access_key_id' "$config_file" 2>/dev/null || echo "minioadmin")
+            MINIO_ROOT_PASSWORD=$(jq -r '.s3.secret_access_key' "$config_file" 2>/dev/null || echo "minioadmin")
+            MEILI_MASTER_KEY=$(jq -r '.integrations.search.api_key' "$config_file" 2>/dev/null || echo "")
+            REDIS_URL=$(jq -r '.internal.kv' "$config_file" 2>/dev/null || echo "redis://valkey:6379/0")
+            NATS_CORE_URL=$(jq -r '.services.nats.core_url' "$config_file" 2>/dev/null || echo "nats://nats:4222")
+            NATS_JETSTREAM_URL=$(jq -r '.services.nats.jetstream_url' "$config_file" 2>/dev/null || echo "nats://nats:4222")
+            NATS_AUTH_TOKEN=$(jq -r '.services.nats.auth_token' "$config_file" 2>/dev/null || echo "")
+            VAPID_PUBLIC_KEY=$(jq -r '.auth.vapid.public_key' "$config_file" 2>/dev/null || echo "")
+            VAPID_PRIVATE_KEY=$(jq -r '.auth.vapid.private_key' "$config_file" 2>/dev/null || echo "")
+            STRIPE_SECRET_KEY=$(jq -r '.integrations.stripe.secret_key' "$config_file" 2>/dev/null || echo "")
+            STRIPE_WEBHOOK_SECRET=$(jq -r '.integrations.stripe.webhook_secret' "$config_file" 2>/dev/null || echo "")
+            SMTP_HOST=$(jq -r '.integrations.email.smtp.host' "$config_file" 2>/dev/null || echo "")
+            SMTP_PORT=$(jq -r '.integrations.email.smtp.port' "$config_file" 2>/dev/null || echo "587")
+            SMTP_USER=$(jq -r '.integrations.email.smtp.username' "$config_file" 2>/dev/null || echo "")
+            LIVEKIT_API_KEY=$(jq -r '.integrations.voice.api_key' "$config_file" 2>/dev/null || echo "")
+            LIVEKIT_API_SECRET=$(jq -r '.integrations.voice.api_secret' "$config_file" 2>/dev/null || echo "")
+            KLIPY_API_KEY=$(jq -r '.integrations.klipy.api_key' "$config_file" 2>/dev/null || echo "")
+            TENOR_API_KEY=$(jq -r '.integrations.tenor.api_key' "$config_file" 2>/dev/null || echo "")
         else
             # Fallback to grep if jq not available
             BASE_DOMAIN=$(grep -oP '"base_domain":\s*"\K[^"]+' "$config_file" 2>/dev/null || echo "localhost")
@@ -63,6 +82,8 @@ load_existing_config() {
             SERVER_PORT=$(grep -oP '"port":\s*"\K[0-9]+' "$config_file" 2>/dev/null | head -1 || echo "")
             GATEWAY_PORT=$(grep -oP '"port":\s*"\K[0-9]+' "$config_file" 2>/dev/null | sed -n '2p' || echo "")
             MARKETING_PORT=$(grep -oP '"port":\s*"\K[0-9]+' "$config_file" 2>/dev/null | sed -n '3p' || echo "")
+            DB_BACKEND=$(grep -oP '"backend":\s*"\K[^"]+' "$config_file" 2>/dev/null || echo "sqlite")
+            SQLITE_PATH=$(grep -oP '"sqlite_path":\s*"\K[^"]+' "$config_file" 2>/dev/null || echo "./data/fluxer.db")
         fi
     fi
 
@@ -79,19 +100,42 @@ load_existing_config() {
     # Load from compose.yaml if it exists
     if [[ -f "$PROJECT_ROOT/compose.yaml" ]]; then
         print_success "Found existing compose.yaml, loading values..."
-        if command -v jq &> /dev/null; then
-            COMPOSE_ADMIN_PORT=$(grep -oP 'FLUXER_ADMIN_PORT=\$\{FLUXER_ADMIN_PORT:-\K[0-9]+' "$PROJECT_ROOT/compose.yaml" 2>/dev/null || echo "")
-            [[ -n "$COMPOSE_ADMIN_PORT" && -z "$FLUXER_ADMIN_PORT" ]] && FLUXER_ADMIN_PORT="$COMPOSE_ADMIN_PORT"
-        else
-            COMPOSE_ADMIN_PORT=$(grep -oP 'FLUXER_ADMIN_PORT=\$\{FLUXER_ADMIN_PORT:-\K[0-9]+' "$PROJECT_ROOT/compose.yaml" 2>/dev/null || echo "")
-            [[ -n "$COMPOSE_ADMIN_PORT" && -z "$FLUXER_ADMIN_PORT" ]] && FLUXER_ADMIN_PORT="$COMPOSE_ADMIN_PORT"
-        fi
+        COMPOSE_ADMIN_PORT=$(grep -oP 'FLUXER_ADMIN_PORT=\$\{FLUXER_ADMIN_PORT:-\K[0-9]+' "$PROJECT_ROOT/compose.yaml" 2>/dev/null || echo "")
+        [[ -n "$COMPOSE_ADMIN_PORT" && -z "$FLUXER_ADMIN_PORT" ]] && FLUXER_ADMIN_PORT="$COMPOSE_ADMIN_PORT"
+    fi
+
+    # Load from nginx.conf if it exists
+    if [[ -f "$PROJECT_ROOT/fluxer_devops/nginx/nginx.conf" ]]; then
+        print_success "Found existing nginx.conf, loading values..."
+        GATEWAY_DOMAIN=$(grep -oP 'gateway\.\K[^ ]+' "$PROJECT_ROOT/fluxer_devops/nginx/nginx.conf" 2>/dev/null || echo "")
+        GATEWAY_BACKEND_PORT=$(grep -oP "gateway.*127\.0\.0\.1:\K[0-9]+" "$PROJECT_ROOT/fluxer_devops/nginx/nginx.conf" 2>/dev/null || echo "9443")
+        MAIN_BACKEND_PORT=$(grep -oP "default.*127\.0\.0\.1:\K[0-9]+" "$PROJECT_ROOT/fluxer_devops/nginx/nginx.conf" 2>/dev/null || echo "8443")
     fi
 
     # Set defaults if not loaded
     BASE_DOMAIN=${BASE_DOMAIN:-localhost}
     PUBLIC_PORT=${PUBLIC_PORT:-48763}
     STATIC_CDN_PORT=${STATIC_CDN_PORT:-8082}
+    DB_BACKEND=${DB_BACKEND:-sqlite}
+    SQLITE_PATH=${SQLITE_PATH:-./data/fluxer.db}
+    MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
+    MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin}
+    POSTGRES_PORT=${POSTGRES_PORT:-5432}
+    MINIO_PORT=${MINIO_PORT:-9000}
+    MINIO_CONSOLE_PORT=${MINIO_CONSOLE_PORT:-9001}
+    IPFS_SWARM_PORT=${IPFS_SWARM_PORT:-4001}
+    IPFS_API_PORT=${IPFS_API_PORT:-5001}
+    IPFS_GATEWAY_PORT=${IPFS_GATEWAY_PORT:-8080}
+    MEILI_PORT=${MEILI_PORT:-7700}
+    ELASTICSEARCH_PORT=${ELASTICSEARCH_PORT:-9200}
+    LIVEKIT_PORT=${LIVEKIT_PORT:-7880}
+    REDIS_URL=${REDIS_URL:-redis://valkey:6379/0}
+    NATS_CORE_URL=${NATS_CORE_URL:-nats://nats:4222}
+    NATS_JETSTREAM_URL=${NATS_JETSTREAM_URL:-nats://nats:4222}
+    SMTP_PORT=${SMTP_PORT:-587}
+    GATEWAY_BACKEND_PORT=${GATEWAY_BACKEND_PORT:-9443}
+    MAIN_BACKEND_PORT=${MAIN_BACKEND_PORT:-8443}
+    HTTP_BACKEND_PORT=${HTTP_BACKEND_PORT:-8080}
 }
 
 # Load existing configuration
@@ -208,41 +252,42 @@ STATIC_CDN_PORT=${STATIC_CDN_PORT_INPUT:-$STATIC_CDN_PORT}
 echo ""
 print_header "Database Configuration"
 
-read -p "Database backend (sqlite/postgres) [sqlite]: " DB_BACKEND
-DB_BACKEND=${DB_BACKEND:-sqlite}
+read -p "Database backend (sqlite/postgres) [$DB_BACKEND]: " DB_BACKEND_INPUT
+DB_BACKEND=${DB_BACKEND_INPUT:-$DB_BACKEND}
 
 if [[ "$DB_BACKEND" == "postgres" ]]; then
-    read -p "PostgreSQL host [localhost]: " POSTGRES_HOST
-    POSTGRES_HOST=${POSTGRES_HOST:-localhost}
-    read -p "PostgreSQL user [fluxer]: " POSTGRES_USER
-    POSTGRES_USER=${POSTGRES_USER:-fluxer}
-    read -p "PostgreSQL password [fluxer]: " POSTGRES_PASSWORD
-    POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-fluxer}
-    read -p "PostgreSQL database [fluxer]: " POSTGRES_DB
-    POSTGRES_DB=${POSTGRES_DB:-fluxer}
+    read -p "PostgreSQL host [$POSTGRES_HOST]: " POSTGRES_HOST_INPUT
+    POSTGRES_HOST=${POSTGRES_HOST_INPUT:-$POSTGRES_HOST}
+    read -p "PostgreSQL user [$POSTGRES_USER]: " POSTGRES_USER_INPUT
+    POSTGRES_USER=${POSTGRES_USER_INPUT:-$POSTGRES_USER}
+    read -p "PostgreSQL password [$POSTGRES_PASSWORD]: " POSTGRES_PASSWORD_INPUT
+    POSTGRES_PASSWORD=${POSTGRES_PASSWORD_INPUT:-$POSTGRES_PASSWORD}
+    read -p "PostgreSQL database [$POSTGRES_DB]: " POSTGRES_DB_INPUT
+    POSTGRES_DB=${POSTGRES_DB_INPUT:-$POSTGRES_DB}
 else
-    read -p "SQLite path [./data/fluxer.db]: " SQLITE_PATH
-    SQLITE_PATH=${SQLITE_PATH:-./data/fluxer.db}
+    read -p "SQLite path [$SQLITE_PATH]: " SQLITE_PATH_INPUT
+    SQLITE_PATH=${SQLITE_PATH_INPUT:-$SQLITE_PATH}
 fi
 
 # S3/MinIO configuration
 echo ""
 print_header "S3/MinIO Configuration"
 
-read -p "S3 access key ID [minioadmin]: " S3_ACCESS_KEY
-S3_ACCESS_KEY=${S3_ACCESS_KEY:-minioadmin}
+read -p "S3 access key ID [$MINIO_ROOT_USER]: " S3_ACCESS_KEY_INPUT
+S3_ACCESS_KEY=${S3_ACCESS_KEY_INPUT:-$MINIO_ROOT_USER}
 
-read -p "S3 secret access key [minioadmin]: " S3_SECRET_KEY
-S3_SECRET_KEY=${S3_SECRET_KEY:-minioadmin}
+read -p "S3 secret access key [$MINIO_ROOT_PASSWORD]: " S3_SECRET_KEY_INPUT
+S3_SECRET_KEY=${S3_SECRET_KEY_INPUT:-$MINIO_ROOT_PASSWORD}
 
-read -p "S3 endpoint [http://127.0.0.1:9000]: " S3_ENDPOINT
-S3_ENDPOINT=${S3_ENDPOINT:-http://127.0.0.1:9000}
+read -p "S3 endpoint [http://127.0.0.1:$MINIO_PORT]: " S3_ENDPOINT_INPUT
+S3_ENDPOINT=${S3_ENDPOINT_INPUT:-http://127.0.0.1:$MINIO_PORT}
 
 # Meilisearch configuration
 echo ""
 print_header "Search Configuration"
 
-read -p "Meilisearch master key (leave empty to generate): " MEILI_MASTER_KEY
+read -p "Meilisearch master key (leave empty to generate) [$MEILI_MASTER_KEY]: " MEILI_MASTER_KEY_INPUT
+MEILI_MASTER_KEY=${MEILI_MASTER_KEY_INPUT:-$MEILI_MASTER_KEY}
 if [[ -z "$MEILI_MASTER_KEY" ]]; then
     MEILI_MASTER_KEY=$(openssl rand -hex 32)
     print_success "Generated Meilisearch master key"
@@ -252,20 +297,21 @@ fi
 echo ""
 print_header "Redis/Valkey Configuration"
 
-read -p "Redis URL [redis://valkey:6379/0]: " REDIS_URL
-REDIS_URL=${REDIS_URL:-redis://valkey:6379/0}
+read -p "Redis URL [$REDIS_URL]: " REDIS_URL_INPUT
+REDIS_URL=${REDIS_URL_INPUT:-$REDIS_URL}
 
 # NATS configuration
 echo ""
 print_header "NATS Configuration"
 
-read -p "NATS core URL [nats://nats:4222]: " NATS_CORE_URL
-NATS_CORE_URL=${NATS_CORE_URL:-nats://nats:4222}
+read -p "NATS core URL [$NATS_CORE_URL]: " NATS_CORE_URL_INPUT
+NATS_CORE_URL=${NATS_CORE_URL_INPUT:-$NATS_CORE_URL}
 
-read -p "NATS jetstream URL [nats://nats:4222]: " NATS_JETSTREAM_URL
-NATS_JETSTREAM_URL=${NATS_JETSTREAM_URL:-nats://nats:4222}
+read -p "NATS jetstream URL [$NATS_JETSTREAM_URL]: " NATS_JETSTREAM_URL_INPUT
+NATS_JETSTREAM_URL=${NATS_JETSTREAM_URL_INPUT:-$NATS_JETSTREAM_URL}
 
-read -p "NATS auth token (leave empty to generate): " NATS_AUTH_TOKEN
+read -p "NATS auth token (leave empty to generate) [$NATS_AUTH_TOKEN]: " NATS_AUTH_TOKEN_INPUT
+NATS_AUTH_TOKEN=${NATS_AUTH_TOKEN_INPUT:-$NATS_AUTH_TOKEN}
 if [[ -z "$NATS_AUTH_TOKEN" ]]; then
     NATS_AUTH_TOKEN=$(openssl rand -hex 32)
     print_success "Generated NATS auth token"
@@ -289,46 +335,57 @@ print_success "Generated all security secrets"
 
 # VAPID keys (optional)
 echo ""
-read -p "VAPID public key (leave empty to skip): " VAPID_PUBLIC_KEY
-read -p "VAPID private key (leave empty to skip): " VAPID_PRIVATE_KEY
+read -p "VAPID public key (leave empty to skip) [$VAPID_PUBLIC_KEY]: " VAPID_PUBLIC_KEY_INPUT
+VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY_INPUT:-$VAPID_PUBLIC_KEY}
+read -p "VAPID private key (leave empty to skip) [$VAPID_PRIVATE_KEY]: " VAPID_PRIVATE_KEY_INPUT
+VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY_INPUT:-$VAPID_PRIVATE_KEY}
 
 # Optional integrations
 echo ""
 print_header "Optional Integrations"
 echo "Press Enter to skip any integration"
 
-read -p "Stripe secret key (leave empty to skip): " STRIPE_SECRET_KEY
-read -p "Stripe webhook secret (leave empty to skip): " STRIPE_WEBHOOK_SECRET
+read -p "Stripe secret key (leave empty to skip) [$STRIPE_SECRET_KEY]: " STRIPE_SECRET_KEY_INPUT
+STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY_INPUT:-$STRIPE_SECRET_KEY}
+read -p "Stripe webhook secret (leave empty to skip) [$STRIPE_WEBHOOK_SECRET]: " STRIPE_WEBHOOK_SECRET_INPUT
+STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET_INPUT:-$STRIPE_WEBHOOK_SECRET}
 
-read -p "SMTP host (leave empty to skip): " SMTP_HOST
+read -p "SMTP host (leave empty to skip) [$SMTP_HOST]: " SMTP_HOST_INPUT
+SMTP_HOST=${SMTP_HOST_INPUT:-$SMTP_HOST}
 if [[ -n "$SMTP_HOST" ]]; then
-    read -p "SMTP port [587]: " SMTP_PORT
-    SMTP_PORT=${SMTP_PORT:-587}
-    read -p "SMTP user: " SMTP_USER
-    read -p "SMTP password: " SMTP_PASSWORD
+    read -p "SMTP port [$SMTP_PORT]: " SMTP_PORT_INPUT
+    SMTP_PORT=${SMTP_PORT_INPUT:-$SMTP_PORT}
+    read -p "SMTP user [$SMTP_USER]: " SMTP_USER_INPUT
+    SMTP_USER=${SMTP_USER_INPUT:-$SMTP_USER}
+    read -p "SMTP password [$SMTP_PASSWORD]: " SMTP_PASSWORD_INPUT
+    SMTP_PASSWORD=${SMTP_PASSWORD_INPUT:-$SMTP_PASSWORD}
 fi
 
-read -p "LiveKit API key (leave empty to skip): " LIVEKIT_API_KEY
-read -p "LiveKit API secret (leave empty to skip): " LIVEKIT_API_SECRET
+read -p "LiveKit API key (leave empty to skip) [$LIVEKIT_API_KEY]: " LIVEKIT_API_KEY_INPUT
+LIVEKIT_API_KEY=${LIVEKIT_API_KEY_INPUT:-$LIVEKIT_API_KEY}
+read -p "LiveKit API secret (leave empty to skip) [$LIVEKIT_API_SECRET]: " LIVEKIT_API_SECRET_INPUT
+LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET_INPUT:-$LIVEKIT_API_SECRET}
 
-read -p "Klipy API key (leave empty to skip): " KLIPY_API_KEY
-read -p "Tenor API key (leave empty to skip): " TENOR_API_KEY
+read -p "Klipy API key (leave empty to skip) [$KLIPY_API_KEY]: " KLIPY_API_KEY_INPUT
+KLIPY_API_KEY=${KLIPY_API_KEY_INPUT:-$KLIPY_API_KEY}
+read -p "Tenor API key (leave empty to skip) [$TENOR_API_KEY]: " TENOR_API_KEY_INPUT
+TENOR_API_KEY=${TENOR_API_KEY_INPUT:-$TENOR_API_KEY}
 
 # Nginx configuration
 echo ""
 print_header "Nginx Configuration"
 
-read -p "Gateway domain (e.g., gateway.fluxer.app) [gateway.$BASE_DOMAIN]: " GATEWAY_DOMAIN
-GATEWAY_DOMAIN=${GATEWAY_DOMAIN:-gateway.$BASE_DOMAIN}
+read -p "Gateway domain (e.g., gateway.fluxer.app) [${GATEWAY_DOMAIN:-gateway.$BASE_DOMAIN}]: " GATEWAY_DOMAIN_INPUT
+GATEWAY_DOMAIN=${GATEWAY_DOMAIN_INPUT:-${GATEWAY_DOMAIN:-gateway.$BASE_DOMAIN}}
 
-read -p "Gateway backend port [9443]: " GATEWAY_BACKEND_PORT
-GATEWAY_BACKEND_PORT=${GATEWAY_BACKEND_PORT:-9443}
+read -p "Gateway backend port [$GATEWAY_BACKEND_PORT]: " GATEWAY_BACKEND_PORT_INPUT
+GATEWAY_BACKEND_PORT=${GATEWAY_BACKEND_PORT_INPUT:-$GATEWAY_BACKEND_PORT}
 
-read -p "Main backend port [8443]: " MAIN_BACKEND_PORT
-MAIN_BACKEND_PORT=${MAIN_BACKEND_PORT:-8443}
+read -p "Main backend port [$MAIN_BACKEND_PORT]: " MAIN_BACKEND_PORT_INPUT
+MAIN_BACKEND_PORT=${MAIN_BACKEND_PORT_INPUT:-$MAIN_BACKEND_PORT}
 
-read -p "HTTP backend port [8080]: " HTTP_BACKEND_PORT
-HTTP_BACKEND_PORT=${HTTP_BACKEND_PORT:-8080}
+read -p "HTTP backend port [$HTTP_BACKEND_PORT]: " HTTP_BACKEND_PORT_INPUT
+HTTP_BACKEND_PORT=${HTTP_BACKEND_PORT_INPUT:-$HTTP_BACKEND_PORT}
 
 # Summary
 echo ""
