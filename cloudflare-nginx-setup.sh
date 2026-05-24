@@ -59,29 +59,40 @@ SMTP_FROM=""
 is_port_in_use() {
     local port=$1
     
-    # Check if port is bound by Docker
+    # Check if port is bound by Docker (including stopped containers)
     if command -v docker &> /dev/null; then
-        if docker ps --format "{{.Ports}}" 2>/dev/null | grep -q ":${port}->"; then
+        # Check all containers (running and stopped) for port bindings
+        if docker ps -a --format "{{.Ports}}" 2>/dev/null | grep -q ":${port}->"; then
             return 0  # Port is bound by Docker
         fi
     fi
     
     # Check if port is listening
     if command -v ss &> /dev/null; then
-        ss -tuln | grep -q ":${port} "
-        return $?
+        if ss -tuln | grep -q ":${port} "; then
+            return 0  # Port is listening
+        fi
     elif command -v netstat &> /dev/null; then
-        netstat -tuln | grep -q ":${port} "
-        return $?
+        if netstat -tuln | grep -q ":${port} "; then
+            return 0  # Port is listening
+        fi
+    fi
+    
+    # Fallback: try to actually bind to the port to test availability
+    if command -v python3 &> /dev/null; then
+        python3 -c "import socket; s = socket.socket(); s.bind(('0.0.0.0', $port)); s.close()" 2>/dev/null
+        if [ $? -ne 0 ]; then
+            return 0  # Port is in use
+        fi
     else
-        # Fallback: try to connect to the port
+        # Try to connect to the port
         timeout 1 bash -c "cat < /dev/null > /dev/tcp/127.0.0.1/${port}" 2>/dev/null
         if [ $? -eq 0 ]; then
             return 0  # Port is in use
-        else
-            return 1  # Port is free
         fi
     fi
+    
+    return 1  # Port is free
 }
 
 # Find next available free port in a range
