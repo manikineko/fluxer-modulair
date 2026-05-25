@@ -105,11 +105,11 @@ read_ports_from_compose() {
     print_info "Reading ports from $compose_file..."
     
     # Check if compose file uses environment variables for ports
-    local app_port_line=$(grep -A 10 "fluxer_app:" "$compose_file" | grep -E "^\s+-\s+['\"]?[0-9\$]+" | head -1)
+    local server_port_line=$(grep -A 10 "fluxer_server:" "$compose_file" | grep -E "^\s+-\s+['\"]?[0-9\$]+" | head -1)
     local admin_port_line=$(grep -A 10 "fluxer_admin:" "$compose_file" | grep -E "^\s+-\s+['\"]?[0-9\$]+" | head -1)
     
     # If compose file uses env variables, read from .env
-    if [[ "$app_port_line" == *'$'* ]] || [[ "$admin_port_line" == *'$'* ]]; then
+    if [[ "$server_port_line" == *'$'* ]] || [[ "$admin_port_line" == *'$'* ]]; then
         print_info "Compose file uses environment variables, reading from .env..."
         if [ -f "$ENV_FILE" ]; then
             source "$ENV_FILE"
@@ -128,7 +128,7 @@ read_ports_from_compose() {
     fi
     
     # Otherwise, parse hardcoded ports from compose file
-    local fluxer_public_port=$(echo "$app_port_line" | sed -E "s/^\s+-\s+['\"]?([0-9]+):.*/\1/")
+    local fluxer_public_port=$(echo "$server_port_line" | sed -E "s/^\s+-\s+['\"]?([0-9]+):.*/\1/")
     local fluxer_admin_port=$(echo "$admin_port_line" | sed -E "s/^\s+-\s+['\"]?([0-9]+):.*/\1/")
     
     print_info "Parsed ports from compose: public=$fluxer_public_port admin=$fluxer_admin_port"
