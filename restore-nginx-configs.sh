@@ -57,14 +57,8 @@ echo ""
 print_info "Files that will be copied (only if they exist in source):"
 echo ""
 
-# Copy main nginx.conf (only if exists in source)
-if [ -f "$SOURCE_NGINX_DIR/nginx.conf" ]; then
-    print_info "  - nginx.conf"
-    cp "$SOURCE_NGINX_DIR/nginx.conf" "$TARGET_NGINX_DIR/nginx.conf"
-    print_success "Copied nginx.conf"
-else
-    print_info "  - nginx.conf (not found in source, skipping)"
-fi
+# DO NOT copy nginx.conf - it has system-specific configs like stream directive
+# Only copy site-specific configs
 
 # Copy ONLY specific site configs that match fluxer project
 # Do NOT touch any other files in sites-available

@@ -57,20 +57,8 @@ echo ""
 print_info "Files that will be copied (only if they exist in source):"
 echo ""
 
-# Copy main nginx.conf (only if exists in source)
-if [ -f "$SOURCE_NGINX_DIR/nginx.conf" ]; then
-    # Backup only this file
-    if [ -f "$TARGET_NGINX_DIR/nginx.conf" ]; then
-        cp "$TARGET_NGINX_DIR/nginx.conf" "/tmp/nginx.conf.backup"
-        print_info "  - nginx.conf (backed up to /tmp/nginx.conf.backup)"
-    else
-        print_info "  - nginx.conf (no existing file to backup)"
-    fi
-    cp "$SOURCE_NGINX_DIR/nginx.conf" "$TARGET_NGINX_DIR/nginx.conf"
-    print_success "Copied nginx.conf"
-else
-    print_info "  - nginx.conf (not found in source, skipping)"
-fi
+# DO NOT copy nginx.conf - it has stream directive that may not be supported
+# Only copy site-specific configs
 
 # Copy ONLY specific site configs that match fluxer project
 # Do NOT touch any other files in sites-available
@@ -113,15 +101,11 @@ if nginx -t 2>&1; then
     echo ""
     print_info "Backups are in /tmp/*.backup"
     print_info "To restore a specific file if needed:"
-    echo "  sudo cp /tmp/nginx.conf.backup /etc/nginx/nginx.conf"
+    echo "  sudo cp /tmp/<filename>.backup /etc/nginx/sites-available/<filename>"
 else
     print_error "Nginx configuration test failed"
     print_info "Restoring backups..."
-    # Restore only the files we backed up
-    if [ -f "/tmp/nginx.conf.backup" ]; then
-        cp "/tmp/nginx.conf.backup" "$TARGET_NGINX_DIR/nginx.conf"
-        print_success "Restored nginx.conf"
-    fi
+    # Restore only the site files we backed up
     for backup_file in /tmp/*.backup; do
         if [ -f "$backup_file" ]; then
             filename=$(basename "$backup_file" .backup)
