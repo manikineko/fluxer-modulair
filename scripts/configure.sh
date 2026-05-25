@@ -45,6 +45,7 @@ load_existing_config() {
         source "$env_file" 2>/dev/null || true
         # Map .env variables to script variables
         FLUXER_PUBLIC_PORT="${FLUXER_PUBLIC_PORT:-}"
+        FLUXER_API_PORT="${FLUXER_API_PORT:-}"
         FLUXER_ADMIN_PORT="${FLUXER_ADMIN_PORT:-}"
         FLUXER_GATEWAY_PORT="${FLUXER_GATEWAY_PORT:-}"
         FLUXER_MARKETING_PORT="${FLUXER_MARKETING_PORT:-}"
@@ -457,6 +458,7 @@ cat > "$PROJECT_ROOT/.env" << EOF
 # Service Ports
 # ============================================
 FLUXER_PUBLIC_PORT=$FLUXER_PUBLIC_PORT
+FLUXER_API_PORT=$FLUXER_API_PORT
 FLUXER_ADMIN_PORT=$FLUXER_ADMIN_PORT
 POSTGRES_PORT=$POSTGRES_PORT
 MINIO_PORT=$MINIO_PORT

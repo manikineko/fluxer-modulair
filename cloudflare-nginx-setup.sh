@@ -786,6 +786,7 @@ generate_all_secrets() {
 # Service Ports
 # ============================================
 FLUXER_PUBLIC_PORT=${fluxer_public_port}
+FLUXER_API_PORT=${fluxer_public_port}
 FLUXER_APP_PORT=40000
 FLUXER_ADMIN_PORT=${fluxer_admin_port}
 FLUXER_GATEWAY_PORT=49107
