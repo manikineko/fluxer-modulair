@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Install Nginx Configs Script
-# Copies nginx configs from project to /etc/nginx
+# SAFELY copies ONLY specific nginx config files from project to /etc/nginx
+# DOES NOT delete anything, only overwrites exact files that exist in source
 
 set -e
 
@@ -36,6 +37,9 @@ echo "=========================================="
 echo "Install Nginx Configs"
 echo "=========================================="
 echo ""
+print_info "SAFE MODE: This script ONLY copies files that exist in source"
+print_info "It will NOT delete any files or directories"
+echo ""
 
 # Source nginx config directory
 SOURCE_NGINX_DIR="${SCRIPT_DIR}/fluxer_devops/nginx"
@@ -50,52 +54,50 @@ print_info "Source: $SOURCE_NGINX_DIR"
 print_info "Target: $TARGET_NGINX_DIR"
 echo ""
 
-# Create backup directory
-BACKUP_DIR="/tmp/nginx-backup-$(date +%Y%m%d-%H%M%S)"
-print_info "Creating backup of existing configs to: $BACKUP_DIR"
-mkdir -p "$BACKUP_DIR"
-
-# Backup existing configs
-if [ -d "$TARGET_NGINX_DIR" ]; then
-    cp -r "$TARGET_NGINX_DIR"/* "$BACKUP_DIR/" 2>/dev/null || true
-    print_success "Backup created"
-fi
-
+print_info "Files that will be copied (only if they exist in source):"
 echo ""
-print_info "Copying nginx configs..."
 
-# Copy main nginx.conf
+# Copy main nginx.conf (only if exists in source)
 if [ -f "$SOURCE_NGINX_DIR/nginx.conf" ]; then
+    # Backup only this file
+    if [ -f "$TARGET_NGINX_DIR/nginx.conf" ]; then
+        cp "$TARGET_NGINX_DIR/nginx.conf" "/tmp/nginx.conf.backup"
+        print_info "  - nginx.conf (backed up to /tmp/nginx.conf.backup)"
+    else
+        print_info "  - nginx.conf (no existing file to backup)"
+    fi
     cp "$SOURCE_NGINX_DIR/nginx.conf" "$TARGET_NGINX_DIR/nginx.conf"
     print_success "Copied nginx.conf"
+else
+    print_info "  - nginx.conf (not found in source, skipping)"
 fi
 
-# Copy sites-available
-if [ -d "$SOURCE_NGINX_DIR/sites-available" ]; then
+# Copy ONLY specific site configs that match fluxer project
+# Do NOT touch any other files in sites-available
+if [ -d "$SOURCE_NGINX_DIR/sites" ]; then
     mkdir -p "$TARGET_NGINX_DIR/sites-available"
-    cp -r "$SOURCE_NGINX_DIR/sites-available"/* "$TARGET_NGINX_DIR/sites-available/" 2>/dev/null || true
-    print_success "Copied sites-available"
-fi
-
-# Copy sites-enabled
-if [ -d "$SOURCE_NGINX_DIR/sites-enabled" ]; then
-    mkdir -p "$TARGET_NGINX_DIR/sites-enabled"
-    cp -r "$SOURCE_NGINX_DIR/sites-enabled"/* "$TARGET_NGINX_DIR/sites-enabled/" 2>/dev/null || true
-    print_success "Copied sites-enabled"
-fi
-
-# Copy conf.d
-if [ -d "$SOURCE_NGINX_DIR/conf.d" ]; then
-    mkdir -p "$TARGET_NGINX_DIR/conf.d"
-    cp -r "$SOURCE_NGINX_DIR/conf.d"/* "$TARGET_NGINX_DIR/conf.d/" 2>/dev/null || true
-    print_success "Copied conf.d"
-fi
-
-# Copy ssl directory if it exists
-if [ -d "$SOURCE_NGINX_DIR/ssl" ]; then
-    mkdir -p "$TARGET_NGINX_DIR/ssl"
-    cp -r "$SOURCE_NGINX_DIR/ssl"/* "$TARGET_NGINX_DIR/ssl/" 2>/dev/null || true
-    print_success "Copied ssl certificates"
+    # Only copy files that start with fluxer or are explicitly fluxer-related
+    for site_file in "$SOURCE_NGINX_DIR/sites"/*; do
+        if [ -f "$site_file" ]; then
+            filename=$(basename "$site_file")
+            # Only copy if it's a fluxer-related config
+            if [[ "$filename" == *"fluxer"* ]] || [[ "$filename" == *"proxcord"* ]] || [[ "$filename" == *"app"* ]] || [[ "$filename" == *"admin"* ]] || [[ "$filename" == *"api"* ]]; then
+                # Backup only this file
+                if [ -f "$TARGET_NGINX_DIR/sites-available/$filename" ]; then
+                    cp "$TARGET_NGINX_DIR/sites-available/$filename" "/tmp/$filename.backup"
+                    print_info "  - sites-available/$filename (backed up to /tmp/$filename.backup)"
+                else
+                    print_info "  - sites-available/$filename (no existing file to backup)"
+                fi
+                cp "$site_file" "$TARGET_NGINX_DIR/sites-available/$filename"
+                print_success "Copied $filename"
+            else
+                print_info "  - sites-available/$filename (skipping - not fluxer-related)"
+            fi
+        fi
+    done
+else
+    print_info "  - sites directory (not found in source, skipping)"
 fi
 
 echo ""
@@ -109,15 +111,27 @@ if nginx -t 2>&1; then
     echo "  or"
     echo "  sudo nginx -s reload"
     echo ""
-    print_info "Backup location: $BACKUP_DIR"
-    print_info "To restore backup if needed:"
-    echo "  sudo cp -r $BACKUP_DIR/* /etc/nginx/"
+    print_info "Backups are in /tmp/*.backup"
+    print_info "To restore a specific file if needed:"
+    echo "  sudo cp /tmp/nginx.conf.backup /etc/nginx/nginx.conf"
 else
     print_error "Nginx configuration test failed"
-    print_info "Restoring backup..."
-    rm -rf "$TARGET_NGINX_DIR"/*
-    cp -r "$BACKUP_DIR"/* "$TARGET_NGINX_DIR/"
-    print_success "Backup restored"
+    print_info "Restoring backups..."
+    # Restore only the files we backed up
+    if [ -f "/tmp/nginx.conf.backup" ]; then
+        cp "/tmp/nginx.conf.backup" "$TARGET_NGINX_DIR/nginx.conf"
+        print_success "Restored nginx.conf"
+    fi
+    for backup_file in /tmp/*.backup; do
+        if [ -f "$backup_file" ]; then
+            filename=$(basename "$backup_file" .backup)
+            if [ -f "$backup_file" ]; then
+                cp "$backup_file" "$TARGET_NGINX_DIR/sites-available/$filename"
+                print_success "Restored $filename"
+            fi
+        fi
+    done
+    print_success "Backups restored"
     exit 1
 fi
 
