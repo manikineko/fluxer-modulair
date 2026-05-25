@@ -180,7 +180,7 @@ services:
       - FLUXER_CONFIG__INTEGRATIONS__STRIPE__SECRET_KEY=${STRIPE_SECRET_KEY:-null}
       - FLUXER_CONFIG__INTEGRATIONS__STRIPE__WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-null}
     ports:
-      - '${FLUXER_PUBLIC_PORT:-49320}:49320'
+      - '${FLUXER_API_PORT:-49320}:49320'
       - '${FLUXER_GATEWAY_PORT:-49107}:49107'
     volumes:
       - ./config:/usr/src/app/config:ro
