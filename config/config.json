@@ -1,23 +1,23 @@
 {
   "$schema": "../packages/config/src/ConfigSchema.json",
-  "env": "development",
+  "env": "production",
   "domain": {
-    "base_domain": "localhost",
+    "base_domain": "81.169.237.72",
     "public_scheme": "http",
     "public_port": 49320,
-    "static_cdn_domain": "localhost:8082"
+    "static_cdn_domain": "81.169.237.72:8082"
   },
   "endpoint_overrides": {
     "api": "https://api.proxcord.cc/api",
     "api_client": "https://api.proxcord.cc/api",
     "gateway": "http://fluxer_server:49107",
     "media": "http://fluxer_server:49320/media",
-    "static_cdn": "http://localhost:8082",
-    "marketing": "http://localhost:49531",
-    "admin": "http://localhost:8081",
+    "static_cdn": "http://81.169.237.72:8082",
+    "marketing": "http://81.169.237.72:49531",
+    "admin": "http://81.169.237.72:8081",
     "app": "https://app.proxcord.cc",
-    "invite": "http://localhost:49320/invite",
-    "gift": "http://localhost:49320/gift"
+    "invite": "http://81.169.237.72:49320/invite",
+    "gift": "http://81.169.237.72:49320/gift"
   },
   "database": {
     "backend": "sqlite",
@@ -34,7 +34,7 @@
   "s3": {
     "access_key_id": "",
     "secret_access_key": "",
-    "endpoint": "http://localhost:9000",
+    "endpoint": "http://81.169.237.72:9000",
     "region": "us-east-1",
     "buckets": {
       "cdn": "fluxer-cdn",
