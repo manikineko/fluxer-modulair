@@ -25,8 +25,8 @@ services:
     restart: unless-stopped
     command: ["-js"]
     ports:
-      - "4222:4222"
-      - "4223:4223"
+      - '${NATS_PORT:-4222}:4222'
+      - '${NATS_MONITORING_PORT:-4223}:4223'
     logging: *default-logging
     profiles: [minimal, full, dev]
 
@@ -97,7 +97,7 @@ services:
       - FLUXER_PUBLIC_PORT=${FLUXER_PUBLIC_PORT}
       - FLUXER_STATIC_CDN=${FLUXER_STATIC_CDN:-https://static.${DOMAIN:-localhost}}
     ports:
-      - '${FLUXER_PUBLIC_PORT}:8080'
+      - '${FLUXER_PUBLIC_PORT:-49320}:8080'
     volumes:
       - ./config:/usr/src/app/config:ro
       - ./plugins:/usr/src/app/plugins:ro
@@ -126,7 +126,7 @@ services:
       - OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET}
       - OAUTH_REDIRECT_URI=${OAUTH_REDIRECT_URI}
     ports:
-      - '${FLUXER_ADMIN_PORT}:3001'
+      - '${FLUXER_ADMIN_PORT:-40003}:3001'
     volumes:
       - ./config:/usr/src/app/config:ro
       - ./fluxer_static:/usr/src/app/fluxer_static:ro
@@ -142,7 +142,7 @@ services:
     container_name: fluxer_app_proxy
     restart: unless-stopped
     ports:
-      - '8082:80'
+      - '${FLUXER_STATIC_CDN_PORT:-8082}:80'
     volumes:
       - ./fluxer_static:/usr/share/nginx/html:ro
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
@@ -201,8 +201,8 @@ services:
       - NATS_CORE_URL=${NATS_CORE_URL:-nats://nats:4222}
       - NATS_JETSTREAM_URL=${NATS_JETSTREAM_URL:-nats://nats:4222}
     ports:
-      - '49320:49320'
-      - '49107:49107'
+      - '${FLUXER_PUBLIC_PORT:-49320}:49320'
+      - '${FLUXER_GATEWAY_PORT:-49107}:49107'
     volumes:
       - ./config:/usr/src/app/config:ro
       - ./fluxer_static:/usr/src/app/fluxer_static:ro
@@ -268,9 +268,9 @@ services:
       - ./config/livekit.yaml:/etc/livekit/livekit.yaml:ro
     ports:
       - '${LIVEKIT_PORT:-7880}:7880'
-      - '7881:7881'
-      - '3478:3478/udp'
-      - '50000-50100:50000-50100/udp'
+      - '${LIVEKIT_HTTP_PORT:-7881}:7881'
+      - '${LIVEKIT_TURN_PORT:-3478}:3478/udp'
+      - '${LIVEKIT_UDP_RANGE:-50000-50100}:50000-50100/udp'
     healthcheck:
       test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:7880 || exit 1']
       interval: 15s
@@ -300,7 +300,7 @@ services:
     volumes:
       - cassandra_data:/var/lib/cassandra
     ports:
-      - '9042:9042'
+      - '${CASSANDRA_PORT:-9042}:9042'
     healthcheck:
       test: ['CMD-SHELL', 'cqlsh -e "DESCRIBE KEYSPACES;" || exit 1']
       interval: 30s
