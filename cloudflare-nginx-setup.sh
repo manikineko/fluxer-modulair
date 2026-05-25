@@ -738,18 +738,24 @@ generate_all_secrets() {
     local oauth_client_id=$(openssl rand -hex 16)
     local oauth_client_secret=$(generate_random_hex)
     
-    # Find available ports (scan for free ports, use user-specified if provided)
-    print_info "Scanning for available ports..."
-    local fluxer_public_port=$(find_free_port 40000 50000 "$USER_FLUXER_PUBLIC_PORT" "")
-    local fluxer_admin_port=$(find_free_port 40000 50000 "$USER_FLUXER_ADMIN_PORT" "$fluxer_public_port")
-    local postgres_port=$(find_free_port 5400 6400 "$USER_POSTGRES_PORT" "")
-    local minio_port=$(find_free_port 9000 10000 "$USER_MINIO_PORT" "")
-    local minio_console_port=$((minio_port + 1))
-    local ipfs_swarm_port=$(find_free_port 4000 5000 "" "")
-    local ipfs_api_port=$(find_free_port 5000 6000 "$USER_IPFS_API_PORT" "")
-    local ipfs_gateway_port=$(find_free_port 8000 9000 "" "")
-    local meili_port=$(find_free_port 7700 8700 "$USER_MEILI_PORT" "")
-    local livekit_port=$(find_free_port 7800 8800 "" "")
+    # Load existing .env if it exists to get current ports
+    if [ -f "${ENV_FILE}" ]; then
+        print_info "Loading existing ports from .env..."
+        source "${ENV_FILE}" 2>/dev/null || true
+    fi
+    
+    # Use existing ports from .env, or find available ports if not set
+    print_info "Determining ports..."
+    local fluxer_public_port="${FLUXER_PUBLIC_PORT:-$(find_free_port 40000 50000 "$USER_FLUXER_PUBLIC_PORT" "")}"
+    local fluxer_admin_port="${FLUXER_ADMIN_PORT:-$(find_free_port 40000 50000 "$USER_FLUXER_ADMIN_PORT" "$fluxer_public_port")}"
+    local postgres_port="${POSTGRES_PORT:-$(find_free_port 5400 6400 "$USER_POSTGRES_PORT" "")}"
+    local minio_port="${MINIO_PORT:-$(find_free_port 9000 10000 "$USER_MINIO_PORT" "")}"
+    local minio_console_port="${MINIO_CONSOLE_PORT:-$((minio_port + 1))}"
+    local ipfs_swarm_port="${IPFS_SWARM_PORT:-$(find_free_port 4000 5000 "" "")}"
+    local ipfs_api_port="${IPFS_API_PORT:-$(find_free_port 5000 6000 "$USER_IPFS_API_PORT" "")}"
+    local ipfs_gateway_port="${IPFS_GATEWAY_PORT:-$(find_free_port 8000 9000 "" "")}"
+    local meili_port="${MEILI_PORT:-$(find_free_port 7700 8700 "$USER_MEILI_PORT" "")}"
+    local livekit_port="${LIVEKIT_PORT:-$(find_free_port 7800 8800 "" "")}"
     
     print_success "Ports selected:"
     print_info "  FLUXER_PUBLIC_PORT: $fluxer_public_port"

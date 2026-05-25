@@ -50,6 +50,12 @@ setup_config() {
     # Create config directory if it doesn't exist
     mkdir -p "$REPO_ROOT/config"
     
+    # Load existing .env if it exists to get current ports
+    if [ -f "$REPO_ROOT/.env" ]; then
+        info "Loading existing ports from .env..."
+        source "$REPO_ROOT/.env" 2>/dev/null || true
+    fi
+    
     # Generate random keys
     info "Generating random keys and secrets..."
     S3_ACCESS_KEY=$(openssl rand -hex 16 2>/dev/null || tr -dc 'a-f0-9' < /dev/urandom | head -c 32)
@@ -63,6 +69,11 @@ setup_config() {
     SUDO_MODE_SECRET=$(openssl rand -hex 32 2>/dev/null || tr -dc 'a-f0-9' < /dev/urandom | head -c 64)
     CONNECTION_INITIATION_SECRET=$(openssl rand -hex 32 2>/dev/null || tr -dc 'a-f0-9' < /dev/urandom | head -c 64)
     MEILI_MASTER_KEY=$(openssl rand -hex 32 2>/dev/null || tr -dc 'a-f0-9' < /dev/urandom | head -c 64)
+    
+    # Use ports from .env or defaults
+    local FLUXER_PUBLIC_PORT="${FLUXER_PUBLIC_PORT:-49320}"
+    local FLUXER_GATEWAY_PORT="${FLUXER_GATEWAY_PORT:-49107}"
+    local FLUXER_MARKETING_PORT="${FLUXER_MARKETING_PORT:-49531}"
     
     # Check if config files exist
     if [ ! -f "$REPO_ROOT/config/config.json" ]; then
@@ -103,7 +114,7 @@ setup_config() {
   "env": "development",
   "domain": {
     "base_domain": "localhost",
-    "public_port": 49320,
+    "public_port": $FLUXER_PUBLIC_PORT,
     "public_scheme": "http"
   },
   "database": {
@@ -120,7 +131,7 @@ setup_config() {
   },
   "services": {
     "server": {
-      "port": 49320,
+      "port": $FLUXER_PUBLIC_PORT,
       "host": "0.0.0.0"
     },
     "media_proxy": {
@@ -133,12 +144,12 @@ setup_config() {
     },
     "marketing": {
       "enabled": true,
-      "port": 49531,
+      "port": $FLUXER_MARKETING_PORT,
       "host": "0.0.0.0",
       "secret_key_base": "$MARKETING_SECRET_KEY_BASE"
     },
     "gateway": {
-      "port": 49107,
+      "port": $FLUXER_GATEWAY_PORT,
       "admin_reload_secret": "$GATEWAY_ADMIN_RELOAD_SECRET"
     }
   },
@@ -165,7 +176,7 @@ EOF
   "env": "development",
   "domain": {
     "base_domain": "localhost",
-    "public_port": 49320,
+    "public_port": $FLUXER_PUBLIC_PORT,
     "public_scheme": "http"
   },
   "database": {
@@ -182,7 +193,7 @@ EOF
   },
   "services": {
     "server": {
-      "port": 49320,
+      "port": $FLUXER_PUBLIC_PORT,
       "host": "0.0.0.0"
     },
     "media_proxy": {
@@ -195,12 +206,12 @@ EOF
     },
     "marketing": {
       "enabled": true,
-      "port": 49531,
+      "port": $FLUXER_MARKETING_PORT,
       "host": "0.0.0.0",
       "secret_key_base": "$MARKETING_SECRET_KEY_BASE"
     },
     "gateway": {
-      "port": 49107,
+      "port": $FLUXER_GATEWAY_PORT,
       "admin_reload_secret": "$GATEWAY_ADMIN_RELOAD_SECRET"
     }
   },

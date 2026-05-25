@@ -39,13 +39,27 @@ load_existing_config() {
     local config_file="$PROJECT_ROOT/config/config.json"
     local admin_config_file="$PROJECT_ROOT/config/admin-config.json"
 
-    # Load from .env if it exists
+    # Load from .env file first (highest priority for ports)
     if [[ -f "$env_file" ]]; then
         print_success "Found existing .env, loading values..."
         source "$env_file" 2>/dev/null || true
+        # Map .env variables to script variables
+        FLUXER_PUBLIC_PORT="${FLUXER_PUBLIC_PORT:-}"
+        FLUXER_ADMIN_PORT="${FLUXER_ADMIN_PORT:-}"
+        FLUXER_GATEWAY_PORT="${FLUXER_GATEWAY_PORT:-}"
+        FLUXER_MARKETING_PORT="${FLUXER_MARKETING_PORT:-}"
+        POSTGRES_PORT="${POSTGRES_PORT:-}"
+        MINIO_PORT="${MINIO_PORT:-}"
+        MINIO_CONSOLE_PORT="${MINIO_CONSOLE_PORT:-}"
+        IPFS_SWARM_PORT="${IPFS_SWARM_PORT:-}"
+        IPFS_API_PORT="${IPFS_API_PORT:-}"
+        IPFS_GATEWAY_PORT="${IPFS_GATEWAY_PORT:-}"
+        MEILI_PORT="${MEILI_PORT:-}"
+        LIVEKIT_PORT="${LIVEKIT_PORT:-}"
+        SMTP_PORT="${SMTP_PORT:-}"
     fi
 
-    # Load from config.json if it exists
+    # Load from config.json if it exists (fallback for non-port values)
     if [[ -f "$config_file" ]]; then
         print_success "Found existing config.json, loading values..."
         if command -v jq &> /dev/null; then
