@@ -66,15 +66,22 @@ else
     print_info "  - nginx.conf (not found in source, skipping)"
 fi
 
-# Copy individual site configs from sites directory (only if they exist)
+# Copy ONLY specific site configs that match fluxer project
+# Do NOT touch any other files in sites-available
 if [ -d "$SOURCE_NGINX_DIR/sites" ]; then
     mkdir -p "$TARGET_NGINX_DIR/sites-available"
+    # Only copy files that start with fluxer or are explicitly fluxer-related
     for site_file in "$SOURCE_NGINX_DIR/sites"/*; do
         if [ -f "$site_file" ]; then
             filename=$(basename "$site_file")
-            print_info "  - sites-available/$filename"
-            cp "$site_file" "$TARGET_NGINX_DIR/sites-available/$filename"
-            print_success "Copied $filename"
+            # Only copy if it's a fluxer-related config
+            if [[ "$filename" == *"fluxer"* ]] || [[ "$filename" == *"proxcord"* ]] || [[ "$filename" == *"app"* ]] || [[ "$filename" == *"admin"* ]] || [[ "$filename" == *"api"* ]]; then
+                print_info "  - sites-available/$filename"
+                cp "$site_file" "$TARGET_NGINX_DIR/sites-available/$filename"
+                print_success "Copied $filename"
+            else
+                print_info "  - sites-available/$filename (skipping - not fluxer-related)"
+            fi
         fi
     done
 else
