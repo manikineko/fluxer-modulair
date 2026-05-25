@@ -295,13 +295,18 @@ prompt_smtp_config() {
     echo "Press Enter to skip (SMTP will not be configured)."
     echo ""
     
-    read -p "SMTP Host (e.g., smtp.gmail.com): " SMTP_HOST
+    read -p "SMTP Host (e.g., smtp.gmail.com) [${SMTP_HOST:-}]: " SMTP_HOST_INPUT
+    SMTP_HOST="${SMTP_HOST_INPUT:-${SMTP_HOST:-}}"
+    
     if [ -n "$SMTP_HOST" ]; then
-        read -p "SMTP Port (e.g., 587): " SMTP_PORT
-        read -p "SMTP Username: " SMTP_USER
+        read -p "SMTP Port (e.g., 587) [${SMTP_PORT:-465}]: " SMTP_PORT_INPUT
+        SMTP_PORT="${SMTP_PORT_INPUT:-${SMTP_PORT:-465}}"
+        read -p "SMTP Username [${SMTP_USER:-}]: " SMTP_USER_INPUT
+        SMTP_USER="${SMTP_USER_INPUT:-${SMTP_USER:-}}"
         read -sp "SMTP Password: " SMTP_PASSWORD
         echo ""
-        read -p "SMTP From Address (e.g., noreply@example.com): " SMTP_FROM
+        read -p "SMTP From Address (e.g., noreply@example.com) [${SMTP_FROM:-}]: " SMTP_FROM_INPUT
+        SMTP_FROM="${SMTP_FROM_INPUT:-${SMTP_FROM:-}}"
         print_success "SMTP configuration saved"
     else
         print_info "Skipping SMTP configuration"
@@ -757,6 +762,12 @@ generate_all_secrets() {
     local meili_port="${MEILI_PORT:-$(find_free_port 7700 8700 "$USER_MEILI_PORT" "")}"
     local livekit_port="${LIVEKIT_PORT:-$(find_free_port 7800 8800 "" "")}"
     
+    # Use domain from .env if set, otherwise use command line or prompt
+    local domain="${DOMAIN:-}"
+    if [ -z "$domain" ]; then
+        read -p "Enter your domain (e.g., example.com): " domain
+    fi
+    
     print_success "Ports selected:"
     print_info "  FLUXER_PUBLIC_PORT: $fluxer_public_port"
     print_info "  FLUXER_ADMIN_PORT: $fluxer_admin_port"
@@ -1140,25 +1151,39 @@ main() {
     # Parse command-line arguments first
     parse_arguments "$@"
     
-    # Check for positional arguments
-    if [ $# -lt 1 ]; then
-        print_error "Usage: $0 <domain> [OPTIONS]"
-        print_error "       $0 <subdomain> <domain> [OPTIONS]"
-        echo "Example: $0 example.com"
-        echo "         $0 www example.com"
-        echo "Use --help for more options"
-        exit 1
+    # Load .env file if it exists
+    if [ -f "$ENV_FILE" ]; then
+        print_info "Loading configuration from .env..."
+        source "$ENV_FILE" 2>/dev/null || true
     fi
     
-    # If only 1 argument provided, treat as domain and enable multi-mode
-    if [ $# -eq 1 ]; then
-        local domain=$1
-        local subdomain="www"
-        MULTI_MODE=true
-        print_info "Single domain provided, enabling multi-subdomain mode for $domain..."
+    # Check for positional arguments
+    if [ $# -lt 1 ]; then
+        # If no arguments and DOMAIN is set in .env, use it
+        if [ -n "$DOMAIN" ]; then
+            local domain="$DOMAIN"
+            local subdomain="www"
+            MULTI_MODE=true
+            print_info "Using domain from .env: $domain"
+        else
+            print_error "Usage: $0 <domain> [OPTIONS]"
+            print_error "       $0 <subdomain> <domain> [OPTIONS]"
+            echo "Example: $0 example.com"
+            echo "         $0 www example.com"
+            echo "Use --help for more options"
+            exit 1
+        fi
     else
-        local subdomain=$1
-        local domain=$2
+        # If only 1 argument provided, treat as domain and enable multi-mode
+        if [ $# -eq 1 ]; then
+            local domain=$1
+            local subdomain="www"
+            MULTI_MODE=true
+            print_info "Single domain provided, enabling multi-subdomain mode for $domain..."
+        else
+            local subdomain=$1
+            local domain=$2
+        fi
     fi
     
     if [ "$MULTI_MODE" = true ]; then
